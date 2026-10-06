@@ -1,0 +1,92 @@
+.root {
+    -fx-font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+/* Barra superior */
+.topbar {
+    -fx-background-color: #0F766E;
+}
+.topbar-title {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+}
+.topbar-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #CBD5E1;
+    -fx-font-size: 11px;
+    -fx-padding: 2 8 2 8;
+}
+
+/* Sidebar */
+.sidebar {
+    -fx-background-color: white;
+    -fx-border-color: #E2E8F0;
+    -fx-border-width: 0 1 0 0;
+}
+.logo-title {
+    -fx-font-weight: 800;
+    -fx-font-size: 12px;
+    -fx-text-fill: #1E293B;
+}
+.logo-sub {
+    -fx-font-size: 9px;
+    -fx-text-fill: #64748B;
+}
+.nav-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #475569;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-alignment: CENTER_LEFT;
+}
+.nav-btn-active {
+    -fx-background-color: #00A896;
+    -fx-text-fill: white;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+    -fx-background-radius: 6;
+}
+
+/* Paneles */
+.panel {
+    -fx-background-color: white;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+.panel-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E293B;
+}
+.field-label {
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #475569;
+}
+.code {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0F766E;
+}
+
+/* Botones */
+.btn-primary {
+    -fx-background-color: #00A896;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-background-radius: 6;
+}
+.btn-danger {
+    -fx-background-color: #FFF1F2;
+    -fx-text-fill: #BE123C;
+    -fx-border-color: #FECDD3;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-font-weight: bold;
+    -fx-font-size: 10px;
+}
