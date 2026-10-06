@@ -4,6 +4,7 @@ Proyecto del curso **Integrador I (UTP)**: aplicación JavaFX + Scene Builder
 para la gestión de turnos odontológicos (Módulo 5: Agenda y Programación de Citas).
 
 Repo: `https://github.com/maick7747/clinica-dental-agenda` (privado del equipo).
+IDE del equipo: **Apache NetBeans**.
 
 ---
 
@@ -12,24 +13,19 @@ Repo: `https://github.com/maick7747/clinica-dental-agenda` (privado del equipo).
 | Software | Versión | Descarga |
 |---|---|---|
 | JDK | **25** (Oracle OpenJDK 25.0.1+) | https://www.oracle.com/java/technologies/downloads/ (o Adoptium Temurin 25) |
-| IntelliJ IDEA | **Community** (gratis) | https://www.jetbrains.com/idea/download/ |
+| Apache NetBeans | **25 o superior** | https://netbeans.apache.org/download/ |
 | Scene Builder | **26.0.0** (Gluon) | https://gluonhq.com/products/scene-builder/ |
 | Git | última estable | https://git-scm.com/download/win |
 
 Además necesitas una **cuenta de GitHub** y aceptar la invitación de
 colaborador del repo (llega por correo).
 
-> **Nota:** en IntelliJ 2025.3 el plugin oficial `JavaFX` aparece como
-> "solo Ultimate" (bug `IDEA-383145` de JetBrains, no es tu culpa).
-> No lo necesitas: este proyecto abre los `.fxml` con Scene Builder
-> externo (paso 6).
-
 ---
 
 ## 2. Instalación paso a paso (desde cero)
 
 ### Paso 1 — Instalar el JDK 25
-1. Instala el JDK 25 con el instalador (ruta típica: `C:\Program Files\Java\jdk-25`).
+1. Instala el JDK 25 (ruta típica: `C:\Program Files\Java\jdk-25`).
 2. Verifica en terminal:
    ```
    java -version
@@ -51,62 +47,50 @@ colaborador del repo (llega por correo).
    git clone https://github.com/maick7747/clinica-dental-agenda.git
    ```
 
-### Paso 4 — Instalar IntelliJ IDEA Community
-1. Descarga la edición **Community** e instálala.
-2. No toques nada del plugin JavaFX (ver nota arriba).
+### Paso 4 — Registrar el JDK 25 en NetBeans
+1. `Tools → Java Platforms → Add Platform…` → `Java Standard Edition`
+   → carpeta `C:\Program Files\Java\jdk-25` → nombre `JDK 25` → `Finish`.
 
-### Paso 5 — Instalar Scene Builder
-1. Instala Scene Builder 26. Ruta típica:
-   ```
-   C:\Users\TU_USUARIO\AppData\Local\SceneBuilder\SceneBuilder.exe
-   ```
-2. Ábrelo una vez para comprobar que inicia, y ciérralo.
+### Paso 5 — Instalar el soporte JavaFX y enlazar Scene Builder
+1. `Tools → Plugins → Available Plugins` → busca `JavaFX` → instala
+   **JavaFX Kit** (acepta la licencia) → reinicia el IDE.
+2. `Tools → Options → Java → JavaFX` → `Scene Builder Home` → `Browse` →
+   `C:\Users\TU_USUARIO\AppData\Local\SceneBuilder\SceneBuilder.exe`
+   → `Apply → OK`. (Normalmente NetBeans lo detecta solo.)
 
-### Paso 6 — Abrir el proyecto en IntelliJ
-1. `File → Open` → selecciona la carpeta clonada `clinica-dental-agenda`.
-2. Si pide SDK, elige **25** (el JDK del paso 1).
-3. Espera a que IntelliJ importe Maven y descargue JavaFX
-   (barra de progreso abajo, 1-2 min la primera vez).
-   Si algo falta: panel Maven (derecha) → botón **Reload**.
+### Paso 6 — Maven con JDK 25
+1. `Tools → Options → Java → Maven → Execution` → JDK por defecto = **JDK 25**.
+2. Sin esto, la compilación falla con `release version 25 not supported`.
 
-### Paso 7 — Conectar Scene Builder (External Tool)
-1. `Ctrl+Alt+S` → `Tools → External Tools` → `+`.
-2. Completa **exacto**:
-   - Name: `SceneBuilder`
-   - Program: `C:\Users\TU_USUARIO\AppData\Local\SceneBuilder\SceneBuilder.exe`
-   - Arguments: `"$FilePath$"` **← ¡CON comillas dobles!**
-   - Working directory: `$FileDir$`
-3. `Apply → OK`.
-
-> Sin las comillas, las rutas con espacios se rompen en pedazos
-> (error `Could not open ... / Failed to open 8 of 8 files!`).
-
-### Paso 8 — Correr el programa
-1. Panel Maven → `Plugins → javafx → javafx:run` (doble clic).
-2. Debe abrir la ventana **Dentrix Dental — Agenda y Programación de Turnos**.
-3. Para diseñar: clic derecho en `primary.fxml` o `anchor.fxml`
-   → `External Tools → SceneBuilder` → edita → `Ctrl+S`.
+### Paso 7 — Abrir y correr
+1. `File → Open Project` → carpeta `clinica-dental-agenda` → `Open`.
+2. Clic derecho en `demofx` → `Set as Main Project` (si no lo es).
+3. Pulsa **F6** o el ▶ verde: el archivo `nbactions.xml` ya mapea el Run
+   a `javafx:run` y abre la ventana del programa.
+4. Para diseñar: doble clic en `primary.fxml` o `anchor.fxml`
+   (en `Other Sources → src/main/resources → org.example.demofx`) → se abren
+   en Scene Builder dentro del IDE → edita → `Ctrl+S`.
 
 ---
 
-## 3. Las dos vistas
+## 3. Las dos vistas base
 
 | Archivo | Modelo | Uso |
 |---|---|---|
-| `primary.fxml` | `VBox` (apilado automático) | Reordena desde el **Hierarchy**, ajusta `spacing`/`padding` |
+| `primary.fxml` | `VBox` (apilado automático, responsivo) | Reordena desde el **Hierarchy**, ajusta `spacing`/`padding` |
 | `anchor.fxml` | `AnchorPane` (posición libre) | Arrastra con el mouse (`layoutX`/`layoutY`) |
 
-Ambas comparten `agenda.css`, el modelo `Cita.java` y la misma lógica.
-El botón de la barra superior salta de una vista a la otra.
+Decisión del equipo: desarrollar sobre el modelo **responsivo (VBox)**;
+AnchorPane queda como base de experimentación.
 
 ---
 
-## 4. Flujo de trabajo del equipo (ramas + PR)
+## 4. Modo de trabajo del equipo (ramas + PR)
 
 Ramas: `main` (estable) ← `dev` (integración) ← `rama/<apellido>` (cada uno).
 
 ```bash
-# 1. Trae lo último antes de empezar
+# 1. Trae lo último antes de empezar (o Team → Pull en NetBeans)
 git checkout dev
 git pull
 
@@ -123,9 +107,15 @@ git push -u origin rama/tu-apellido
 ```
 
 Reglas:
-- Nunca subas directo a `main`.
-- Haz `pull` en `dev` antes de empezar cada sesión.
-- No subir `target/`, `.idea/` ni `*.class` (ya están en `.gitignore`).
+- Nunca subir directo a `main`.
+- `pull` en `dev` antes de empezar cada sesión.
+- No subir `target/`, `.idea/`, `*.class` ni `.env` (ya están en `.gitignore`).
+
+### Variables de entorno (`.env`)
+- Las claves y conexiones (ej. base de datos) **nunca** van al repo.
+- Copia `.env.example` como `.env` y completa TUS datos locales.
+- Si agregas una variable nueva, agrégala también a `.env.example`
+  (con valor de ejemplo, sin secretos) para que el equipo la conozca.
 
 ---
 
@@ -134,17 +124,17 @@ Reglas:
 ```
 clinica-dental-agenda/
 ├── pom.xml                        # Maven: Java 25 + JavaFX 25.0.1
+├── nbactions.xml                  # F6 → javafx:run en NetBeans
 ├── README.md
+├── .env.example                   # Plantilla de variables (sin secretos)
 └── src/main/
     ├── java/org/example/demofx/
-    │   ├── App.java               # Arranque (ventana 1120x690)
-    │   ├── Cita.java              # Modelo de la tabla de turnos
+    │   ├── App.java               # Arranque (ventana 480x320)
     │   ├── PrimaryController.java # Lógica vista VBox
     │   └── AnchorPaneController.java  # Lógica vista AnchorPane
     └── resources/org/example/demofx/
         ├── primary.fxml           # Vista VBox
-        ├── anchor.fxml            # Vista AnchorPane
-        └── agenda.css             # Estilos Dentrix compartidos
+        └── anchor.fxml            # Vista AnchorPane
 ```
 
 ---
@@ -153,9 +143,8 @@ clinica-dental-agenda/
 
 | Síntoma | Causa | Fix |
 |---|---|---|
-| `Could not open '...' / Failed to open N of N files` | Arguments sin comillas | Paso 7: usa `"$FilePath$"` |
-| No aparece `Languages & Frameworks → JavaFX` | Bug JetBrains 2025.3 (plugin marcado Ultimate) | Normal, no se necesita; usa el External Tool |
-| `invalid target release: 25` / SDK en rojo | Proyecto sin JDK 25 | `File → Project Structure → SDK → 25` |
-| Dependencias en rojo | Maven no descargó | Panel Maven → **Reload** (con internet) |
-| Scene Builder no abre el archivo | Ruta del Program incorrecta | Revisa paso 7 (ruta de TU usuario) |
+| `release version 25 not supported` | Maven corre con otro JDK | Paso 6: Maven Execution JDK = 25 |
+| No aparece `JavaFX` en Options | Falta el plugin | Paso 5: instalar JavaFX Kit |
+| Doble clic al FXML no abre diseñador | Falta Scene Builder Home | Paso 5: registrar el `.exe` |
 | `Remote origin already exists` | Ya hay origin | `git remote set-url origin <URL>` |
+| El IDE no ve cambios externos | Caché de NetBeans | Clic derecho al proyecto → `Reload POM` / reabrir archivo |

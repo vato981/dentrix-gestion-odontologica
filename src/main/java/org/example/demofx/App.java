@@ -12,8 +12,8 @@ public class App extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("primary.fxml"));
-        Scene scene = new Scene(loader.load(), 1120, 690);
-        stage.setTitle("Dentrix Dental — Agenda y Programación de Turnos");
+        Scene scene = new Scene(loader.load(), 480, 320);
+        stage.setTitle("Clinica Dental - Programa");
         stage.setScene(scene);
         stage.show();
     }

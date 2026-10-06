@@ -1,98 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.net.URL?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="640.0" prefWidth="1100.0" style="-fx-background-color: #F1F5F9;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.demofx.AnchorPaneController">
-   <stylesheets>
-      <URL value="@agenda.css" />
-   </stylesheets>
+<AnchorPane prefHeight="320.0" prefWidth="480.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.demofx.AnchorPaneController">
    <children>
-      <!-- Barra superior -->
-      <AnchorPane layoutX="0.0" layoutY="0.0" prefHeight="40.0" prefWidth="1100.0" styleClass="topbar">
-         <children>
-            <Label layoutX="12.0" layoutY="11.0" style="-fx-font-size: 14px;" text="🦷" />
-            <Label layoutX="36.0" layoutY="11.0" styleClass="topbar-title" text="Dentrix Dental — Agenda y Programación de Turnos" />
-            <Button fx:id="btnCambiarVista" layoutX="884.0" layoutY="7.0" mnemonicParsing="false" onAction="#onCambiarVista" prefWidth="100.0" style="-fx-background-color: rgba(255,255,255,0.15); -fx-text-fill: white; -fx-font-size: 10px; -fx-background-radius: 6;" text="Vista VBox" />
-            <Button layoutX="992.0" layoutY="7.0" mnemonicParsing="false" prefWidth="28.0" styleClass="topbar-btn" text="–" />
-            <Button layoutX="1024.0" layoutY="7.0" mnemonicParsing="false" prefWidth="28.0" styleClass="topbar-btn" text="▢" />
-            <Button layoutX="1056.0" layoutY="7.0" mnemonicParsing="false" prefWidth="28.0" styleClass="topbar-btn" text="✕" />
-         </children>
-      </AnchorPane>
-      <!-- Sidebar -->
-      <AnchorPane layoutX="0.0" layoutY="40.0" prefHeight="600.0" prefWidth="180.0" styleClass="sidebar">
-         <children>
-            <Label layoutX="12.0" layoutY="10.0" style="-fx-font-size: 18px;" text="🦷" />
-            <Label layoutX="42.0" layoutY="6.0" styleClass="logo-title" text="Dentrix" />
-            <Label layoutX="42.0" layoutY="22.0" styleClass="logo-sub" text="Centro Odontológico" />
-            <Button layoutX="8.0" layoutY="60.0" mnemonicParsing="false" prefWidth="164.0" styleClass="nav-btn" text="🏠  Inicio" />
-            <Button layoutX="8.0" layoutY="94.0" mnemonicParsing="false" prefWidth="164.0" styleClass="nav-btn" text="🚨  Triaje / Asistencia" />
-            <Button layoutX="8.0" layoutY="128.0" mnemonicParsing="false" prefWidth="164.0" styleClass="nav-btn" text="👥  Pacientes" />
-            <Button layoutX="8.0" layoutY="162.0" mnemonicParsing="false" prefWidth="164.0" styleClass="nav-btn-active" text="📅  Agenda Citas" />
-            <Button layoutX="8.0" layoutY="196.0" mnemonicParsing="false" prefWidth="164.0" styleClass="nav-btn" text="📋  Ficha Clínica" />
-            <Button layoutX="8.0" layoutY="230.0" mnemonicParsing="false" prefWidth="164.0" styleClass="nav-btn" text="💳  Caja / Cobros" />
-            <Button layoutX="8.0" layoutY="264.0" mnemonicParsing="false" prefWidth="164.0" styleClass="nav-btn" text="📊  Reportes" />
-            <Button layoutX="8.0" layoutY="298.0" mnemonicParsing="false" prefWidth="164.0" styleClass="nav-btn" text="⚙  Configuración" />
-            <Label layoutX="12.0" layoutY="496.0" style="-fx-background-color: #E0F7F6; -fx-border-color: #00A896; -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 4 6 4 6; -fx-text-fill: #0F766E; -fx-font-weight: bold; -fx-font-size: 10px;" text="RC" />
-            <Label layoutX="46.0" layoutY="492.0" style="-fx-font-size: 10px; -fx-font-weight: bold;" text="Cristina Campos" />
-            <Label layoutX="46.0" layoutY="508.0" styleClass="logo-sub" text="Agenda y Turnos" />
-            <Button fx:id="btnCerrarSesion" layoutX="8.0" layoutY="540.0" mnemonicParsing="false" onAction="#onCerrarSesion" prefWidth="164.0" styleClass="btn-danger" text="🔒  Cerrar Sesión" />
-         </children>
-      </AnchorPane>
-      <!-- Barra de filtros -->
-      <AnchorPane layoutX="192.0" layoutY="52.0" prefHeight="60.0" prefWidth="896.0" styleClass="panel">
-         <children>
-            <Label layoutX="12.0" layoutY="21.0" style="-fx-font-size: 11px; -fx-font-weight: bold;" text="📅 Fecha:" />
-            <DatePicker fx:id="dpFiltroFecha" layoutX="72.0" layoutY="16.0" prefWidth="135.0" />
-            <Label layoutX="218.0" layoutY="21.0" style="-fx-font-size: 11px; -fx-font-weight: bold;" text="Consultorio / Doctor:" />
-            <ComboBox fx:id="cbFiltroConsultorio" layoutX="362.0" layoutY="16.0" prefWidth="280.0" promptText="Seleccione…" />
-            <Button fx:id="btnNuevaCita" layoutX="748.0" layoutY="15.0" mnemonicParsing="false" onAction="#onNuevaCitaClick" prefWidth="136.0" styleClass="btn-primary" text="➕  Nueva Cita" />
-         </children>
-      </AnchorPane>
-      <!-- Formulario de cita -->
-      <AnchorPane layoutX="192.0" layoutY="124.0" prefHeight="464.0" prefWidth="350.0" styleClass="panel">
-         <children>
-            <Label layoutX="12.0" layoutY="10.0" styleClass="panel-title" text="FORMULARIO DE CITA" />
-            <Label layoutX="272.0" layoutY="10.0" styleClass="code" text="MOD-CITA" />
-            <Label layoutX="12.0" layoutY="40.0" styleClass="field-label" text="IDENTIFICACIÓN DEL PACIENTE (DNI) *" />
-            <TextField fx:id="txtDni" layoutX="12.0" layoutY="58.0" prefWidth="196.0" promptText="8 dígitos" text="47895612" />
-            <Button fx:id="btnValidar" layoutX="216.0" layoutY="58.0" mnemonicParsing="false" onAction="#onValidarClick" prefWidth="122.0" text="Validar" />
-            <Label fx:id="lblPaciente" layoutX="12.0" layoutY="90.0" style="-fx-font-size: 10px;" text="Paciente: Juan Pérez Alania" />
-            <Label layoutX="12.0" layoutY="114.0" styleClass="field-label" text="ODONTÓLOGO &amp; CONSULTORIO ASIGNADO *" />
-            <ComboBox fx:id="cbOdontologo" layoutX="12.0" layoutY="132.0" prefWidth="326.0" promptText="Seleccione…" />
-            <Label layoutX="12.0" layoutY="166.0" styleClass="field-label" text="TRATAMIENTO / SERVICIO *" />
-            <ComboBox fx:id="cbTratamiento" layoutX="12.0" layoutY="184.0" prefWidth="326.0" promptText="Seleccione…" />
-            <Label layoutX="12.0" layoutY="218.0" styleClass="field-label" text="FECHA DE CITA *" />
-            <DatePicker fx:id="dpFecha" layoutX="12.0" layoutY="236.0" prefWidth="156.0" />
-            <Label layoutX="182.0" layoutY="218.0" styleClass="field-label" text="HORARIO DISPONIBLE *" />
-            <ComboBox fx:id="cbHorario" layoutX="182.0" layoutY="236.0" prefWidth="156.0" promptText="Seleccione…" />
-            <Button fx:id="btnGuardar" layoutX="10.0" layoutY="324.0" mnemonicParsing="false" onAction="#onGuardarClick" prefHeight="36.0" prefWidth="160.0" styleClass="btn-primary" text="💾 Guardar Cita" />
-            <Button fx:id="btnEliminar" layoutX="178.0" layoutY="410.0" mnemonicParsing="false" onAction="#onEliminarClick" prefHeight="36.0" prefWidth="160.0" styleClass="btn-danger" text="🗑 Eliminar" />
-         </children>
-      </AnchorPane>
-      <!-- Grilla de turnos -->
-      <AnchorPane layoutX="554.0" layoutY="124.0" prefHeight="464.0" prefWidth="534.0" styleClass="panel">
-         <children>
-            <Label layoutX="12.0" layoutY="10.0" styleClass="panel-title" text="JORNADA DIARIA • 09:00 AM - 06:00 PM" />
-            <Label layoutX="352.0" layoutY="11.0" style="-fx-font-size: 10px; -fx-text-fill: #0F766E; -fx-font-weight: bold;" text="Consultorios 1 y 2 Activos" />
-            <TableView fx:id="tblTurnos" layoutX="12.0" layoutY="44.0" prefHeight="360.0" prefWidth="510.0">
-               <columns>
-                  <TableColumn fx:id="colHorario" prefWidth="95.0" text="Horario" />
-                  <TableColumn fx:id="colConsultorio" prefWidth="95.0" text="Consultorio" />
-                  <TableColumn fx:id="colPaciente" prefWidth="105.0" text="Paciente" />
-                  <TableColumn fx:id="colTratamiento" prefWidth="120.0" text="Tratamiento" />
-                  <TableColumn fx:id="colDoctor" prefWidth="95.0" text="Doctor" />
-               </columns>
-            </TableView>
-            <Button fx:id="btnCargar" layoutX="12.0" layoutY="412.0" mnemonicParsing="false" onAction="#onCargarClick" prefWidth="300.0" text="📥  Cargar selección en formulario (o doble clic)" />
-         </children>
-      </AnchorPane>
+      <Label layoutX="24.0" layoutY="20.0" text="Clinica Dental - Ejemplo AnchorPane" />
+      <Label layoutX="24.0" layoutY="60.0" text="Nombre:" />
+      <TextField fx:id="campoNombre" layoutX="100.0" layoutY="56.0" promptText="Escribe tu nombre" />
+      <Button fx:id="botonSaludar" layoutX="24.0" layoutY="104.0" mnemonicParsing="false" onAction="#onSaludarClick" text="Saludar" />
+      <Label fx:id="mensaje" layoutX="24.0" layoutY="148.0" text="Pulsa Saludar." />
+      <Button layoutX="24.0" layoutY="188.0" mnemonicParsing="false" onAction="#onVolverClick" text="Volver a VBox" />
    </children>
 </AnchorPane>
