@@ -1,0 +1,9 @@
+# Copia este archivo como "config.properties" en la MISMA carpeta (src/main/resources/pe/edu/utp/dentrix/).
+# El archivo config.properties NO se sube al repo (esta en .gitignore): cada quien pone sus datos locales.
+
+db.host=localhost
+db.puerto=5432
+db.nombre=dentrix
+db.esquema=dentrix
+db.usuario=dentrix
+db.clave=tu_clave_local

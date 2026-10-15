@@ -1,0 +1,277 @@
+.root {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
+    -fx-background-color: #E2E8F0;
+    -fx-text-fill: #0F172A;
+}
+
+/* ===== Botones base ===== */
+.button {
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #CBD5E1;
+    -fx-border-width: 1;
+    -fx-text-fill: #334155;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #F1F5F9;
+}
+
+.button:pressed {
+    -fx-background-color: #E2E8F0;
+}
+
+.button:disabled {
+    -fx-opacity: 0.45;
+}
+
+.boton-primario {
+    -fx-background-color: #00A896;
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: transparent;
+    -fx-font-weight: bold;
+}
+
+.boton-primario:hover {
+    -fx-background-color: #0F766E;
+}
+
+.boton-primario:pressed {
+    -fx-background-color: #0B5F59;
+}
+
+.boton-peligro {
+    -fx-background-color: #FEE2E2;
+    -fx-text-fill: #DC2626;
+    -fx-border-color: #FECACA;
+}
+
+.boton-peligro:hover {
+    -fx-background-color: #FECACA;
+}
+
+.boton-mini {
+    -fx-padding: 3 10 3 10;
+    -fx-font-size: 11px;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+}
+
+/* ===== Tarjetas ===== */
+.tarjeta {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 12;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.06), 12, 0, 0, 2);
+}
+
+.tarjeta-titulo {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0F766E;
+}
+
+.tarjeta-etiqueta {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #94A3B8;
+}
+
+/* ===== Etiquetas ===== */
+.label-titulo {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0F172A;
+}
+
+.etiqueta-error {
+    -fx-text-fill: #DC2626;
+}
+
+.etiqueta-ok {
+    -fx-text-fill: #059669;
+}
+
+.etiqueta-estado {
+    -fx-text-fill: #64748B;
+    -fx-font-size: 12px;
+}
+
+.texto-mono {
+    -fx-font-family: "Consolas";
+}
+
+/* ===== Campos ===== */
+.campo-formulario {
+    -fx-background-radius: 8;
+    -fx-border-color: #CBD5E1;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-background-color: #FFFFFF;
+}
+
+.campo-formulario:focused {
+    -fx-border-color: #00A896;
+}
+
+.combo-formulario {
+    -fx-background-radius: 8;
+    -fx-border-color: #CBD5E1;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+/* ===== Tablas ===== */
+.tabla-datos {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E2E8F0;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.tabla-datos .column-header {
+    -fx-background-color: #F8FAFC;
+    -fx-size: 34px;
+    -fx-border-color: transparent transparent #E2E8F0 transparent;
+}
+
+.tabla-datos .column-header .label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #64748B;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.tabla-datos .table-cell {
+    -fx-font-size: 12px;
+    -fx-text-fill: #0F172A;
+    -fx-border-color: transparent transparent #F1F5F9 transparent;
+}
+
+.tabla-datos .table-row-cell:filled:hover {
+    -fx-background-color: #F0FDFA;
+}
+
+.tabla-datos .table-row-cell:filled:selected {
+    -fx-background-color: #CCFBF1;
+    -fx-text-fill: #0F172A;
+}
+
+/* ===== Badges de estado ===== */
+.badge {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+
+.badge-verde {
+    -fx-background-color: #D1FAE5;
+    -fx-text-fill: #065F46;
+}
+
+.badge-amarillo {
+    -fx-background-color: #FEF3C7;
+    -fx-text-fill: #92400E;
+}
+
+.badge-rojo {
+    -fx-background-color: #FEE2E2;
+    -fx-text-fill: #B91C1C;
+}
+
+.badge-azul {
+    -fx-background-color: #E0F2FE;
+    -fx-text-fill: #0369A1;
+}
+
+.badge-naranja {
+    -fx-background-color: #FFEDD5;
+    -fx-text-fill: #C2410C;
+}
+
+.badge-gris {
+    -fx-background-color: #F1F5F9;
+    -fx-text-fill: #475569;
+}
+
+/* ===== Shell (barra superior + sidebar) ===== */
+.barra-superior {
+    -fx-background-color: #0F766E;
+    -fx-padding: 12 20 12 20;
+}
+
+.sidebar {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: transparent #E2E8F0 transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 18 12 16 12;
+}
+
+.nav-boton {
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 10 14 10 14;
+    -fx-background-radius: 8;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #475569;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-content-display: LEFT;
+}
+
+.nav-boton:hover {
+    -fx-background-color: #F1F5F9;
+}
+
+.nav-activo {
+    -fx-background-color: #00A896;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-weight: bold;
+}
+
+.nav-activo:hover {
+    -fx-background-color: #00A896;
+}
+
+/* ===== KPIs ===== */
+.kpi-titulo {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #64748B;
+}
+
+.kpi-valor {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0F172A;
+}
+
+/* ===== Paneñas ===== */
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: #E2E8F0;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #F1F5F9;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #FFFFFF;
+}
+
+.tab-pane > .tab-content-area {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 12;
+}

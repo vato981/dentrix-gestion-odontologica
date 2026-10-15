@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pe.edu.utp.dentrix.controller.FichaClinicaController">
+    <top>
+        <VBox style="-fx-padding: 0 0 14 0;">
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <children>
+                        <Label text="Ficha clínica" styleClass="label-titulo" />
+                        <Label HBox.hgrow="ALWAYS" text=" " />
+                        <Button text="Volver" onAction="#onVolverClick" />
+                        <Button text="⟳ Refrescar" onAction="#onRefrescarClick" />
+                        <Button styleClass="boton-primario" text="✚ Nueva Ficha" onAction="#onNuevaFichaClick" />
+                    </children>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 10 0 0 0;">
+                    <children>
+                        <Label text="Paciente:" />
+                        <ComboBox fx:id="comboPaciente" prefWidth="340.0" />
+                        <Label text="Ficha:" />
+                        <ComboBox fx:id="comboFichas" prefWidth="300.0" />
+                        <Label fx:id="etiquetaFicha" styleClass="etiqueta-estado" text="" HBox.hgrow="ALWAYS" wrapText="true" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+    <center>
+        <HBox spacing="16.0" BorderPane.alignment="CENTER">
+            <children>
+                <VBox spacing="10.0" prefWidth="520.0" styleClass="tarjeta" HBox.hgrow="NEVER">
+                    <children>
+                        <Label styleClass="tarjeta-titulo" text="ODONTOGRAMA FDI (RF-06)" />
+                        <Label style="-fx-font-size: 11px;" text="Elige una herramienta y haz clic en la pieza:" />
+                        <HBox alignment="CENTER_LEFT" spacing="6.0">
+                            <children>
+                                <ToggleButton fx:id="herrSano" selected="true" styleClass="boton-mini" text="✔ Sano" />
+                                <ToggleButton fx:id="herrCaries" styleClass="boton-mini" style="-fx-background-color: #FEE2E2; -fx-text-fill: #991B1B;" text="● Caries" />
+                                <ToggleButton fx:id="herrObturado" styleClass="boton-mini" style="-fx-background-color: #DBEAFE; -fx-text-fill: #1E40AF;" text="■ Obturado" />
+                                <ToggleButton fx:id="herrAusente" styleClass="boton-mini" style="-fx-background-color: #E5E7EB; -fx-text-fill: #374151;" text="✕ Ausente" />
+                            </children>
+                        </HBox>
+                        <FlowPane fx:id="panelOdontograma" hgap="4.0" prefHeight="210.0" vgap="6.0" style="-fx-padding: 6; -fx-background-color: #F8FAFC; -fx-border-color: #E2E8F0;" />
+                        <Label fx:id="etiquetaOdontograma" styleClass="etiqueta-estado" text="" wrapText="true" />
+                        <Label styleClass="tarjeta-titulo" text="REGISTRO DE HALLAZGOS" />
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                            <children>
+                                <Label style="-fx-font-size: 11px;" text="Pieza:" />
+                                <ComboBox fx:id="comboPiezaOdonto" prefWidth="80.0" />
+                                <Label style="-fx-font-size: 11px;" text="Estado:" />
+                                <ComboBox fx:id="comboEstadoPieza" prefWidth="130.0" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                            <children>
+                                <Label style="-fx-font-size: 11px;" text="Cara:" />
+                                <ComboBox fx:id="comboCara" prefWidth="120.0" />
+                                <TextField fx:id="campoObsPieza" prefWidth="180.0" promptText="Observación" styleClass="campo-formulario" />
+                                <Button text="Guardar pieza" onAction="#onGuardarPiezaClick" />
+                                <Button text="Quitar pieza" onAction="#onQuitarPiezaClick" />
+                            </children>
+                        </HBox>
+                        <TableView fx:id="tablaOdontograma" prefHeight="160.0" styleClass="tabla-datos" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colOdoPieza" prefWidth="70.0" text="PIEZA" />
+                                <TableColumn fx:id="colOdoEstado" prefWidth="110.0" text="ESTADO" />
+                                <TableColumn fx:id="colOdoCara" prefWidth="100.0" text="CARA" />
+                                <TableColumn fx:id="colOdoObs" prefWidth="200.0" text="OBSERVACIÓN" />
+                                <TableColumn fx:id="colOdoFecha" prefWidth="140.0" text="ÚLT. REGISTRO" />
+                            </columns>
+                        </TableView>
+                    </children>
+                </VBox>
+                <ScrollPane fitToWidth="true" focusTraversable="false" HBox.hgrow="ALWAYS" pannable="true" style="-fx-background-color: transparent; -fx-background-insets: 0;">
+                    <content>
+                        <VBox spacing="14.0">
+                            <children>
+                                <VBox spacing="8.0" styleClass="tarjeta">
+                                    <children>
+                                        <Label styleClass="tarjeta-titulo" text="ANAMNESIS / CONTENIDO CLÍNICO" />
+                                        <Label style="-fx-font-size: 11px;" text="Motivo de consulta" />
+                                        <TextArea fx:id="areaMotivo" prefHeight="54.0" wrapText="true" />
+                                        <Label style="-fx-font-size: 11px;" text="Examen clínico" />
+                                        <TextArea fx:id="areaExamen" prefHeight="66.0" wrapText="true" />
+                                        <Label style="-fx-font-size: 11px;" text="Prescripción" />
+                                        <TextArea fx:id="areaPrescripcion" prefHeight="54.0" wrapText="true" />
+                                        <Label style="-fx-font-size: 11px;" text="Plan e indicaciones" />
+                                        <TextArea fx:id="areaPlan" prefHeight="54.0" wrapText="true" />
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <children>
+                                                <Button styleClass="boton-primario" text="💾 Guardar contenido" onAction="#onGuardarContenidoClick" />
+                                                <Label fx:id="etiquetaContenido" styleClass="etiqueta-estado" text="" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
+                                <VBox spacing="8.0" styleClass="tarjeta">
+                                    <children>
+                                        <Label styleClass="tarjeta-titulo" text="DIAGNÓSTICOS CIE-10" />
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <ComboBox fx:id="comboCie10" prefWidth="280.0" />
+                                                <Label style="-fx-font-size: 11px;" text="Pieza FDI:" />
+                                                <ComboBox fx:id="comboPiezaDiag" prefWidth="80.0" />
+                                                <CheckBox fx:id="checkPrincipal" text="Principal" />
+                                                <TextField fx:id="campoObsDiag" prefWidth="160.0" promptText="Observación" styleClass="campo-formulario" />
+                                                <Button text="Agregar" onAction="#onAgregarDiagnosticoClick" />
+                                            </children>
+                                        </HBox>
+                                        <TableView fx:id="tablaDiagnosticos" prefHeight="140.0" styleClass="tabla-datos">
+                                            <columns>
+                                                <TableColumn fx:id="colDiagCodigo" prefWidth="90.0" text="CIE-10" />
+                                                <TableColumn fx:id="colDiagDescripcion" prefWidth="240.0" text="DESCRIPCIÓN" />
+                                                <TableColumn fx:id="colDiagPieza" prefWidth="70.0" text="PIEZA" />
+                                                <TableColumn fx:id="colDiagPrincipal" prefWidth="90.0" text="PRINCIPAL" />
+                                                <TableColumn fx:id="colDiagObs" prefWidth="180.0" text="OBSERVACIÓN" />
+                                            </columns>
+                                        </TableView>
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <children>
+                                                <Button text="Quitar diagnóstico" onAction="#onQuitarDiagnosticoClick" />
+                                                <Button text="Quitar todos" onAction="#onQuitarTodosDiagnosticosClick" />
+                                                <Label HBox.hgrow="ALWAYS" text=" " />
+                                                <Label styleClass="etiqueta-estado" text="RF-06: solo un principal por ficha." />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
+                                <VBox spacing="8.0" styleClass="tarjeta">
+                                    <children>
+                                        <Label styleClass="tarjeta-titulo" text="PLAN DE TRATAMIENTO" />
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <ComboBox fx:id="comboTratamiento" prefWidth="280.0" />
+                                                <Label style="-fx-font-size: 11px;" text="Pieza:" />
+                                                <ComboBox fx:id="comboPiezaPlan" prefWidth="80.0" />
+                                                <TextField fx:id="campoCantidadPlan" prefWidth="55.0" styleClass="campo-formulario" text="1" />
+                                                <Button text="Agregar línea" onAction="#onAgregarLineaPlanClick" />
+                                            </children>
+                                        </HBox>
+                                        <TableView fx:id="tablaPlan" prefHeight="140.0" styleClass="tabla-datos">
+                                            <columns>
+                                                <TableColumn fx:id="colPlanTrat" prefWidth="240.0" text="TRATAMIENTO" />
+                                                <TableColumn fx:id="colPlanPieza" prefWidth="70.0" text="PIEZA" />
+                                                <TableColumn fx:id="colPlanCant" prefWidth="60.0" text="CANT." />
+                                                <TableColumn fx:id="colPlanPrecio" prefWidth="90.0" text="P. UNIT." />
+                                                <TableColumn fx:id="colPlanSubtotal" prefWidth="100.0" text="SUBTOTAL" />
+                                                <TableColumn fx:id="colPlanEstado" prefWidth="110.0" text="ESTADO" />
+                                            </columns>
+                                        </TableView>
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <children>
+                                                <Button text="Marcar ejecutada" onAction="#onMarcarEjecutadaClick" />
+                                                <Button text="Eliminar línea" onAction="#onEliminarLineaClick" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
+                                <VBox spacing="10.0" styleClass="tarjeta">
+                                    <children>
+                                        <Label styleClass="tarjeta-titulo" text="DERIVACIÓN A CAJA" />
+                                        <Label fx:id="etiquetaDerivacion" style="-fx-font-size: 12px;" text="Sin ficha seleccionada." wrapText="true" />
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <children>
+                                                <Button styleClass="boton-primario" text="Derivar a caja" onAction="#onDerivarClick" />
+                                                <Button text="Rechazar derivación" onAction="#onRechazarClick" />
+                                                <Button text="Verificar si es cobrable" onAction="#onVerificarCobrableClick" />
+                                            </children>
+                                        </HBox>
+                                        <Label fx:id="etiquetaDerivResultado" styleClass="etiqueta-estado" text="" wrapText="true" />
+                                        <Label styleClass="etiqueta-estado" text="RF-07: caja solo puede facturar fichas con derivación ACEPTADA." />
+                                    </children>
+                                </VBox>
+                            </children>
+                        </VBox>
+                    </content>
+                </ScrollPane>
+            </children>
+        </HBox>
+    </center>
+</BorderPane>

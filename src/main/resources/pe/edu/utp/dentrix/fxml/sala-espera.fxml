@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pe.edu.utp.dentrix.controller.SalaEsperaController">
+    <top>
+        <VBox spacing="10.0" style="-fx-padding: 0 0 14 0;">
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <children>
+                        <Label text="Control de asistencia" styleClass="label-titulo" />
+                        <Label HBox.hgrow="ALWAYS" text=" " />
+                        <Button text="Volver" onAction="#onVolverClick" />
+                        <Button text="⟳ Refrescar" onAction="#onRefrescarClick" />
+                        <Button styleClass="boton-primario" text="📋 Ver en Agenda →" onAction="#onVerAgendaClick" />
+                    </children>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <children>
+                        <Label fx:id="etiquetaFecha" styleClass="tarjeta-titulo" text="📅 Control Diario" />
+                        <Label HBox.hgrow="ALWAYS" text=" " />
+                        <Label fx:id="etiquetaAsistieron" styleClass="badge-verde" text="✔ Asistieron: 0" />
+                        <Label fx:id="etiquetaFaltantes" styleClass="badge-rojo" text="✖ Faltantes: 0" />
+                        <Label fx:id="etiquetaPendientes" styleClass="badge-gris" text="⏳ Pendientes: 0" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+    <center>
+        <HBox spacing="16.0" BorderPane.alignment="CENTER">
+            <children>
+                <VBox spacing="10.0" prefWidth="420.0" styleClass="tarjeta" HBox.hgrow="NEVER">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                            <children>
+                                <Label styleClass="tarjeta-titulo" text="PANEL OPERATIVO DEL PACIENTE" />
+                                <Label HBox.hgrow="ALWAYS" text=" " />
+                                <Label styleClass="tarjeta-etiqueta" text="TRIAJE-01" />
+                            </children>
+                        </HBox>
+                        <VBox spacing="4.0" style="-fx-background-color: #E0F7F6; -fx-background-radius: 8; -fx-padding: 12; -fx-border-color: #99F6E4; -fx-border-radius: 8;">
+                            <children>
+                                <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #0F766E;" text="PACIENTE SELECCIONADO EN LA COLA:" />
+                                <Label fx:id="etiquetaSelPaciente" style="-fx-font-size: 13px; -fx-font-weight: bold;" text="— selecciona una fila —" wrapText="true" />
+                                <Label fx:id="etiquetaSelDetalle" style="-fx-font-size: 12px; -fx-text-fill: #475569;" text="" wrapText="true" />
+                            </children>
+                        </VBox>
+                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="ESTADO DE ASISTENCIA DEL TURNO (RF-03):" />
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <children>
+                                <Button fx:id="btnAsistio" disable="true" onAction="#onAsistioClick" styleClass="boton-primario" text="✔ Asistió (En Sala)" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                                <Button fx:id="btnFalto" disable="true" onAction="#onFaltoClick" text="✖ No Asistió (Faltó)" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                            </children>
+                        </HBox>
+                        <Label fx:id="etiquetaOperacion" styleClass="etiqueta-estado" text="" wrapText="true" />
+                        <Label style="-fx-font-size: 11px; -fx-text-fill: #64748B;" wrapText="true" text="El paciente asistido continúa su atención desde la Agenda (M5): confirmar, iniciar y finalizar la atención del odontólogo." />
+                    </children>
+                </VBox>
+                <VBox spacing="10.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                            <children>
+                                <Label styleClass="tarjeta-titulo" text="COLA DE ATENCIÓN Y SALA DE ESPERA (EN VIVO)" />
+                                <Label HBox.hgrow="ALWAYS" text=" " />
+                                <Label styleClass="tarjeta-etiqueta" text="Consultorios 1 y 2" />
+                            </children>
+                        </HBox>
+                        <TableView fx:id="tablaCola" styleClass="tabla-datos" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colHora" prefWidth="120.0" text="HORARIO" />
+                                <TableColumn fx:id="colDoctor" prefWidth="170.0" text="CONSULT. / DOCTOR" />
+                                <TableColumn fx:id="colPaciente" prefWidth="170.0" text="PACIENTE" />
+                                <TableColumn fx:id="colTratamiento" prefWidth="180.0" text="TRATAMIENTO" />
+                                <TableColumn fx:id="colEstado" prefWidth="120.0" text="ESTADO" />
+                                <TableColumn fx:id="colAccion" prefWidth="110.0" text="ACCIÓN" />
+                            </columns>
+                        </TableView>
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
+    </center>
+</BorderPane>

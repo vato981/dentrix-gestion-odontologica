@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pe.edu.utp.dentrix.controller.MenuPrincipalController">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="barra-superior" BorderPane.alignment="CENTER">
+            <children>
+                <Label text="🦷" style="-fx-font-size: 16px;" />
+                <Label text="Dentrix Dental" style="-fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold;" />
+                <Label fx:id="etiquetaPantalla" text="— Consola Principal" style="-fx-text-fill: #99F6E4; -fx-font-size: 13px;" />
+                <Label HBox.hgrow="ALWAYS" text=" " />
+                <Label text="Centro Odontológico" style="-fx-text-fill: #99F6E4; -fx-font-size: 12px;" />
+            </children>
+        </HBox>
+    </top>
+    <left>
+        <VBox spacing="4.0" styleClass="sidebar" BorderPane.alignment="CENTER" prefWidth="220.0">
+            <children>
+                <Label text="Dentrix" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #0F766E;" />
+                <Label text="Centro Odontológico" style="-fx-font-size: 11px; -fx-text-fill: #64748B;" />
+                <Label text=" " style="-fx-font-size: 6px;" />
+                <Button fx:id="btnInicio" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="⌂  Inicio" />
+                <Button fx:id="btnSalaEspera" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="🚑  Sala de espera" />
+                <Button fx:id="btnPacientes" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="▦  Pacientes" />
+                <Button fx:id="btnAgenda" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="📅  Agenda" />
+                <Button fx:id="btnFicha" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="🩺  Ficha clínica" />
+                <Button fx:id="btnCaja" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="💰  Caja / Cobros" />
+                <Button fx:id="btnReportes" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="📊  Reportes" />
+                <Button fx:id="btnUsuarios" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="👥  Usuarios" />
+                <Button fx:id="btnConfiguracion" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="⚙  Configuración" />
+                <Region VBox.vgrow="ALWAYS" />
+                <Label fx:id="etiquetaUsuario" text="" style="-fx-font-weight: bold;" />
+                <Label fx:id="etiquetaRol" text="" style="-fx-font-size: 11px; -fx-text-fill: #64748B;" />
+                <Label text=" " style="-fx-font-size: 4px;" />
+                <Button maxWidth="Infinity" onAction="#onSalirClick" styleClass="boton-peligro, nav-boton" text="⏻  Cerrar sesión" />
+            </children>
+        </VBox>
+    </left>
+    <center>
+        <StackPane fx:id="panelContenido" BorderPane.alignment="CENTER" style="-fx-padding: 16 20 20 20;" />
+    </center>
+</BorderPane>
