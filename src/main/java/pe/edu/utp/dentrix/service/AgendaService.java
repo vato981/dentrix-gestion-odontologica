@@ -37,7 +37,8 @@ public class AgendaService {
             throw new DentrixException("La fecha de la agenda es obligatoria");
         }
         List<Cita> citas = new ArrayList<>(citaDAO.listarPorFecha(fecha));
-        citas.sort(Comparator.comparing(Cita::getHoraInicio));
+        citas.sort(Comparator.comparing(Cita::getHoraInicio,
+                Comparator.nullsLast(java.time.LocalTime::compareTo)));
         return citas;
     }
 
@@ -187,9 +188,8 @@ public class AgendaService {
                 throw new DentrixException("El consultorio ya tiene una cita a las " + cita.getHoraInicio());
             }
         }
-        for (Cita otra : citaDAO.listarPorPaciente(cita.getPacienteId())) {
-            if (cita.getFechaCita().equals(otra.getFechaCita())
-                    && cita.getHoraInicio().equals(otra.getHoraInicio())
+        for (Cita otra : citaDAO.listarPorPacienteEnFecha(cita.getPacienteId(), cita.getFechaCita())) {
+            if (cita.getHoraInicio().equals(otra.getHoraInicio())
                     && !"CANCELADA".equals(otra.getEstado())) {
                 throw new DentrixException("El paciente ya tiene una cita a las " + cita.getHoraInicio());
             }

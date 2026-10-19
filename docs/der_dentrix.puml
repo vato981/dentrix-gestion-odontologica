@@ -1,0 +1,205 @@
+@startuml DER Dentrix - Base de datos odontologica
+' Diagrama Entidad-Relacion (notacion pata de gallo) - esquema dentrix v2
+skinparam linetype ortho
+skinparam nodesep 25
+skinparam ranksep 35
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam class {
+  BackgroundColor #F5F8FC
+  BorderColor #2E5A88
+  ArrowColor #2E5A88
+}
+hide circle
+hide empty members
+
+entity "rol" as rol {
+  * id : SERIAL <<PK>>
+  --
+  codigo : VARCHAR(20) <<UQ>>
+  nombre : VARCHAR(40)
+}
+
+entity "configuracion" as conf {
+  * id : INT <<PK>> (singleton = 1)
+  --
+  razon_social : VARCHAR(120)
+  ruc : CHAR(11)
+  igv_porcentaje : NUMERIC(4,2)
+  serie_boleta : VARCHAR(10)
+}
+
+entity "consultorio" as cons {
+  * id : SERIAL <<PK>>
+  --
+  codigo : VARCHAR(4) <<UQ>>
+  nombre : VARCHAR(60)
+  especialidad : VARCHAR(60)
+  estado : VARCHAR(20)
+}
+
+entity "usuario" as usr {
+  * id : SERIAL <<PK>>
+  --
+  username : VARCHAR(30) <<UQ>>
+  password_hash : VARCHAR(80)
+  dni : CHAR(8) <<UQ>>
+  rol_id : INT <<FK>>
+  colegiatura : VARCHAR(20)
+  especialidad : VARCHAR(60)
+  consultorio_id : INT <<FK>>
+  estado : estado_usuario
+}
+
+entity "paciente" as pac {
+  * id : SERIAL <<PK>>
+  --
+  codigo_hc : VARCHAR(15) <<UQ>>
+  dni : CHAR(8) <<UQ>>
+  nombres : VARCHAR(60)
+  apellidos : VARCHAR(60)
+  alergias : VARCHAR(200)
+  antecedentes : TEXT
+  fecha_apertura : DATE
+  usuario_registro_id : INT <<FK>>
+}
+
+entity "diagnostico_cie10" as cie {
+  * codigo : VARCHAR(7) <<PK>>
+  --
+  descripcion : VARCHAR(160)
+  capitulo : VARCHAR(80)
+  es_frecuente : BOOLEAN
+}
+
+entity "tratamiento" as trat {
+  * id : SERIAL <<PK>>
+  --
+  codigo : VARCHAR(10) <<UQ>>
+  nombre : VARCHAR(80)
+  calculo : VARCHAR(20)
+  precio : NUMERIC(10,2)
+  estado : VARCHAR(15)
+}
+
+entity "cita" as cita {
+  * id : BIGSERIAL <<PK>>
+  --
+  tipo : tipo_bloque
+  paciente_id : INT <<FK>>
+  usuario_id : INT <<FK>>
+  consultorio_id : INT <<FK>>
+  fecha_cita : DATE
+  hora_inicio : TIME
+  hora_fin : TIME
+  tratamiento_id : INT <<FK>>
+  estado : estado_cita
+}
+
+entity "ficha_clinica" as ficha {
+  * id : BIGSERIAL <<PK>>
+  --
+  paciente_id : INT <<FK>>
+  cita_id : BIGINT <<FK>>
+  odontologo_id : INT <<FK>>
+  fecha : TIMESTAMP
+  motivo_consulta : VARCHAR(200)
+  estado_derivacion : estado_derivacion
+  derivado_a_caja : BOOLEAN
+}
+
+entity "ficha_diagnostico" as fdiag {
+  * ficha_id : BIGINT <<PK,FK>>
+  * cie10_codigo : VARCHAR(7) <<PK,FK>>
+  --
+  pieza_fdi : SMALLINT
+  es_principal : BOOLEAN
+  observacion : VARCHAR(120)
+}
+
+entity "hallazgo_dental" as hall {
+  * paciente_id : INT <<PK,FK>>
+  * pieza_fdi : SMALLINT <<PK>>
+  --
+  estado : estado_pieza
+  cara : VARCHAR(20)
+  observacion : VARCHAR(120)
+  ultima_ficha_id : BIGINT <<FK>>
+}
+
+entity "cierre_caja" as cierre {
+  * id : BIGSERIAL <<PK>>
+  --
+  fecha : DATE
+  turno : VARCHAR(10)
+  cajero_id : INT <<FK>>
+  fondo_inicial : NUMERIC(10,2)
+  historial_fondos : JSONB
+  efectivo_sistema : NUMERIC(12,2)
+  billeteras_sistema : NUMERIC(12,2)
+  efectivo_contado : NUMERIC(12,2)
+  diferencia : NUMERIC(12,2) <<calculada>>
+  estado : estado_cierre
+}
+
+entity "pago" as pago {
+  * id : BIGSERIAL <<PK>>
+  --
+  numero : VARCHAR(20) <<UQ>>
+  tipo : tipo_documento
+  pago_origen_id : BIGINT <<FK>>
+  fecha : TIMESTAMP
+  paciente_id : INT <<FK>>
+  ficha_id : BIGINT <<FK>>
+  odontologo_id : INT <<FK>>
+  usuario_caja_id : INT <<FK>>
+  cierre_id : BIGINT <<FK>>
+  modalidad : modalidad_pago
+  operacion_ref : VARCHAR(40)
+  monto : NUMERIC(10,2)
+  saldo_deudor : NUMERIC(10,2)
+  estado_pago : estado_pago
+}
+
+entity "plan_tratamiento" as plan {
+  * id : BIGSERIAL <<PK>>
+  --
+  paciente_id : INT <<FK>>
+  tratamiento_id : INT <<FK>>
+  ficha_id : BIGINT <<FK>>
+  pago_id : BIGINT <<FK>>
+  pieza_fdi : SMALLINT
+  cantidad : INT
+  precio_unitario : NUMERIC(10,2)
+  subtotal : NUMERIC(10,2) <<calculada>>
+  estado : estado_linea
+}
+
+rol ||--o{ usr : "1 rol define N usuarios"
+cons ||--o{ usr : "asigna"
+cons ||--o{ cita : "recibe"
+usr ||--o{ cita : "atiende"
+usr ||--o{ ficha : "firma"
+usr ||--o{ cierre : "abre / consolida"
+usr ||--o{ pago : "cobra en caja"
+usr ||--o{ pac : "registra"
+pac ||--o{ cita : "agenda"
+pac ||--o{ ficha : "acumula"
+pac ||--o{ hall : "odontograma"
+pac ||--o{ plan : "planifica"
+pac ||--o{ pago : "paga"
+trat ||--o{ cita : "motivo"
+trat ||--o{ plan : "tarifa"
+cita ||--o| ficha : "genera (0..1)"
+ficha ||--o{ fdiag : "diagnostica"
+cie ||--o{ fdiag : "clasifica"
+ficha ||--o{ plan : "ejecuta"
+ficha ||--o| pago : "cobra (RF-07)"
+cierre ||--o{ pago : "agrupa del turno"
+pago ||--o{ pago : "abonos (pago_origen_id)"
+pago ||--o{ plan : "lineas de boleta"
+conf ..> cierre : "IGV / serie (M9.3)"
+
+@enduml

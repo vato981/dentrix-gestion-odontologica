@@ -52,6 +52,19 @@ public class FichaDiagnosticoDAOImpl implements FichaDiagnosticoDAO {
     }
 
     @Override
+    public int desmarcarPrincipales(Long fichaId) throws DentrixException {
+        String sql = "UPDATE ficha_diagnostico SET es_principal = FALSE "
+                + "WHERE ficha_id = ? AND es_principal = TRUE";
+        try (Connection cn = ConexionBD.abrir();
+             PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setObject(1, fichaId);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DentrixException("No se pudo actualizar el diagnostico principal: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public boolean actualizar(FichaDiagnostico diagnostico) throws DentrixException {
         String sql = "UPDATE ficha_diagnostico SET pieza_fdi = ?, es_principal = ?, observacion = ? "
                 + "WHERE ficha_id = ? AND cie10_codigo = ?";

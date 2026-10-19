@@ -41,17 +41,17 @@
                                 </HBox>
                                 <HBox alignment="CENTER_LEFT" spacing="8.0">
                                     <children>
-                                        <TextField fx:id="campoCodTrat" prefWidth="100.0" promptText="Código" styleClass="campo-formulario" />
-                                        <TextField fx:id="campoNomTrat" prefWidth="240.0" promptText="Nombre del procedimiento" styleClass="campo-formulario" />
+                                        <TextField fx:id="campoCodTrat" prefWidth="100.0" promptText="Código" styleClass="text-field, campo-formulario" />
+                                        <TextField fx:id="campoNomTrat" prefWidth="240.0" promptText="Nombre del procedimiento" styleClass="text-field, campo-formulario" />
                                         <ComboBox fx:id="comboEspecialidad" prefWidth="160.0" promptText="Especialidad" />
                                         <ComboBox fx:id="comboCalculo" prefWidth="110.0" />
-                                        <TextField fx:id="campoPrecio" prefWidth="90.0" promptText="Precio S/" styleClass="campo-formulario" />
-                                        <Button styleClass="boton-primario" text="💾 Guardar" onAction="#onGuardarTratamientoClick" />
+                                        <TextField fx:id="campoPrecio" prefWidth="90.0" promptText="Precio S/" styleClass="text-field, campo-formulario" />
+                                        <Button styleClass="button, boton-primario" text="💾 Guardar" onAction="#onGuardarTratamientoClick" />
                                         <Button text="Nuevo" onAction="#onNuevoTratamientoClick" />
                                     </children>
                                 </HBox>
                                 <Label fx:id="etiquetaTratError" styleClass="etiqueta-error" text="" wrapText="true" />
-                                <TableView fx:id="tablaTratamientos" prefHeight="220.0" styleClass="tabla-datos">
+                                <TableView fx:id="tablaTratamientos" prefHeight="220.0" styleClass="table-view, tabla-datos">
                                     <columns>
                                         <TableColumn fx:id="colTCodigo" prefWidth="100.0" text="CÓDIGO" />
                                         <TableColumn fx:id="colTNombre" prefWidth="260.0" text="NOMBRE" />
@@ -75,16 +75,16 @@
                                 </HBox>
                                 <HBox alignment="CENTER_LEFT" spacing="8.0">
                                     <children>
-                                        <TextField fx:id="campoCodCie" prefWidth="100.0" promptText="K02.1" styleClass="campo-formulario" />
-                                        <TextField fx:id="campoDescCie" prefWidth="300.0" promptText="Descripción del diagnóstico" styleClass="campo-formulario" />
-                                        <TextField fx:id="campoCapCie" prefWidth="200.0" promptText="Capítulo" styleClass="campo-formulario" />
+                                        <TextField fx:id="campoCodCie" prefWidth="100.0" promptText="K02.1" styleClass="text-field, campo-formulario" />
+                                        <TextField fx:id="campoDescCie" prefWidth="300.0" promptText="Descripción del diagnóstico" styleClass="text-field, campo-formulario" />
+                                        <TextField fx:id="campoCapCie" prefWidth="200.0" promptText="Capítulo" styleClass="text-field, campo-formulario" />
                                         <CheckBox fx:id="checkFrecuente" text="Frecuente" />
-                                        <Button styleClass="boton-primario" text="💾 Guardar" onAction="#onGuardarCieClick" />
+                                        <Button styleClass="button, boton-primario" text="💾 Guardar" onAction="#onGuardarCieClick" />
                                         <Button text="Nuevo" onAction="#onNuevoCieClick" />
                                     </children>
                                 </HBox>
                                 <Label fx:id="etiquetaCieError" styleClass="etiqueta-error" text="" wrapText="true" />
-                                <TableView fx:id="tablaCie" prefHeight="200.0" styleClass="tabla-datos">
+                                <TableView fx:id="tablaCie" prefHeight="200.0" styleClass="table-view, tabla-datos">
                                     <columns>
                                         <TableColumn fx:id="colCCodigo" prefWidth="100.0" text="CÓDIGO" />
                                         <TableColumn fx:id="colCDesc" prefWidth="320.0" text="DESCRIPCIÓN" />
@@ -107,13 +107,13 @@
                                     </columnConstraints>
                                     <children>
                                         <Label style="-fx-font-size: 11px;" text="Razón social:" GridPane.rowIndex="0" />
-                                        <TextField fx:id="campoRazonSocial" styleClass="campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                        <TextField fx:id="campoRazonSocial" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
                                         <Label style="-fx-font-size: 11px;" text="RUC:" GridPane.rowIndex="0" GridPane.columnIndex="2" />
-                                        <TextField fx:id="campoRuc" styleClass="campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                                        <TextField fx:id="campoRuc" styleClass="text-field, campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="0" />
                                         <Label style="-fx-font-size: 11px;" text="Dirección:" GridPane.rowIndex="1" />
                                         <TextField fx:id="campoDireccion" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                         <Label style="-fx-font-size: 11px;" text="Teléfono:" GridPane.rowIndex="1" GridPane.columnIndex="2" />
-                                        <TextField fx:id="campoTelefono" styleClass="campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                                        <TextField fx:id="campoTelefono" styleClass="text-field, campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="1" />
                                         <Label style="-fx-font-size: 11px;" text="Email:" GridPane.rowIndex="2" />
                                         <TextField fx:id="campoEmail" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                         <Label style="-fx-font-size: 11px;" text="Representante legal:" GridPane.rowIndex="2" GridPane.columnIndex="2" />
@@ -125,26 +125,26 @@
                                         <Label style="-fx-font-size: 11px;" text="Licencia municipal:" GridPane.rowIndex="4" />
                                         <TextField fx:id="campoLicMunicipal" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                         <Label style="-fx-font-size: 11px;" text="Serie boleta:" GridPane.rowIndex="4" GridPane.columnIndex="2" />
-                                        <TextField fx:id="campoSerieBoleta" styleClass="campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+                                        <TextField fx:id="campoSerieBoleta" styleClass="text-field, campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="4" />
                                         <Label style="-fx-font-size: 11px;" text="Apertura:" GridPane.rowIndex="5" />
-                                        <TextField fx:id="campoHoraApertura" prefWidth="90.0" promptText="08:00" styleClass="campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                        <TextField fx:id="campoHoraApertura" prefWidth="90.0" promptText="08:00" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                                         <Label style="-fx-font-size: 11px;" text="Cierre:" GridPane.rowIndex="5" GridPane.columnIndex="2" />
-                                        <TextField fx:id="campoHoraCierre" prefWidth="90.0" promptText="20:00" styleClass="campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="5" />
+                                        <TextField fx:id="campoHoraCierre" prefWidth="90.0" promptText="20:00" styleClass="text-field, campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="5" />
                                         <Label style="-fx-font-size: 11px;" text="Almuerzo:" GridPane.rowIndex="6" />
                                         <HBox alignment="CENTER_LEFT" spacing="6.0" GridPane.columnIndex="1" GridPane.rowIndex="6">
                                             <children>
-                                                <TextField fx:id="campoAlmuerzoIni" prefWidth="80.0" promptText="12:00" styleClass="campo-formulario" />
+                                                <TextField fx:id="campoAlmuerzoIni" prefWidth="80.0" promptText="12:00" styleClass="text-field, campo-formulario" />
                                                 <Label text="—" />
-                                                <TextField fx:id="campoAlmuerzoFin" prefWidth="80.0" promptText="13:00" styleClass="campo-formulario" />
+                                                <TextField fx:id="campoAlmuerzoFin" prefWidth="80.0" promptText="13:00" styleClass="text-field, campo-formulario" />
                                             </children>
                                         </HBox>
                                         <Label style="-fx-font-size: 11px;" text="IGV %:" GridPane.rowIndex="6" GridPane.columnIndex="2" />
-                                        <TextField fx:id="campoIgv" prefWidth="70.0" promptText="18" styleClass="campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+                                        <TextField fx:id="campoIgv" prefWidth="70.0" promptText="18" styleClass="text-field, campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="6" />
                                     </children>
                                 </GridPane>
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <children>
-                                        <Button styleClass="boton-primario" text="💾 Guardar datos de la clínica" onAction="#onGuardarConfigClick" />
+                                        <Button styleClass="button, boton-primario" text="💾 Guardar datos de la clínica" onAction="#onGuardarConfigClick" />
                                         <Label fx:id="etiquetaConfigResultado" styleClass="etiqueta-estado" text="" />
                                     </children>
                                 </HBox>
@@ -156,7 +156,7 @@
                                 <Label style="-fx-font-size: 11px;" text="Genera un archivo .sql del esquema dentrix con pg_dump. Recomendado antes de cada cierre de turno." wrapText="true" />
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <children>
-                                        <Button styleClass="boton-primario" text="📦 Generar respaldo .sql" onAction="#onRespaldarClick" />
+                                        <Button styleClass="button, boton-primario" text="📦 Generar respaldo .sql" onAction="#onRespaldarClick" />
                                         <Label fx:id="etiquetaRespaldoResultado" styleClass="etiqueta-estado" text="" wrapText="true" HBox.hgrow="ALWAYS" />
                                     </children>
                                 </HBox>

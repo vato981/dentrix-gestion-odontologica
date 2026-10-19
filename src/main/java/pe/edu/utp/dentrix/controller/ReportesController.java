@@ -15,12 +15,11 @@ import pe.edu.utp.dentrix.dto.KpiMes;
 import pe.edu.utp.dentrix.dto.ProductividadOdontologo;
 import pe.edu.utp.dentrix.dto.RankingTratamiento;
 import pe.edu.utp.dentrix.dto.SaldoPaciente;
-import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.Paciente;
 import pe.edu.utp.dentrix.model.Pago;
+import pe.edu.utp.dentrix.ui.TareasFX;
 
 import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -28,8 +27,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ReportesController {
 
@@ -141,6 +140,9 @@ public class ReportesController {
     private Label etiquetaDocsTotal;
 
     private final Map<Integer, String> nombresPacientes = new HashMap<>();
+    private final AtomicInteger generacionTodo = new AtomicInteger();
+    private final AtomicInteger generacionKpis = new AtomicInteger();
+    private final AtomicInteger generacionPeriodo = new AtomicInteger();
 
     @FXML
     private void initialize() {
@@ -174,25 +176,17 @@ public class ReportesController {
         colDocEstado.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getEstadoPago()));
         pe.edu.utp.dentrix.ui.Badges.aplicarEn(colDocEstado);
 
-        campoFecha.valueProperty().addListener((obs, antes, ahora) -> recargarKpis());
-        campoDesde.valueProperty().addListener((obs, antes, ahora) -> recargarPeriodo());
-        campoHasta.valueProperty().addListener((obs, antes, ahora) -> recargarPeriodo());
-
         AppContext contexto = AppContext.get();
         if (!contexto.sesion().activa()) {
             return;
         }
-        try {
-            for (Paciente p : contexto.pacientes().listar()) {
-                nombresPacientes.put(p.getId(), p.getApellidos() + ", " + p.getNombres());
-            }
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
         campoFecha.setValue(LocalDate.now());
         campoDesde.setValue(LocalDate.now().withDayOfMonth(1));
         campoHasta.setValue(LocalDate.now());
-        recargarTodo();
+        campoFecha.valueProperty().addListener((obs, antes, ahora) -> recargarKpis());
+        campoDesde.valueProperty().addListener((obs, antes, ahora) -> recargarPeriodo());
+        campoHasta.valueProperty().addListener((obs, antes, ahora) -> recargarPeriodo());
+        cargarTodo();
     }
 
     private void recargarKpis() {
@@ -200,15 +194,18 @@ public class ReportesController {
         if (fecha == null) {
             return;
         }
-        try {
-            KpiDia kpi = AppContext.get().reportes().kpisDeFecha(fecha);
-            kpiCitas.setText(String.valueOf(kpi.citas()));
-            kpiEnSala.setText(String.valueOf(kpi.enSala()));
-            kpiRecaudado.setText("S/ " + kpi.recaudado().toPlainString());
-            kpiDeudores.setText(String.valueOf(kpi.deudores()));
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
+        int generacion = generacionKpis.incrementAndGet();
+        TareasFX.ejecutar(() -> AppContext.get().reportes().kpisDeFecha(fecha),
+                kpi -> {
+                    if (generacion != generacionKpis.get()) {
+                        return;
+                    }
+                    kpiCitas.setText(String.valueOf(kpi.citas()));
+                    kpiEnSala.setText(String.valueOf(kpi.enSala()));
+                    kpiRecaudado.setText("S/ " + kpi.recaudado().toPlainString());
+                    kpiDeudores.setText(String.valueOf(kpi.deudores()));
+                },
+                error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     private void recargarPeriodo() {
@@ -217,20 +214,28 @@ public class ReportesController {
         if (desde == null || hasta == null) {
             return;
         }
-        try {
-            KpiMes mes = AppContext.get().reportes().kpisDelMes(desde, hasta);
-            kpiMesRecaudado.setText("S/ " + mes.recaudado().toPlainString());
-            kpiMesAtendidas.setText(mes.atendidas() + " / " + mes.citas());
-            kpiMesNoShow.setText(mes.noShowPct().toPlainString() + " % (" + mes.faltas() + " faltas)");
-            kpiMesModalidades.setText("S/ " + mes.yape().toPlainString()
-                    + " · S/ " + mes.plin().toPlainString()
-                    + " · S/ " + mes.tarjeta().toPlainString());
-            List<ProductividadOdontologo> productividad =
-                    AppContext.get().reportes().productividadOdontologos(desde, hasta);
-            tablaProductividad.setItems(FXCollections.observableArrayList(productividad));
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
+        int generacion = generacionPeriodo.incrementAndGet();
+        TareasFX.ejecutar(() -> new DatosPeriodo(
+                        AppContext.get().reportes().kpisDelMes(desde, hasta),
+                        AppContext.get().reportes().productividadOdontologos(desde, hasta)),
+                datos -> {
+                    if (generacion != generacionPeriodo.get()) {
+                        return;
+                    }
+                    aplicarPeriodo(datos);
+                },
+                error -> mostrarError(TareasFX.mensaje(error)));
+    }
+
+    private void aplicarPeriodo(DatosPeriodo datos) {
+        KpiMes mes = datos.mes();
+        kpiMesRecaudado.setText("S/ " + mes.recaudado().toPlainString());
+        kpiMesAtendidas.setText(mes.atendidas() + " / " + mes.citas());
+        kpiMesNoShow.setText(mes.noShowPct().toPlainString() + " % (" + mes.faltas() + " faltas)");
+        kpiMesModalidades.setText("S/ " + mes.yape().toPlainString()
+                + " · S/ " + mes.plin().toPlainString()
+                + " · S/ " + mes.tarjeta().toPlainString());
+        tablaProductividad.setItems(FXCollections.observableArrayList(datos.productividad()));
     }
 
     @FXML
@@ -249,7 +254,7 @@ public class ReportesController {
         if (archivo == null) {
             return;
         }
-        try {
+        TareasFX.ejecutar(() -> {
             KpiMes kpi = AppContext.get().reportes().kpisDelMes(desde, hasta);
             List<ProductividadOdontologo> productividad =
                     AppContext.get().reportes().productividadOdontologos(desde, hasta);
@@ -286,15 +291,15 @@ public class ReportesController {
                         .append(s.documentos()).append('\n');
             }
             Files.writeString(archivo.toPath(), sb.toString(), StandardCharsets.UTF_8);
+            return null;
+        }, ignorado -> {
             Alert ok = new Alert(Alert.AlertType.INFORMATION);
             ok.setTitle("Exportar");
             ok.setHeaderText(null);
             ok.setContentText("Reporte exportado a:\n" + archivo.getAbsolutePath()
                     + "\n\nÁbrelo con Excel (abre CSV sin problema).");
             ok.showAndWait();
-        } catch (DentrixException | IOException e) {
-            mostrarError("No se pudo exportar: " + e.getMessage());
-        }
+        }, error -> mostrarError("No se pudo exportar: " + TareasFX.mensaje(error)));
     }
 
     private String escaparCsv(String texto) {
@@ -307,38 +312,75 @@ public class ReportesController {
         return texto;
     }
 
-    private void recargarTodo() {
-        recargarKpis();
-        recargarPeriodo();
-        try {
-            List<SaldoPaciente> saldos = AppContext.get().reportes().saldosPacientes();
-            tablaSaldos.setItems(FXCollections.observableArrayList(saldos));
+    private void cargarTodo() {
+        LocalDate fecha = campoFecha.getValue();
+        LocalDate desde = campoDesde.getValue();
+        LocalDate hasta = campoHasta.getValue();
+        if (fecha == null || desde == null || hasta == null) {
+            return;
+        }
+        int generacion = generacionTodo.incrementAndGet();
+        int generacionKpi = generacionKpis.get();
+        int generacionRango = generacionPeriodo.get();
+        TareasFX.ejecutar(() -> {
+            Map<Integer, String> nombres = new HashMap<>();
+            for (Paciente p : AppContext.get().pacientes().listar()) {
+                nombres.put(p.getId(), p.getApellidos() + ", " + p.getNombres());
+            }
+            return new DatosReportes(nombres,
+                    AppContext.get().reportes().kpisDeFecha(fecha),
+                    new DatosPeriodo(AppContext.get().reportes().kpisDelMes(desde, hasta),
+                            AppContext.get().reportes().productividadOdontologos(desde, hasta)),
+                    AppContext.get().reportes().saldosPacientes(),
+                    AppContext.get().reportes().rankingTratamientos(),
+                    AppContext.get().reportes().documentosConSaldo());
+        }, datos -> {
+            if (generacion != generacionTodo.get()) {
+                return;
+            }
+            nombresPacientes.clear();
+            nombresPacientes.putAll(datos.nombres());
+            if (generacionKpi == generacionKpis.get()) {
+                kpiCitas.setText(String.valueOf(datos.kpi().citas()));
+                kpiEnSala.setText(String.valueOf(datos.kpi().enSala()));
+                kpiRecaudado.setText("S/ " + datos.kpi().recaudado().toPlainString());
+                kpiDeudores.setText(String.valueOf(datos.kpi().deudores()));
+            }
+            if (generacionRango == generacionPeriodo.get()) {
+                aplicarPeriodo(datos.periodo());
+            }
+            tablaSaldos.setItems(FXCollections.observableArrayList(datos.saldos()));
             BigDecimal totalSaldos = BigDecimal.ZERO;
-            for (SaldoPaciente s : saldos) {
+            for (SaldoPaciente s : datos.saldos()) {
                 totalSaldos = totalSaldos.add(s.saldo());
             }
             etiquetaSaldoTotal.setText("Total por cobrar: S/ " + totalSaldos.toPlainString()
-                    + "  |  " + saldos.size() + " paciente(s) con deuda");
+                    + "  |  " + datos.saldos().size() + " paciente(s) con deuda");
 
-            List<RankingTratamiento> ranking = AppContext.get().reportes().rankingTratamientos();
-            tablaRanking.setItems(FXCollections.observableArrayList(ranking));
+            tablaRanking.setItems(FXCollections.observableArrayList(datos.ranking()));
 
-            List<Pago> documentos = AppContext.get().reportes().documentosConSaldo();
-            tablaDocumentos.setItems(FXCollections.observableArrayList(documentos));
+            tablaDocumentos.setItems(FXCollections.observableArrayList(datos.documentos()));
             BigDecimal totalDocumentos = BigDecimal.ZERO;
-            for (Pago p : documentos) {
+            for (Pago p : datos.documentos()) {
                 totalDocumentos = totalDocumentos.add(p.getSaldoDeudor());
             }
             etiquetaDocsTotal.setText("Saldo total en documentos: S/ " + totalDocumentos.toPlainString()
-                    + "  |  " + documentos.size() + " documento(s) con saldo");
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
+                    + "  |  " + datos.documentos().size() + " documento(s) con saldo");
+        },
+        error -> mostrarError(TareasFX.mensaje(error)));
+    }
+
+    private record DatosPeriodo(KpiMes mes, List<ProductividadOdontologo> productividad) {
+    }
+
+    private record DatosReportes(Map<Integer, String> nombres, KpiDia kpi, DatosPeriodo periodo,
+                                 List<SaldoPaciente> saldos, List<RankingTratamiento> ranking,
+                                 List<Pago> documentos) {
     }
 
     @FXML
     private void onRefrescarClick() {
-        recargarTodo();
+        cargarTodo();
     }
 
     @FXML

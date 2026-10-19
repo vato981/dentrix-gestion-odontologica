@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -128,6 +129,33 @@ public class PagoDAOImpl implements PagoDAO {
                 + "WHERE pago_origen_id IS NULL AND estado = 'EMITIDO' AND saldo_deudor > 0 "
                 + "ORDER BY fecha, id";
         return listar(sql, new Object[0]);
+    }
+
+    @Override
+    public List<Pago> listarBoletasPorFecha(LocalDate fecha) throws DentrixException {
+        String sql = "SELECT " + COLUMNAS + " FROM pago "
+                + "WHERE pago_origen_id IS NULL AND estado = 'EMITIDO' AND fecha >= ? AND fecha < ? "
+                + "ORDER BY fecha, id";
+        return listar(sql, new Object[]{fecha, fecha.plusDays(1)});
+    }
+
+    @Override
+    public long maximoCorrelativo(String prefijo) throws DentrixException {
+        String sql = "SELECT COALESCE(MAX(CAST(SUBSTRING(numero FROM ?) AS BIGINT)), 0) FROM pago "
+                + "WHERE pago_origen_id IS NULL AND starts_with(numero, ?) "
+                + "AND SUBSTRING(numero FROM ?) ~ '^[0-9]+$'";
+        try (Connection cn = ConexionBD.abrir();
+             PreparedStatement ps = cn.prepareStatement(sql)) {
+            int inicio = prefijo.length() + 1;
+            ps.setInt(1, inicio);
+            ps.setString(2, prefijo);
+            ps.setInt(3, inicio);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getLong(1) : 0L;
+            }
+        } catch (SQLException e) {
+            throw new DentrixException("No se pudo calcular el correlativo de la boleta.", e);
+        }
     }
 
     @Override

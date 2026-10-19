@@ -69,6 +69,13 @@ public class CierreCajaDAOImpl implements CierreCajaDAO {
     }
 
     @Override
+    public Optional<CierreCaja> buscarPorId(Long id) throws DentrixException {
+        String sql = "SELECT " + COLUMNAS + " FROM cierre_caja WHERE id = ?";
+        List<CierreCaja> cierres = listar(sql, new Object[]{id});
+        return cierres.isEmpty() ? Optional.empty() : Optional.of(cierres.get(0));
+    }
+
+    @Override
     public Optional<CierreCaja> buscarPorFecha(LocalDate fecha) throws DentrixException {
         String sql = "SELECT " + COLUMNAS + " FROM cierre_caja WHERE fecha = ? ORDER BY id";
         List<CierreCaja> cierres = listar(sql, new Object[]{fecha});

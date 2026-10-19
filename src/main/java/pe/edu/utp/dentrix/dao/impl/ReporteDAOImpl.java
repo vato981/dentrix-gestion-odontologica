@@ -59,7 +59,7 @@ public class ReporteDAOImpl {
                 + "(SELECT COUNT(*) FROM cita WHERE fecha_cita = ? AND tipo = 'CITA') AS citas, "
                 + "(SELECT COUNT(*) FROM cita WHERE fecha_cita = ? AND estado = 'EN_SALA') AS en_sala, "
                 + "(SELECT COALESCE(SUM(monto), 0) FROM pago "
-                + " WHERE fecha::date = ? AND pago_origen_id IS NULL AND estado = 'EMITIDO') AS recaudado, "
+                + " WHERE fecha >= ? AND fecha < ? AND pago_origen_id IS NULL AND estado = 'EMITIDO') AS recaudado, "
                 + "(SELECT COUNT(DISTINCT paciente_id) FROM pago "
                 + " WHERE pago_origen_id IS NULL AND saldo_deudor > 0 AND estado = 'EMITIDO') AS deudores";
         try (Connection cn = ConexionBD.abrir();
@@ -67,6 +67,7 @@ public class ReporteDAOImpl {
             ps.setObject(1, fecha);
             ps.setObject(2, fecha);
             ps.setObject(3, fecha);
+            ps.setObject(4, fecha.plusDays(1));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return new KpiDia(fecha, rs.getLong("citas"), rs.getLong("en_sala"),
@@ -80,30 +81,27 @@ public class ReporteDAOImpl {
     }
 
     public KpiMes kpisDelMes(LocalDate desde, LocalDate hasta) throws DentrixException {
-        String sql = "SELECT "
-                + "(SELECT COUNT(*) FROM cita WHERE fecha_cita BETWEEN ? AND ? AND tipo = 'CITA') AS citas, "
-                + "(SELECT COUNT(*) FROM cita WHERE fecha_cita BETWEEN ? AND ? AND estado = 'ATENDIDA') AS atendidas, "
-                + "(SELECT COUNT(*) FROM cita WHERE fecha_cita BETWEEN ? AND ? AND estado = 'FALTO') AS faltas, "
-                + "(SELECT COALESCE(SUM(monto), 0) FROM pago "
-                + " WHERE fecha::date BETWEEN ? AND ? AND pago_origen_id IS NULL AND estado = 'EMITIDO') AS recaudado, "
-                + "(SELECT COALESCE(SUM(monto), 0) FROM pago "
-                + " WHERE fecha::date BETWEEN ? AND ? AND pago_origen_id IS NULL AND estado = 'EMITIDO' "
-                + "   AND modalidad = 'EFECTIVO') AS efectivo, "
-                + "(SELECT COALESCE(SUM(monto), 0) FROM pago "
-                + " WHERE fecha::date BETWEEN ? AND ? AND pago_origen_id IS NULL AND estado = 'EMITIDO' "
-                + "   AND modalidad = 'YAPE') AS yape, "
-                + "(SELECT COALESCE(SUM(monto), 0) FROM pago "
-                + " WHERE fecha::date BETWEEN ? AND ? AND pago_origen_id IS NULL AND estado = 'EMITIDO' "
-                + "   AND modalidad = 'PLIN') AS plin, "
-                + "(SELECT COALESCE(SUM(monto), 0) FROM pago "
-                + " WHERE fecha::date BETWEEN ? AND ? AND pago_origen_id IS NULL AND estado = 'EMITIDO' "
-                + "   AND modalidad = 'TARJETA') AS tarjeta";
+        String sql = "SELECT c.citas, c.atendidas, c.faltas, "
+                + "COALESCE(p.recaudado, 0) AS recaudado, COALESCE(p.efectivo, 0) AS efectivo, "
+                + "COALESCE(p.yape, 0) AS yape, COALESCE(p.plin, 0) AS plin, "
+                + "COALESCE(p.tarjeta, 0) AS tarjeta "
+                + "FROM (SELECT COUNT(*) FILTER (WHERE tipo = 'CITA') AS citas, "
+                + "             COUNT(*) FILTER (WHERE estado = 'ATENDIDA') AS atendidas, "
+                + "             COUNT(*) FILTER (WHERE estado = 'FALTO') AS faltas "
+                + "        FROM cita WHERE fecha_cita BETWEEN ? AND ?) c, "
+                + "     (SELECT SUM(monto) AS recaudado, "
+                + "             SUM(monto) FILTER (WHERE modalidad = 'EFECTIVO') AS efectivo, "
+                + "             SUM(monto) FILTER (WHERE modalidad = 'YAPE') AS yape, "
+                + "             SUM(monto) FILTER (WHERE modalidad = 'PLIN') AS plin, "
+                + "             SUM(monto) FILTER (WHERE modalidad = 'TARJETA') AS tarjeta "
+                + "        FROM pago WHERE fecha >= ? AND fecha < ? "
+                + "         AND pago_origen_id IS NULL AND estado = 'EMITIDO') p";
         try (Connection cn = ConexionBD.abrir();
              PreparedStatement ps = cn.prepareStatement(sql)) {
-            for (int i = 1; i <= 16; i += 2) {
-                ps.setObject(i, desde);
-                ps.setObject(i + 1, hasta);
-            }
+            ps.setObject(1, desde);
+            ps.setObject(2, hasta);
+            ps.setObject(3, desde);
+            ps.setObject(4, hasta.plusDays(1));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     long citas = rs.getLong("citas");

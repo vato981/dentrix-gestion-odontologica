@@ -23,6 +23,7 @@ import pe.edu.utp.dentrix.model.CierreCaja;
 import pe.edu.utp.dentrix.model.Paciente;
 import pe.edu.utp.dentrix.model.Pago;
 import pe.edu.utp.dentrix.model.Tratamiento;
+import pe.edu.utp.dentrix.ui.TareasFX;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -242,24 +243,38 @@ public class CajaController {
         }
         usuarioCajaId = contexto.sesion().getUsuario().getId();
         etiquetaCajero.setText("Cajero: " + contexto.sesion().getNombreCompleto());
-        try {
-            for (Paciente p : contexto.pacientes().listar()) {
-                if ("ACTIVO".equals(p.getEstado())) {
-                    pacientesActivos.add(p);
-                }
+        comboModalidad.setValue("EFECTIVO");
+        comboModalidadAbono.setValue("EFECTIVO");
+        comboTurno.setValue("DIURNO");
+        etiquetaFechaHoy.setText("Hoy: " + LocalDate.now());
+        TareasFX.ejecutar(this::cargarCombos,
+                this::aplicarCombos,
+                error -> mostrarError(TareasFX.mensaje(error)));
+        recargarBoletas();
+        recargarCierre();
+    }
+
+    private record DatosCombos(List<Paciente> pacientesActivos, List<Tratamiento> tratamientosActivos) {
+    }
+
+    private DatosCombos cargarCombos() throws DentrixException {
+        AppContext contexto = AppContext.get();
+        List<Paciente> activos = new ArrayList<>();
+        for (Paciente p : contexto.pacientes().listar()) {
+            if ("ACTIVO".equals(p.getEstado())) {
+                activos.add(p);
             }
-            comboPaciente.setItems(FXCollections.observableArrayList(pacientesActivos));
-            tratamientosActivos.addAll(contexto.catalogo().listarTratamientosActivos());
-            comboTratamiento.setItems(FXCollections.observableArrayList(tratamientosActivos));
-            comboModalidad.setValue("EFECTIVO");
-            comboModalidadAbono.setValue("EFECTIVO");
-            comboTurno.setValue("DIURNO");
-            etiquetaFechaHoy.setText("Hoy: " + LocalDate.now());
-            recargarBoletas();
-            recargarCierre();
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
         }
+        return new DatosCombos(activos, contexto.catalogo().listarTratamientosActivos());
+    }
+
+    private void aplicarCombos(DatosCombos datos) {
+        pacientesActivos.clear();
+        pacientesActivos.addAll(datos.pacientesActivos());
+        tratamientosActivos.clear();
+        tratamientosActivos.addAll(datos.tratamientosActivos());
+        comboPaciente.setItems(FXCollections.observableArrayList(pacientesActivos));
+        comboTratamiento.setItems(FXCollections.observableArrayList(tratamientosActivos));
     }
 
     private void actualizarTotal() {
@@ -332,13 +347,18 @@ public class CajaController {
             for (LineaGrilla g : lineas) {
                 detalle.add(new LineaBoleta(g.tratamientoId(), g.pieza(), g.cantidad()));
             }
-            Pago boleta = AppContext.get().caja().emitirBoleta(paciente.getId(), modalidad, operacion,
-                    null, null, usuarioCajaId, null, detalle);
-            indicar(etiquetaResultado, "Boleta " + boleta.getNumero() + " emitida: S/ " + boleta.getMonto().toPlainString()
-                    + " (saldo S/ " + boleta.getSaldoDeudor().toPlainString() + ")", false);
-            lineas.clear();
-            campoOperacion.clear();
-            recargarBoletas();
+            Integer pacienteId = paciente.getId();
+            TareasFX.ejecutar(() -> AppContext.get().caja().emitirBoleta(pacienteId, modalidad, operacion,
+                            null, null, usuarioCajaId, null, detalle),
+                    boleta -> {
+                        indicar(etiquetaResultado, "Boleta " + boleta.getNumero() + " emitida: S/ "
+                                + boleta.getMonto().toPlainString()
+                                + " (saldo S/ " + boleta.getSaldoDeudor().toPlainString() + ")", false);
+                        lineas.clear();
+                        campoOperacion.clear();
+                        recargarBoletas();
+                    },
+                    error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -350,31 +370,42 @@ public class CajaController {
     }
 
     private void recargarBoletas() {
-        try {
-            List<Pago> boletas = AppContext.get().caja().boletasDelDia(LocalDate.now());
-            tablaBoletas.setItems(FXCollections.observableArrayList(boletas));
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
+        TareasFX.ejecutar(() -> AppContext.get().caja().boletasDelDia(LocalDate.now()),
+                boletas -> tablaBoletas.setItems(FXCollections.observableArrayList(boletas)),
+                error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     @FXML
     private void onCargarBoletaClick() {
+        String numero;
         try {
-            String numero = texto(campoNumeroBoleta);
+            numero = texto(campoNumeroBoleta);
             if (numero == null) {
                 throw new DentrixException("Ingresa el número de la boleta (ej. B001-000440)");
             }
-            documentoAbonado = AppContext.get().caja().buscarBoleta(numero);
-            mostrarDocumentoAbonado();
-            tablaAbonos.setItems(FXCollections.observableArrayList(
-                    AppContext.get().caja().abonosDe(documentoAbonado.getId())));
-            etiquetaAbonoResultado.setText("");
         } catch (DentrixException e) {
             documentoAbonado = null;
             etiquetaDocumento.setText(e.getMessage());
             tablaAbonos.setItems(FXCollections.observableArrayList());
+            return;
         }
+        TareasFX.ejecutar(() -> {
+            var caja = AppContext.get().caja();
+            Pago boleta = caja.buscarBoleta(numero);
+            return new DocumentoAbonado(boleta, caja.abonosDe(boleta.getId()));
+        }, datos -> {
+            documentoAbonado = datos.boleta();
+            mostrarDocumentoAbonado();
+            tablaAbonos.setItems(FXCollections.observableArrayList(datos.abonos()));
+            etiquetaAbonoResultado.setText("");
+        }, error -> {
+            documentoAbonado = null;
+            etiquetaDocumento.setText(TareasFX.mensaje(error));
+            tablaAbonos.setItems(FXCollections.observableArrayList());
+        });
+    }
+
+    private record DocumentoAbonado(Pago boleta, List<Pago> abonos) {
     }
 
     private void mostrarDocumentoAbonado() {
@@ -404,15 +435,22 @@ public class CajaController {
             if (!"EFECTIVO".equals(modalidad) && operacion == null) {
                 throw new DentrixException("RF-08: Yape/Plin/Tarjeta requieren N° de operación");
             }
-            AppContext.get().caja().registrarAbono(documentoAbonado.getId(), monto, modalidad, operacion, usuarioCajaId);
-            documentoAbonado = AppContext.get().caja().buscarBoleta(documentoAbonado.getNumero());
-            mostrarDocumentoAbonado();
-            tablaAbonos.setItems(FXCollections.observableArrayList(
-                    AppContext.get().caja().abonosDe(documentoAbonado.getId())));
-            campoMontoAbono.clear();
-            campoOpAbono.clear();
-            indicar(etiquetaAbonoResultado, "Abono registrado correctamente", false);
-            recargarBoletas();
+            Long documentoId = documentoAbonado.getId();
+            String numeroBoleta = documentoAbonado.getNumero();
+            TareasFX.ejecutar(() -> {
+                var caja = AppContext.get().caja();
+                caja.registrarAbono(documentoId, monto, modalidad, operacion, usuarioCajaId);
+                Pago actualizado = caja.buscarBoleta(numeroBoleta);
+                return new DocumentoAbonado(actualizado, caja.abonosDe(actualizado.getId()));
+            }, datos -> {
+                documentoAbonado = datos.boleta();
+                mostrarDocumentoAbonado();
+                tablaAbonos.setItems(FXCollections.observableArrayList(datos.abonos()));
+                campoMontoAbono.clear();
+                campoOpAbono.clear();
+                indicar(etiquetaAbonoResultado, "Abono registrado correctamente", false);
+                recargarBoletas();
+            }, error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -430,11 +468,16 @@ public class CajaController {
             if (fondo.compareTo(BigDecimal.ZERO) < 0) {
                 throw new DentrixException("El fondo inicial no puede ser negativo");
             }
-            cierreActual = AppContext.get().caja().abrirCierre(LocalDate.now(), comboTurno.getValue(),
-                    usuarioCajaId, fondo);
-            campoFondo.clear();
-            indicar(etiquetaCierreResultado, "Cierre de turno " + cierreActual.getTurno() + " abierto", false);
-            recargarCierre();
+            LocalDate hoy = LocalDate.now();
+            String turno = comboTurno.getValue();
+            TareasFX.ejecutar(() -> AppContext.get().caja().abrirCierre(hoy, turno, usuarioCajaId, fondo),
+                    cierre -> {
+                        cierreActual = cierre;
+                        campoFondo.clear();
+                        indicar(etiquetaCierreResultado, "Cierre de turno " + cierre.getTurno() + " abierto", false);
+                        recargarCierre();
+                    },
+                    error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -455,10 +498,15 @@ public class CajaController {
             if (fondo.compareTo(BigDecimal.ZERO) < 0) {
                 throw new DentrixException("El fondo inicial no puede ser negativo");
             }
-            cierreActual = AppContext.get().caja().cambiarFondo(cierreActual.getId(), fondo);
-            campoNuevoFondo.clear();
-            indicar(etiquetaCierreResultado, "Fondo inicial actualizado a S/ " + fondo.toPlainString(), false);
-            recargarCierre();
+            Long cierreId = cierreActual.getId();
+            TareasFX.ejecutar(() -> AppContext.get().caja().cambiarFondo(cierreId, fondo),
+                    cierre -> {
+                        cierreActual = cierre;
+                        campoNuevoFondo.clear();
+                        indicar(etiquetaCierreResultado, "Fondo inicial actualizado a S/ " + fondo.toPlainString(), false);
+                        recargarCierre();
+                    },
+                    error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -476,11 +524,16 @@ public class CajaController {
             } catch (NumberFormatException e) {
                 throw new DentrixException("El efectivo contado debe ser un número (ej. 350.00)");
             }
-            cierreActual = AppContext.get().caja().consolidar(cierreActual.getId(), contado, usuarioCajaId);
-            campoContado.clear();
-            indicar(etiquetaCierreResultado, "Cierre consolidado con diferencia S/ "
-                    + cierreActual.getDiferencia().toPlainString(), false);
-            recargarCierre();
+            Long cierreId = cierreActual.getId();
+            TareasFX.ejecutar(() -> AppContext.get().caja().consolidar(cierreId, contado, usuarioCajaId),
+                    cierre -> {
+                        cierreActual = cierre;
+                        campoContado.clear();
+                        indicar(etiquetaCierreResultado, "Cierre consolidado con diferencia S/ "
+                                + cierre.getDiferencia().toPlainString(), false);
+                        recargarCierre();
+                    },
+                    error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -492,21 +545,38 @@ public class CajaController {
             if (cierreActual == null) {
                 throw new DentrixException("No hay cierre del día para marcar el acta");
             }
-            AppContext.get().caja().marcarActaGenerada(cierreActual.getId());
-            cierreActual = AppContext.get().caja().buscarCierre(LocalDate.now());
-            indicar(etiquetaCierreResultado, "Acta de arqueo marcada como generada", false);
-            recargarCierre();
+            Long cierreId = cierreActual.getId();
+            LocalDate hoy = LocalDate.now();
+            TareasFX.ejecutar(() -> {
+                var caja = AppContext.get().caja();
+                caja.marcarActaGenerada(cierreId);
+                return caja.buscarCierre(hoy);
+            }, cierre -> {
+                cierreActual = cierre;
+                indicar(etiquetaCierreResultado, "Acta de arqueo marcada como generada", false);
+                recargarCierre();
+            }, error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
     }
 
     private void recargarCierre() {
+        TareasFX.ejecutar(this::buscarCierreDelDia,
+                this::aplicarCierre,
+                error -> mostrarError(TareasFX.mensaje(error)));
+    }
+
+    private CierreCaja buscarCierreDelDia() {
         try {
-            cierreActual = AppContext.get().caja().buscarCierre(LocalDate.now());
+            return AppContext.get().caja().buscarCierre(LocalDate.now());
         } catch (DentrixException e) {
-            cierreActual = null;
+            return null;
         }
+    }
+
+    private void aplicarCierre(CierreCaja cierre) {
+        cierreActual = cierre;
         if (cierreActual == null) {
             etiquetaSinCierre.setText("Todavía no se abrió el cierre del día. Abre el turno con su fondo inicial.");
             etiquetaCierreInfo.setText("");

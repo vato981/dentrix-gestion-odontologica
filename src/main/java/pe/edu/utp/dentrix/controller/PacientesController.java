@@ -1,5 +1,6 @@
 package pe.edu.utp.dentrix.controller;
 
+import javafx.animation.PauseTransition;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -15,13 +16,19 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.util.Duration;
 import pe.edu.utp.dentrix.config.AppContext;
-import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.Paciente;
+import pe.edu.utp.dentrix.ui.TareasFX;
 
-import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class PacientesController {
+
+    private static final Duration ESPERA_BUSQUEDA = Duration.millis(250);
+
+    private final PauseTransition esperaBusqueda = new PauseTransition(ESPERA_BUSQUEDA);
+    private final AtomicInteger generacionBusqueda = new AtomicInteger();
 
     @FXML
     private TextField campoBusqueda;
@@ -131,21 +138,26 @@ public class PacientesController {
             });
             return filaTabla;
         });
-        campoBusqueda.textProperty().addListener((obs, antes, ahora) -> recargar());
+        esperaBusqueda.setOnFinished(evento -> recargar());
+        campoBusqueda.textProperty().addListener((obs, antes, ahora) -> esperaBusqueda.playFromStart());
         limpiarForma();
         recargar();
     }
 
     private void recargar() {
-        try {
-            List<Paciente> pacientes = AppContext.get().pacientes().buscar(campoBusqueda.getText());
-            tablaPacientes.setItems(FXCollections.observableArrayList(pacientes));
-            long activos = pacientes.stream().filter(p -> !"INACTIVO".equals(p.getEstado())).count();
-            etiquetaConteo.setText(pacientes.size() + " Paciente(s) · " + activos + " activo(s)");
-            etiquetaEstado.setText("");
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
+        String texto = campoBusqueda.getText() == null ? "" : campoBusqueda.getText();
+        int generacion = generacionBusqueda.incrementAndGet();
+        TareasFX.ejecutar(() -> AppContext.get().pacientes().buscar(texto),
+                pacientes -> {
+                    if (generacion != generacionBusqueda.get()) {
+                        return;
+                    }
+                    tablaPacientes.setItems(FXCollections.observableArrayList(pacientes));
+                    long activos = pacientes.stream().filter(p -> !"INACTIVO".equals(p.getEstado())).count();
+                    etiquetaConteo.setText(pacientes.size() + " Paciente(s) · " + activos + " activo(s)");
+                    etiquetaEstado.setText("");
+                },
+                error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     @FXML
@@ -194,19 +206,19 @@ public class PacientesController {
         paciente.setDireccion(texto(campoDireccion));
         paciente.setAlergias(texto(campoAlergias));
         paciente.setAntecedentes(texto(campoAntecedentes));
-        try {
+        TareasFX.ejecutar(() -> {
             if (pacienteEditando == null) {
                 AppContext.get().pacientes().registrar(paciente);
             } else {
                 paciente.setCodigoHc(pacienteEditando.getCodigoHc());
                 AppContext.get().pacientes().editar(paciente);
             }
+            return null;
+        }, ignorado -> {
             limpiarForma();
             recargar();
             indicar("Datos del paciente guardados.", false);
-        } catch (DentrixException e) {
-            indicar(e.getMessage(), true);
-        }
+        }, error -> indicar(TareasFX.mensaje(error), true));
     }
 
     @FXML
@@ -262,15 +274,15 @@ public class PacientesController {
                 + " (HC " + paciente.getCodigoHc() + ")?");
         confirmacion.showAndWait().ifPresent(respuesta -> {
             if (respuesta == javafx.scene.control.ButtonType.OK) {
-                try {
+                TareasFX.ejecutar(() -> {
                     AppContext.get().pacientes().inactivar(paciente.getId());
+                    return null;
+                }, ignorado -> {
                     if (pacienteEditando != null && pacienteEditando.getId().equals(paciente.getId())) {
                         limpiarForma();
                     }
                     recargar();
-                } catch (DentrixException e) {
-                    mostrarError(e.getMessage());
-                }
+                }, error -> mostrarError(TareasFX.mensaje(error)));
             }
         });
     }

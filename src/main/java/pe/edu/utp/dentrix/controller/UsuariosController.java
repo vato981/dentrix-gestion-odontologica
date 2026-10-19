@@ -12,6 +12,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import pe.edu.utp.dentrix.config.AppContext;
 import pe.edu.utp.dentrix.model.Rol;
@@ -19,10 +20,14 @@ import pe.edu.utp.dentrix.model.Usuario;
 import pe.edu.utp.dentrix.service.UsuarioService;
 import pe.edu.utp.dentrix.ui.Badges;
 import pe.edu.utp.dentrix.ui.Navegador;
+import pe.edu.utp.dentrix.ui.TareasFX;
 
 import java.util.List;
 
 public class UsuariosController {
+
+    private static final Tooltip TOOLTIP_SESION =
+            new Tooltip("No puedes desactivar tu propia sesión");
 
     private final UsuarioService servicio = AppContext.get().gestionUsuarios();
 
@@ -105,21 +110,22 @@ public class UsuariosController {
                     setGraphic(null);
                 } else {
                     Usuario usuario = getTableRow().getItem();
-                    boolean activo = "ACTIVO".equals(usuario.getEstado());
-                    botonEstado.setText(activo ? "✖ Inactivar" : "✔ Activar");
+                    String estado = usuario.getEstado();
+                    boolean activo = "ACTIVO".equals(estado);
+                    boolean bloqueado = "BLOQUEADO".equals(estado);
+                    botonEstado.setText(bloqueado ? "Desbloquear" : (activo ? "✖ Inactivar" : "✔ Activar"));
                     botonEstado.getStyleClass().removeAll("boton-peligro", "boton-primario");
                     botonEstado.getStyleClass().add(activo ? "boton-peligro" : "boton-primario");
-                    botonEstado.setDisable(sesionActual(usuario));
-                    botonEstado.setTooltip(new javafx.scene.control.Tooltip(
-                            sesionActual(usuario) ? "No puedes desactivar tu propia sesión" : ""));
+                    boolean esSesionActual = sesionActual(usuario);
+                    botonEstado.setDisable(esSesionActual);
+                    botonEstado.setTooltip(esSesionActual ? TOOLTIP_SESION : null);
                     setGraphic(contenedor);
                 }
             }
         });
         tablaUsuarios.setItems(filas);
-        cargarRoles();
-        recargar();
         onNuevoClick();
+        recargarAsync();
     }
 
     @FXML
@@ -129,8 +135,7 @@ public class UsuariosController {
 
     @FXML
     private void onRefrescarClick() {
-        cargarRoles();
-        recargar();
+        recargarAsync();
     }
 
     @FXML
@@ -152,14 +157,15 @@ public class UsuariosController {
     private void onGuardarClick() {
         try {
             Usuario usuario = construir();
-            if (idEnEdicion == null) {
-                usuario = servicio.registrar(usuario, campoClave.getText());
-                idEnEdicion = usuario.getId();
-                etiquetaModo.setText("EDITAR (id " + usuario.getId() + ")");
-            } else {
-                usuario.setId(idEnEdicion);
+            String clave = campoClave.getText() == null ? "" : campoClave.getText();
+            Integer idEdicion = idEnEdicion;
+            TareasFX.ejecutar(() -> {
+                if (idEdicion == null) {
+                    return servicio.registrar(usuario, clave);
+                }
+                usuario.setId(idEdicion);
                 Usuario existente = servicio.listar().stream()
-                        .filter(u -> idEnEdicion.equals(u.getId()))
+                        .filter(u -> idEdicion.equals(u.getId()))
                         .findFirst()
                         .orElse(usuario);
                 usuario.setPasswordHash(existente.getPasswordHash());
@@ -168,13 +174,17 @@ public class UsuariosController {
                 usuario.setBloqueadoHasta(existente.getBloqueadoHasta());
                 usuario.setUltimoAcceso(existente.getUltimoAcceso());
                 servicio.editar(usuario);
-                if (!campoClave.getText().isBlank()) {
-                    servicio.cambiarClave(idEnEdicion, campoClave.getText());
+                if (!clave.isBlank()) {
+                    servicio.cambiarClave(idEdicion, clave);
                 }
-            }
-            campoClave.clear();
-            etiquetaError.setText("");
-            recargar();
+                return usuario;
+            }, guardado -> {
+                idEnEdicion = guardado.getId();
+                etiquetaModo.setText("EDITAR (id " + guardado.getId() + ")");
+                campoClave.clear();
+                etiquetaError.setText("");
+                recargarAsync();
+            }, error -> etiquetaError.setText(TareasFX.mensaje(error)));
         } catch (Exception e) {
             etiquetaError.setText(e.getMessage());
         }
@@ -204,13 +214,11 @@ public class UsuariosController {
         if (usuario == null || sesionActual(usuario)) {
             return;
         }
-        try {
-            String nuevo = "ACTIVO".equals(usuario.getEstado()) ? "INACTIVO" : "ACTIVO";
+        String nuevo = "ACTIVO".equals(usuario.getEstado()) ? "INACTIVO" : "ACTIVO";
+        TareasFX.ejecutar(() -> {
             servicio.cambiarEstado(usuario.getId(), nuevo);
-            recargar();
-        } catch (Exception e) {
-            etiquetaError.setText(e.getMessage());
-        }
+            return null;
+        }, ok -> recargarAsync(), error -> etiquetaError.setText(TareasFX.mensaje(error)));
     }
 
     private Usuario construir() {
@@ -227,23 +235,20 @@ public class UsuariosController {
         return usuario;
     }
 
-    private void cargarRoles() {
-        try {
-            roles.setAll(servicio.listarRoles());
-            comboRol.setItems(roles);
-        } catch (Exception e) {
-            etiquetaError.setText("No se pudieron cargar los roles: " + e.getMessage());
-        }
+    private void recargarAsync() {
+        TareasFX.ejecutar(() -> new DatosUsuarios(servicio.listarRoles(), servicio.listar()),
+                this::aplicarDatos,
+                error -> etiquetaError.setText("No se pudo cargar el padrón: " + TareasFX.mensaje(error)));
     }
 
-    private void recargar() {
-        try {
-            List<Usuario> usuarios = servicio.listar();
-            filas.setAll(usuarios);
-            etiquetaConteo.setText(usuarios.size() + " USUARIOS · M9.1");
-        } catch (Exception e) {
-            etiquetaError.setText("No se pudo cargar el padrón: " + e.getMessage());
-        }
+    private void aplicarDatos(DatosUsuarios datos) {
+        roles.setAll(datos.roles());
+        comboRol.setItems(roles);
+        filas.setAll(datos.usuarios());
+        etiquetaConteo.setText(datos.usuarios().size() + " USUARIOS · M9.1");
+    }
+
+    private record DatosUsuarios(List<Rol> roles, List<Usuario> usuarios) {
     }
 
     private String rolDe(Usuario usuario) {

@@ -20,6 +20,7 @@ import pe.edu.utp.dentrix.model.DiagnosticoCie10;
 import pe.edu.utp.dentrix.model.Tratamiento;
 import pe.edu.utp.dentrix.ui.Badges;
 import pe.edu.utp.dentrix.ui.Navegador;
+import pe.edu.utp.dentrix.ui.TareasFX;
 
 import java.math.BigDecimal;
 import java.time.LocalTime;
@@ -232,50 +233,55 @@ public class ConfiguracionController {
         if (!contexto.sesion().activa()) {
             return;
         }
-        recargarTratamientos();
-        recargarCie();
-        cargarConfiguracion();
+        TareasFX.ejecutar(this::cargarDatos,
+                this::aplicarDatos,
+                error -> mostrarError(TareasFX.mensaje(error)));
+    }
+
+    private record DatosConfiguracion(List<Tratamiento> tratamientos, List<DiagnosticoCie10> cie,
+                                      Configuracion configuracion) {
+    }
+
+    private DatosConfiguracion cargarDatos() throws DentrixException {
+        var catalogo = AppContext.get().catalogo();
+        return new DatosConfiguracion(catalogo.listarTratamientos(), catalogo.listarDiagnosticos(),
+                catalogo.obtenerConfiguracion());
+    }
+
+    private void aplicarDatos(DatosConfiguracion datos) {
+        tablaTratamientos.setItems(FXCollections.observableArrayList(datos.tratamientos()));
+        tablaCie.setItems(FXCollections.observableArrayList(datos.cie()));
+        aplicarConfiguracion(datos.configuracion());
     }
 
     private void recargarTratamientos() {
-        try {
-            tablaTratamientos.setItems(FXCollections.observableArrayList(
-                    AppContext.get().catalogo().listarTratamientos()));
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
+        TareasFX.ejecutar(() -> AppContext.get().catalogo().listarTratamientos(),
+                lista -> tablaTratamientos.setItems(FXCollections.observableArrayList(lista)),
+                error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     private void recargarCie() {
-        try {
-            tablaCie.setItems(FXCollections.observableArrayList(
-                    AppContext.get().catalogo().listarDiagnosticos()));
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
+        TareasFX.ejecutar(() -> AppContext.get().catalogo().listarDiagnosticos(),
+                lista -> tablaCie.setItems(FXCollections.observableArrayList(lista)),
+                error -> mostrarError(TareasFX.mensaje(error)));
     }
 
-    private void cargarConfiguracion() {
-        try {
-            Configuracion config = AppContext.get().catalogo().obtenerConfiguracion();
-            campoRazonSocial.setText(config.getRazonSocial());
-            campoRuc.setText(config.getRuc());
-            campoDireccion.setText(config.getDireccion());
-            campoTelefono.setText(config.getTelefono());
-            campoEmail.setText(config.getEmail());
-            campoRepresentante.setText(config.getRepresentanteLegal());
-            campoMedicoDirector.setText(config.getMedicoDirector());
-            campoLicSanitaria.setText(config.getLicenciaSanitaria());
-            campoLicMunicipal.setText(config.getLicenciaMunicipal());
-            campoSerieBoleta.setText(config.getSerieBoleta());
-            campoHoraApertura.setText(formatearHora(config.getHoraApertura()));
-            campoHoraCierre.setText(formatearHora(config.getHoraCierre()));
-            campoAlmuerzoIni.setText(formatearHora(config.getAlmuerzoInicio()));
-            campoAlmuerzoFin.setText(formatearHora(config.getAlmuerzoFin()));
-            campoIgv.setText(config.getIgvPorcentaje() == null ? "" : config.getIgvPorcentaje().toPlainString());
-        } catch (DentrixException e) {
-            etiquetaConfigResultado.setText(e.getMessage());
-        }
+    private void aplicarConfiguracion(Configuracion config) {
+        campoRazonSocial.setText(config.getRazonSocial());
+        campoRuc.setText(config.getRuc());
+        campoDireccion.setText(config.getDireccion());
+        campoTelefono.setText(config.getTelefono());
+        campoEmail.setText(config.getEmail());
+        campoRepresentante.setText(config.getRepresentanteLegal());
+        campoMedicoDirector.setText(config.getMedicoDirector());
+        campoLicSanitaria.setText(config.getLicenciaSanitaria());
+        campoLicMunicipal.setText(config.getLicenciaMunicipal());
+        campoSerieBoleta.setText(config.getSerieBoleta());
+        campoHoraApertura.setText(formatearHora(config.getHoraApertura()));
+        campoHoraCierre.setText(formatearHora(config.getHoraCierre()));
+        campoAlmuerzoIni.setText(formatearHora(config.getAlmuerzoInicio()));
+        campoAlmuerzoFin.setText(formatearHora(config.getAlmuerzoFin()));
+        campoIgv.setText(config.getIgvPorcentaje() == null ? "" : config.getIgvPorcentaje().toPlainString());
     }
 
     private String formatearHora(LocalTime hora) {
@@ -331,13 +337,18 @@ public class ConfiguracionController {
             } catch (NumberFormatException e) {
                 throw new DentrixException("El precio debe ser un número (ej. 80.00)");
             }
-            if (tratEnEdicion == null) {
-                AppContext.get().catalogo().registrarTratamiento(tratamiento);
-            } else {
-                AppContext.get().catalogo().editarTratamiento(tratamiento);
-            }
-            onNuevoTratamientoClick();
-            recargarTratamientos();
+            boolean nuevo = tratEnEdicion == null;
+            TareasFX.ejecutar(() -> {
+                if (nuevo) {
+                    AppContext.get().catalogo().registrarTratamiento(tratamiento);
+                } else {
+                    AppContext.get().catalogo().editarTratamiento(tratamiento);
+                }
+                return null;
+            }, ok -> {
+                onNuevoTratamientoClick();
+                recargarTratamientos();
+            }, error -> etiquetaTratError.setText(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             etiquetaTratError.setText(e.getMessage());
         }
@@ -347,12 +358,10 @@ public class ConfiguracionController {
         if (t == null) {
             return;
         }
-        try {
+        TareasFX.ejecutar(() -> {
             AppContext.get().catalogo().inactivarTratamiento(t.getId());
-            recargarTratamientos();
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
+            return null;
+        }, ok -> recargarTratamientos(), error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     @FXML
@@ -384,23 +393,24 @@ public class ConfiguracionController {
 
     @FXML
     private void onGuardarCieClick() {
-        try {
-            DiagnosticoCie10 diagnostico = new DiagnosticoCie10();
-            diagnostico.setCodigo(texto(campoCodCie));
-            diagnostico.setDescripcion(texto(campoDescCie));
-            diagnostico.setCapitulo(texto(campoCapCie));
-            diagnostico.setEsFrecuente(checkFrecuente.isSelected());
-            if (cieEnEdicion == null) {
+        DiagnosticoCie10 diagnostico = new DiagnosticoCie10();
+        diagnostico.setCodigo(texto(campoCodCie));
+        diagnostico.setDescripcion(texto(campoDescCie));
+        diagnostico.setCapitulo(texto(campoCapCie));
+        diagnostico.setEsFrecuente(checkFrecuente.isSelected());
+        boolean nuevo = cieEnEdicion == null;
+        TareasFX.ejecutar(() -> {
+            if (nuevo) {
                 AppContext.get().catalogo().registrarDiagnostico(diagnostico);
             } else {
                 AppContext.get().catalogo().editarDiagnostico(diagnostico);
             }
+            return null;
+        }, ok -> {
             campoCodCie.setDisable(false);
             onNuevoCieClick();
             recargarCie();
-        } catch (DentrixException e) {
-            etiquetaCieError.setText(e.getMessage());
-        }
+        }, error -> etiquetaCieError.setText(TareasFX.mensaje(error)));
     }
 
     private void eliminarCie(DiagnosticoCie10 d) {
@@ -413,15 +423,16 @@ public class ConfiguracionController {
         confirmacion.setContentText("¿Eliminar el diagnóstico " + d.getCodigo() + "?");
         confirmacion.showAndWait().ifPresent(respuesta -> {
             if (respuesta == javafx.scene.control.ButtonType.OK) {
-                try {
-                    AppContext.get().catalogo().eliminarDiagnostico(d.getCodigo());
-                    if (cieEnEdicion != null && cieEnEdicion.getCodigo().equals(d.getCodigo())) {
+                String codigo = d.getCodigo();
+                TareasFX.ejecutar(() -> {
+                    AppContext.get().catalogo().eliminarDiagnostico(codigo);
+                    return null;
+                }, ok -> {
+                    if (cieEnEdicion != null && codigo.equals(cieEnEdicion.getCodigo())) {
                         onNuevoCieClick();
                     }
                     recargarCie();
-                } catch (DentrixException e) {
-                    mostrarError(e.getMessage());
-                }
+                }, error -> mostrarError(TareasFX.mensaje(error)));
             }
         });
     }
@@ -449,10 +460,18 @@ public class ConfiguracionController {
             } catch (NumberFormatException e) {
                 throw new DentrixException("El IGV debe ser un número (ej. 18)");
             }
-            AppContext.get().catalogo().actualizarConfiguracion(config);
-            etiquetaConfigResultado.setText("Datos de la clínica guardados");
-            etiquetaConfigResultado.getStyleClass().removeAll("etiqueta-error");
-            etiquetaConfigResultado.getStyleClass().add("etiqueta-ok");
+            TareasFX.ejecutar(() -> {
+                AppContext.get().catalogo().actualizarConfiguracion(config);
+                return null;
+            }, ok -> {
+                etiquetaConfigResultado.setText("Datos de la clínica guardados");
+                etiquetaConfigResultado.getStyleClass().removeAll("etiqueta-error");
+                etiquetaConfigResultado.getStyleClass().add("etiqueta-ok");
+            }, error -> {
+                etiquetaConfigResultado.setText(TareasFX.mensaje(error));
+                etiquetaConfigResultado.getStyleClass().removeAll("etiqueta-ok");
+                etiquetaConfigResultado.getStyleClass().add("etiqueta-error");
+            });
         } catch (DentrixException e) {
             etiquetaConfigResultado.setText(e.getMessage());
             etiquetaConfigResultado.getStyleClass().removeAll("etiqueta-ok");
@@ -498,9 +517,9 @@ public class ConfiguracionController {
 
     @FXML
     private void onRefrescarClick() {
-        recargarTratamientos();
-        recargarCie();
-        cargarConfiguracion();
+        TareasFX.ejecutar(this::cargarDatos,
+                this::aplicarDatos,
+                error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     @FXML

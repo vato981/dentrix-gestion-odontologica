@@ -17,6 +17,7 @@ import pe.edu.utp.dentrix.model.Tratamiento;
 import pe.edu.utp.dentrix.model.Usuario;
 import pe.edu.utp.dentrix.ui.Badges;
 import pe.edu.utp.dentrix.ui.Navegador;
+import pe.edu.utp.dentrix.ui.TareasFX;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -123,32 +124,49 @@ public class SalaEsperaController {
         if (!contexto.sesion().activa()) {
             return;
         }
-        try {
-            cargarDiccionarios();
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
-        recargar();
+        etiquetaFecha.setText("📅 Control Diario • " + FECHA_LARGA.format(LocalDate.now()));
+        TareasFX.ejecutar(this::cargarInicial,
+                this::aplicarInicial,
+                error -> mostrarError(TareasFX.mensaje(error)));
     }
 
-    private void cargarDiccionarios() throws DentrixException {
+    private record DatosSala(Map<Integer, String> pacientes, Map<Integer, String> odontologos,
+                             Map<Integer, String> consultorios, Map<Integer, String> tratamientos,
+                             List<Cita> citas) {
+    }
+
+    private DatosSala cargarInicial() throws DentrixException {
         AppContext contexto = AppContext.get();
-        nombresPacientes.clear();
-        nombresOdontologos.clear();
-        consultoriosPorId.clear();
-        nombresTratamientos.clear();
+        Map<Integer, String> pacientes = new HashMap<>();
         for (Paciente p : contexto.pacientes().listar()) {
-            nombresPacientes.put(p.getId(), p.getApellidos() + ", " + p.getNombres());
+            pacientes.put(p.getId(), p.getApellidos() + ", " + p.getNombres());
         }
+        Map<Integer, String> odontologos = new HashMap<>();
         for (Usuario u : contexto.usuarios().listarTodos()) {
-            nombresOdontologos.put(u.getId(), "Dr. " + u.getNombres() + " " + u.getApellidos());
+            odontologos.put(u.getId(), "Dr. " + u.getNombres() + " " + u.getApellidos());
         }
+        Map<Integer, String> consultorios = new HashMap<>();
         for (var c : contexto.catalogo().listarConsultorios()) {
-            consultoriosPorId.put(c.getId(), c.getNombre());
+            consultorios.put(c.getId(), c.getNombre());
         }
+        Map<Integer, String> tratamientos = new HashMap<>();
         for (Tratamiento t : contexto.catalogo().listarTratamientos()) {
-            nombresTratamientos.put(t.getId(), t.getNombre());
+            tratamientos.put(t.getId(), t.getNombre());
         }
+        return new DatosSala(pacientes, odontologos, consultorios, tratamientos,
+                contexto.agenda().agendaDelDia(LocalDate.now()));
+    }
+
+    private void aplicarInicial(DatosSala datos) {
+        nombresPacientes.clear();
+        nombresPacientes.putAll(datos.pacientes());
+        nombresOdontologos.clear();
+        nombresOdontologos.putAll(datos.odontologos());
+        consultoriosPorId.clear();
+        consultoriosPorId.putAll(datos.consultorios());
+        nombresTratamientos.clear();
+        nombresTratamientos.putAll(datos.tratamientos());
+        aplicarCitas(datos.citas());
     }
 
     private String hora(Cita cita) {
@@ -160,30 +178,29 @@ public class SalaEsperaController {
     }
 
     private void recargar() {
-        try {
-            LocalDate hoy = LocalDate.now();
-            etiquetaFecha.setText("📅 Control Diario • " + FECHA_LARGA.format(hoy));
-            List<Cita> citas = AppContext.get().agenda().agendaDelDia(hoy);
-            tablaCola.setItems(FXCollections.observableArrayList(citas));
-            int asistieron = 0;
-            int faltaron = 0;
-            int pendientes = 0;
-            for (Cita c : citas) {
-                String estado = c.getEstado();
-                if ("EN_SALA".equals(estado) || "EN_ATENCION".equals(estado) || "ATENDIDA".equals(estado)) {
-                    asistieron++;
-                } else if ("FALTO".equals(estado)) {
-                    faltaron++;
-                } else if ("PENDIENTE".equals(estado) || "CONFIRMADA".equals(estado)) {
-                    pendientes++;
-                }
+        TareasFX.ejecutar(() -> AppContext.get().agenda().agendaDelDia(LocalDate.now()),
+                this::aplicarCitas,
+                error -> mostrarError(TareasFX.mensaje(error)));
+    }
+
+    private void aplicarCitas(List<Cita> citas) {
+        tablaCola.setItems(FXCollections.observableArrayList(citas));
+        int asistieron = 0;
+        int faltaron = 0;
+        int pendientes = 0;
+        for (Cita c : citas) {
+            String estado = c.getEstado();
+            if ("EN_SALA".equals(estado) || "EN_ATENCION".equals(estado) || "ATENDIDA".equals(estado)) {
+                asistieron++;
+            } else if ("FALTO".equals(estado)) {
+                faltaron++;
+            } else if ("PENDIENTE".equals(estado) || "CONFIRMADA".equals(estado)) {
+                pendientes++;
             }
-            etiquetaAsistieron.setText("✔ Asistieron: " + asistieron);
-            etiquetaFaltantes.setText("✖ Faltantes: " + faltaron);
-            etiquetaPendientes.setText("⏳ Pendientes: " + pendientes);
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
         }
+        etiquetaAsistieron.setText("✔ Asistieron: " + asistieron);
+        etiquetaFaltantes.setText("✖ Faltantes: " + faltaron);
+        etiquetaPendientes.setText("⏳ Pendientes: " + pendientes);
     }
 
     private void seleccionar(Cita cita) {
@@ -224,17 +241,23 @@ public class SalaEsperaController {
         if (citaSeleccionada == null) {
             return;
         }
-        try {
-            accion.aplicar(citaSeleccionada.getId());
-            etiquetaOperacion.setText(mensajeOk);
+        Long id = citaSeleccionada.getId();
+        btnAsistio.setDisable(true);
+        btnFalto.setDisable(true);
+        TareasFX.ejecutar(() -> {
+            accion.aplicar(id);
+            return mensajeOk;
+        }, mensaje -> {
+            etiquetaOperacion.setText(mensaje);
             etiquetaOperacion.getStyleClass().removeAll("etiqueta-error");
             etiquetaOperacion.getStyleClass().add("etiqueta-ok");
             recargar();
-        } catch (DentrixException e) {
-            etiquetaOperacion.setText(e.getMessage());
+        }, error -> {
+            etiquetaOperacion.setText(TareasFX.mensaje(error));
             etiquetaOperacion.getStyleClass().removeAll("etiqueta-ok");
             etiquetaOperacion.getStyleClass().add("etiqueta-error");
-        }
+            seleccionar(citaSeleccionada);
+        });
     }
 
     @FXML

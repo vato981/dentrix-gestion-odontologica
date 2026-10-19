@@ -129,6 +129,18 @@
     -fx-border-width: 1;
 }
 
+/* DatePicker usa su clase nativa (no styleClass en FXML) para no romper el popup */
+.date-picker {
+    -fx-background-radius: 8;
+    -fx-border-color: #CBD5E1;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.date-picker:focused {
+    -fx-border-color: #00A896;
+}
+
 /* ===== Tablas ===== */
 .tabla-datos {
     -fx-background-color: #FFFFFF;
@@ -220,12 +232,12 @@
 
 .nav-boton {
     -fx-alignment: CENTER_LEFT;
-    -fx-padding: 10 14 10 14;
+    -fx-padding: 9 12 9 12;
     -fx-background-radius: 8;
     -fx-background-color: transparent;
     -fx-border-color: transparent;
     -fx-text-fill: #475569;
-    -fx-font-size: 13px;
+    -fx-font-size: 12px;
     -fx-cursor: hand;
     -fx-content-display: LEFT;
 }
@@ -274,4 +286,200 @@
 .tab-pane > .tab-content-area {
     -fx-background-color: #FFFFFF;
     -fx-padding: 12;
+}
+
+/* ===== Login (referencia: prototipo UX-01 - MODULO 1) ===== */
+.tarjeta-login {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 16;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-padding: 28;
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.08), 16, 0, 0, 4);
+}
+
+.isotipo {
+    -fx-background-color: #F0FDFA;
+    -fx-background-radius: 16;
+    -fx-border-color: #99F6E4;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+}
+
+.titulo-login {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E293B;
+}
+
+.subtitulo-login {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748B;
+}
+
+.campo-login-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #475569;
+}
+
+.campo-login {
+    -fx-background-color: #F8FAFC;
+    -fx-background-radius: 8;
+    -fx-border-color: #CBD5E1;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 9 12 9 36;
+    -fx-font-size: 12px;
+    -fx-text-fill: #0F172A;
+    -fx-prompt-text-fill: #94A3B8;
+}
+
+.campo-login:focused {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #00A896;
+}
+
+.icono-campo {
+    -fx-font-size: 13px;
+    -fx-text-fill: #94A3B8;
+}
+
+.alerta-error {
+    -fx-background-color: #FFF1F2;
+    -fx-background-radius: 8;
+    -fx-border-color: #FECDD3;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 8 12 8 12;
+}
+
+.icono-alerta {
+    -fx-font-size: 12px;
+    -fx-text-fill: #E11D48;
+}
+
+.mensaje-error {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #9F1239;
+}
+
+.boton-login {
+    -fx-background-color: #00A896;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-radius: 8;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 16 10 16;
+    -fx-cursor: hand;
+}
+
+.boton-login:hover {
+    -fx-background-color: #0D9488;
+}
+
+.boton-login:pressed {
+    -fx-background-color: #0F766E;
+}
+
+.icono-boton {
+    -fx-font-size: 14px;
+    -fx-text-fill: #FFFFFF;
+}
+
+.pie-tarjeta {
+    -fx-font-size: 11px;
+    -fx-text-fill: #64748B;
+    -fx-alignment: CENTER;
+    -fx-padding: 14 0 0 0;
+    -fx-border-color: #E2E8F0 transparent transparent transparent;
+    -fx-border-style: dashed;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ===== Shell: logo del sidebar y bloque de usuario (pulido) ===== */
+.sidebar-logo {
+    -fx-border-color: transparent transparent #F1F5F9 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 2 2 12 2;
+}
+
+.sidebar-isotipo {
+    -fx-background-color: #F0FDFA;
+    -fx-background-radius: 8;
+    -fx-border-color: #99F6E4;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.sidebar-isotipo-icono {
+    -fx-font-size: 13px;
+}
+
+.sidebar-marca {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E293B;
+}
+
+.sidebar-submarca {
+    -fx-font-size: 10px;
+    -fx-text-fill: #64748B;
+}
+
+.usuario-bloque {
+    -fx-border-color: #E2E8F0 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 12 2 0 2;
+}
+
+.usuario-avatar {
+    -fx-background-color: #F0FDFA;
+    -fx-background-radius: 14;
+    -fx-border-color: #00A896;
+    -fx-border-radius: 14;
+    -fx-border-width: 1;
+}
+
+.usuario-avatar-texto {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0F766E;
+}
+
+.usuario-nombre {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E293B;
+}
+
+.usuario-rol {
+    -fx-font-size: 10px;
+    -fx-text-fill: #64748B;
+}
+
+.boton-salir {
+    -fx-background-color: #FFF1F2;
+    -fx-background-radius: 8;
+    -fx-border-color: #FECDD3;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-text-fill: #BE123C;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 12 6 12;
+    -fx-alignment: CENTER;
+    -fx-cursor: hand;
+}
+
+.boton-salir:hover {
+    -fx-background-color: #FFE4E6;
+}
+
+.boton-salir:pressed {
+    -fx-background-color: #FECDD3;
 }

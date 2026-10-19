@@ -11,6 +11,8 @@ public interface FichaDiagnosticoDAO {
 
     int insertar(FichaDiagnostico diagnostico) throws DentrixException;
 
+    int desmarcarPrincipales(Long fichaId) throws DentrixException;
+
     boolean actualizar(FichaDiagnostico diagnostico) throws DentrixException;
 
     boolean eliminar(Long fichaId, String cie10Codigo) throws DentrixException;

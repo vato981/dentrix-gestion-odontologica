@@ -25,7 +25,7 @@
                         <Label HBox.hgrow="ALWAYS" text=" " />
                         <Button text="Volver" onAction="#onVolverClick" />
                         <Button text="⟳ Refrescar" onAction="#onRefrescarClick" />
-                        <Button styleClass="boton-primario" text="✚ Nueva Ficha" onAction="#onNuevaFichaClick" />
+                        <Button styleClass="button, boton-primario" text="✚ Nueva Ficha" onAction="#onNuevaFichaClick" />
                     </children>
                 </HBox>
                 <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 10 0 0 0;">
@@ -70,12 +70,12 @@
                             <children>
                                 <Label style="-fx-font-size: 11px;" text="Cara:" />
                                 <ComboBox fx:id="comboCara" prefWidth="120.0" />
-                                <TextField fx:id="campoObsPieza" prefWidth="180.0" promptText="Observación" styleClass="campo-formulario" />
+                                <TextField fx:id="campoObsPieza" prefWidth="180.0" promptText="Observación" styleClass="text-field, campo-formulario" />
                                 <Button text="Guardar pieza" onAction="#onGuardarPiezaClick" />
                                 <Button text="Quitar pieza" onAction="#onQuitarPiezaClick" />
                             </children>
                         </HBox>
-                        <TableView fx:id="tablaOdontograma" prefHeight="160.0" styleClass="tabla-datos" VBox.vgrow="ALWAYS">
+                        <TableView fx:id="tablaOdontograma" prefHeight="160.0" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
                             <columns>
                                 <TableColumn fx:id="colOdoPieza" prefWidth="70.0" text="PIEZA" />
                                 <TableColumn fx:id="colOdoEstado" prefWidth="110.0" text="ESTADO" />
@@ -103,7 +103,7 @@
                                         <TextArea fx:id="areaPlan" prefHeight="54.0" wrapText="true" />
                                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                                             <children>
-                                                <Button styleClass="boton-primario" text="💾 Guardar contenido" onAction="#onGuardarContenidoClick" />
+                                                <Button styleClass="button, boton-primario" text="💾 Guardar contenido" onAction="#onGuardarContenidoClick" />
                                                 <Label fx:id="etiquetaContenido" styleClass="etiqueta-estado" text="" />
                                             </children>
                                         </HBox>
@@ -118,11 +118,11 @@
                                                 <Label style="-fx-font-size: 11px;" text="Pieza FDI:" />
                                                 <ComboBox fx:id="comboPiezaDiag" prefWidth="80.0" />
                                                 <CheckBox fx:id="checkPrincipal" text="Principal" />
-                                                <TextField fx:id="campoObsDiag" prefWidth="160.0" promptText="Observación" styleClass="campo-formulario" />
+                                                <TextField fx:id="campoObsDiag" prefWidth="160.0" promptText="Observación" styleClass="text-field, campo-formulario" />
                                                 <Button text="Agregar" onAction="#onAgregarDiagnosticoClick" />
                                             </children>
                                         </HBox>
-                                        <TableView fx:id="tablaDiagnosticos" prefHeight="140.0" styleClass="tabla-datos">
+                                        <TableView fx:id="tablaDiagnosticos" prefHeight="140.0" styleClass="table-view, tabla-datos">
                                             <columns>
                                                 <TableColumn fx:id="colDiagCodigo" prefWidth="90.0" text="CIE-10" />
                                                 <TableColumn fx:id="colDiagDescripcion" prefWidth="240.0" text="DESCRIPCIÓN" />
@@ -136,7 +136,7 @@
                                                 <Button text="Quitar diagnóstico" onAction="#onQuitarDiagnosticoClick" />
                                                 <Button text="Quitar todos" onAction="#onQuitarTodosDiagnosticosClick" />
                                                 <Label HBox.hgrow="ALWAYS" text=" " />
-                                                <Label styleClass="etiqueta-estado" text="RF-06: solo un principal por ficha." />
+                                                <Label styleClass="etiqueta-estado" text="Puedes agregar varios CIE-10; solo uno como principal (RF-06)." />
                                             </children>
                                         </HBox>
                                     </children>
@@ -149,11 +149,11 @@
                                                 <ComboBox fx:id="comboTratamiento" prefWidth="280.0" />
                                                 <Label style="-fx-font-size: 11px;" text="Pieza:" />
                                                 <ComboBox fx:id="comboPiezaPlan" prefWidth="80.0" />
-                                                <TextField fx:id="campoCantidadPlan" prefWidth="55.0" styleClass="campo-formulario" text="1" />
+                                                <TextField fx:id="campoCantidadPlan" prefWidth="55.0" styleClass="text-field, campo-formulario" text="1" />
                                                 <Button text="Agregar línea" onAction="#onAgregarLineaPlanClick" />
                                             </children>
                                         </HBox>
-                                        <TableView fx:id="tablaPlan" prefHeight="140.0" styleClass="tabla-datos">
+                                        <TableView fx:id="tablaPlan" prefHeight="140.0" styleClass="table-view, tabla-datos">
                                             <columns>
                                                 <TableColumn fx:id="colPlanTrat" prefWidth="240.0" text="TRATAMIENTO" />
                                                 <TableColumn fx:id="colPlanPieza" prefWidth="70.0" text="PIEZA" />
@@ -177,7 +177,7 @@
                                         <Label fx:id="etiquetaDerivacion" style="-fx-font-size: 12px;" text="Sin ficha seleccionada." wrapText="true" />
                                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                                             <children>
-                                                <Button styleClass="boton-primario" text="Derivar a caja" onAction="#onDerivarClick" />
+                                                <Button styleClass="button, boton-primario" text="Derivar a caja" onAction="#onDerivarClick" />
                                                 <Button text="Rechazar derivación" onAction="#onRechazarClick" />
                                                 <Button text="Verificar si es cobrable" onAction="#onVerificarCobrableClick" />
                                             </children>

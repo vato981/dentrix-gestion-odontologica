@@ -1,18 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+<?import java.net.URL?>
 
-<VBox alignment="CENTER" spacing="14.0" style="-fx-padding: 40;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pe.edu.utp.dentrix.controller.LoginController">
+<VBox alignment="CENTER" fillWidth="false" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pe.edu.utp.dentrix.controller.LoginController">
+    <stylesheets>
+        <URL value="@../estilos.css" />
+    </stylesheets>
     <children>
-        <Label text="Dentrix" style="-fx-font-size: 36px; -fx-font-weight: bold;" />
-        <Label text="Sistema de Gestión Clínica" style="-fx-font-size: 14px; -fx-text-fill: #666666;" />
-        <TextField fx:id="campoUsuario" promptText="Usuario" prefWidth="280.0" />
-        <PasswordField fx:id="campoClave" promptText="Contraseña" prefWidth="280.0" />
-        <Label fx:id="etiquetaError" text="" style="-fx-text-fill: #C62828;" />
-        <Button text="Ingresar" defaultButton="true" prefWidth="280.0" styleClass="boton-primario" onAction="#onIngresarClick" />
+        <VBox alignment="CENTER" prefWidth="390.0" styleClass="tarjeta-login">
+            <children>
+                <StackPane maxHeight="56.0" maxWidth="56.0" minHeight="56.0" minWidth="56.0" prefHeight="56.0" prefWidth="56.0" styleClass="isotipo">
+                    <children>
+                        <SVGPath content="M12 2C9 2 7.5 3.5 7 5.5c-.8 3-1.8 7-2 11.5-.2 2.5 1.5 4 3 3.5 1.5-.5 2.5-4 4-4s2.5 3.5 4 4c1.5.5 3.2-1 3-3.5-.2-4.5-1.2-8.5-2-11.5C16.5 3.5 15 2 12 2z" fill="#00A896" scaleX="1.5" scaleY="1.5" />
+                    </children>
+                </StackPane>
+                <VBox alignment="CENTER" spacing="2.0">
+                    <VBox.margin>
+                        <Insets bottom="24.0" top="12.0" />
+                    </VBox.margin>
+                    <children>
+                        <Label styleClass="titulo-login" text="Dentrix" />
+                        <Label styleClass="subtitulo-login" text="Centro Odontológico" />
+                    </children>
+                </VBox>
+                <VBox spacing="16.0">
+                    <children>
+                        <VBox spacing="6.0">
+                            <children>
+                                <Label styleClass="campo-login-label" text="USUARIO" />
+                                <StackPane>
+                                    <children>
+                                        <TextField fx:id="campoUsuario" promptText="Nombre de usuario" styleClass="campo-login" />
+                                        <Label mouseTransparent="true" styleClass="icono-campo" text="&#x1F464;" StackPane.alignment="CENTER_LEFT">
+                                            <StackPane.margin>
+                                                <Insets left="12.0" />
+                                            </StackPane.margin>
+                                        </Label>
+                                    </children>
+                                </StackPane>
+                            </children>
+                        </VBox>
+                        <VBox spacing="6.0">
+                            <children>
+                                <Label styleClass="campo-login-label" text="CONTRASEÑA" />
+                                <StackPane>
+                                    <children>
+                                        <PasswordField fx:id="campoClave" promptText="Contraseña" styleClass="campo-login" />
+                                        <Label mouseTransparent="true" styleClass="icono-campo" text="&#x1F512;" StackPane.alignment="CENTER_LEFT">
+                                            <StackPane.margin>
+                                                <Insets left="12.0" />
+                                            </StackPane.margin>
+                                        </Label>
+                                    </children>
+                                </StackPane>
+                            </children>
+                        </VBox>
+                        <Button contentDisplay="RIGHT" defaultButton="true" graphicTextGap="8.0" maxWidth="Infinity" onAction="#onIngresarClick" styleClass="button, boton-login" text="Iniciar Sesión">
+                            <VBox.margin>
+                                <Insets top="8.0" />
+                            </VBox.margin>
+                            <graphic>
+                                <Label styleClass="icono-boton" text="&#x2794;" />
+                            </graphic>
+                        </Button>
+                        <HBox fx:id="cajaError" alignment="TOP_LEFT" managed="false" spacing="8.0" styleClass="alerta-error" visible="false">
+                            <children>
+                                <Label styleClass="icono-alerta" text="&#x26A0;" />
+                                <Label fx:id="etiquetaError" maxWidth="Infinity" styleClass="mensaje-error" wrapText="true" HBox.hgrow="ALWAYS" />
+                            </children>
+                        </HBox>
+                    </children>
+                </VBox>
+                <Label maxWidth="Infinity" styleClass="pie-tarjeta" text="Sistema de Gestión Odontológica • Versión 1.0">
+                    <VBox.margin>
+                        <Insets top="24.0" />
+                    </VBox.margin>
+                </Label>
+            </children>
+        </VBox>
     </children>
 </VBox>

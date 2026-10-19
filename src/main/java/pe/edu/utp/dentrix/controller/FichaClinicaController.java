@@ -29,6 +29,7 @@ import pe.edu.utp.dentrix.model.HallazgoDental;
 import pe.edu.utp.dentrix.model.Paciente;
 import pe.edu.utp.dentrix.model.PlanTratamiento;
 import pe.edu.utp.dentrix.model.Tratamiento;
+import pe.edu.utp.dentrix.ui.TareasFX;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -294,25 +295,47 @@ public class FichaClinicaController {
             return;
         }
         odontologoSesion = contexto.sesion().getUsuario().getId();
-        try {
-            List<Paciente> activos = new ArrayList<>();
-            for (Paciente p : contexto.pacientes().listar()) {
-                if ("ACTIVO".equals(p.getEstado())) {
-                    activos.add(p);
+        TareasFX.ejecutar(this::cargarCombos,
+                this::aplicarCombos,
+                error -> mostrarError(TareasFX.mensaje(error)));
+    }
+
+    private record DatosCombos(List<Paciente> pacientes, List<DiagnosticoCie10> diagnosticos,
+                               List<Tratamiento> tratamientos, List<Tratamiento> activos) {
+    }
+
+    private DatosCombos cargarCombos() throws DentrixException {
+        AppContext contexto = AppContext.get();
+        List<Paciente> activos = new ArrayList<>();
+        for (Paciente p : contexto.pacientes().listar()) {
+            if ("ACTIVO".equals(p.getEstado())) {
+                activos.add(p);
+            }
+        }
+        return new DatosCombos(activos, contexto.catalogo().listarDiagnosticos(),
+                contexto.catalogo().listarTratamientos(), contexto.catalogo().listarTratamientosActivos());
+    }
+
+    private void aplicarCombos(DatosCombos datos) {
+        comboPaciente.setItems(FXCollections.observableArrayList(datos.pacientes()));
+        Paciente enAtencion = AppContext.get().sesion().getPacienteEnAtencion();
+        if (enAtencion != null) {
+            for (Paciente p : datos.pacientes()) {
+                if (p.getId() != null && p.getId().equals(enAtencion.getId())) {
+                    comboPaciente.setValue(p);
+                    break;
                 }
             }
-            comboPaciente.setItems(FXCollections.observableArrayList(activos));
-            comboCie10.setItems(FXCollections.observableArrayList(contexto.catalogo().listarDiagnosticos()));
-            for (DiagnosticoCie10 d : contexto.catalogo().listarDiagnosticos()) {
-                descripcionesCie10.put(d.getCodigo(), d.getDescripcion());
-            }
-            List<Tratamiento> tratamientos = contexto.catalogo().listarTratamientosActivos();
-            comboTratamiento.setItems(FXCollections.observableArrayList(tratamientos));
-            for (Tratamiento t : contexto.catalogo().listarTratamientos()) {
-                nombresTratamientos.put(t.getId(), t.getNombre());
-            }
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
+        }
+        comboCie10.setItems(FXCollections.observableArrayList(datos.diagnosticos()));
+        descripcionesCie10.clear();
+        for (DiagnosticoCie10 d : datos.diagnosticos()) {
+            descripcionesCie10.put(d.getCodigo(), d.getDescripcion());
+        }
+        comboTratamiento.setItems(FXCollections.observableArrayList(datos.activos()));
+        nombresTratamientos.clear();
+        for (Tratamiento t : datos.tratamientos()) {
+            nombresTratamientos.put(t.getId(), t.getNombre());
         }
     }
 
@@ -468,15 +491,16 @@ public class FichaClinicaController {
             return;
         }
         String estado = herramientaSeleccionada();
-        try {
-            AppContext.get().fichas().actualizarEstadoPieza(paciente.getId(), pieza, estado, null, null);
+        Integer pacienteId = paciente.getId();
+        TareasFX.ejecutar(() -> {
+            AppContext.get().fichas().actualizarEstadoPieza(pacienteId, pieza, estado, null, null);
+            return null;
+        }, ok -> {
             etiquetaOdontograma.setText("Pieza " + pieza + " → " + estado + " (RF-06 registrado)");
             etiquetaOdontograma.getStyleClass().removeAll("etiqueta-error");
             etiquetaOdontograma.getStyleClass().add("etiqueta-ok");
             recargarOdontograma();
-        } catch (DentrixException ex) {
-            mostrarError(ex.getMessage());
-        }
+        }, error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     private String herramientaSeleccionada() {
@@ -519,33 +543,40 @@ public class FichaClinicaController {
 
     @FXML
     private void onNuevaFichaClick() {
-        try {
-            Paciente paciente = comboPaciente.getValue();
-            if (paciente == null) {
-                mostrarInfo("Selecciona el paciente de la nueva ficha.");
-                return;
-            }
-            FichaClinica ficha = new FichaClinica();
-            ficha.setPacienteId(paciente.getId());
-            ficha.setOdontologoId(odontologoSesion);
-            FichaClinica creada = AppContext.get().fichas().crear(ficha);
-            pacienteCambiado();
-            comboFichas.setValue(creada);
-            comboFichas.getSelectionModel().select(creada);
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
+        Paciente paciente = comboPaciente.getValue();
+        if (paciente == null) {
+            mostrarInfo("Selecciona el paciente de la nueva ficha.");
+            return;
         }
+        FichaClinica ficha = new FichaClinica();
+        ficha.setPacienteId(paciente.getId());
+        ficha.setOdontologoId(odontologoSesion);
+        TareasFX.ejecutar(() -> AppContext.get().fichas().crear(ficha),
+                creada -> {
+                    pacienteCambiado();
+                    comboFichas.setValue(creada);
+                    comboFichas.getSelectionModel().select(creada);
+                },
+                error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     @FXML
     private void onGuardarContenidoClick() {
         try {
             exigirFicha();
-            AppContext.get().fichas().actualizarContenido(fichaActual.getId(),
-                    texto(areaMotivo), texto(areaExamen), texto(areaPrescripcion), texto(areaPlan));
-            etiquetaContenido.setText("Contenido guardado");
-            etiquetaContenido.getStyleClass().removeAll("etiqueta-error", "etiqueta-ok");
-            etiquetaContenido.getStyleClass().add("etiqueta-ok");
+            Long fichaId = fichaActual.getId();
+            String motivo = texto(areaMotivo);
+            String examen = texto(areaExamen);
+            String prescripcion = texto(areaPrescripcion);
+            String plan = texto(areaPlan);
+            TareasFX.ejecutar(() -> {
+                AppContext.get().fichas().actualizarContenido(fichaId, motivo, examen, prescripcion, plan);
+                return null;
+            }, ok -> {
+                etiquetaContenido.setText("Contenido guardado");
+                etiquetaContenido.getStyleClass().removeAll("etiqueta-error", "etiqueta-ok");
+                etiquetaContenido.getStyleClass().add("etiqueta-ok");
+            }, error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -558,13 +589,22 @@ public class FichaClinicaController {
             if (comboCie10.getValue() == null) {
                 throw new DentrixException("Selecciona el diagnóstico CIE-10");
             }
-            FichaDiagnostico diag = AppContext.get().fichas().registrarDiagnostico(fichaActual.getId(),
-                    comboCie10.getValue().getCodigo(), comboPiezaDiag.getValue(),
-                    checkPrincipal.isSelected(), texto(campoObsDiag));
-            campoObsDiag.clear();
-            checkPrincipal.setSelected(false);
-            recargarDiagnosticos();
-            tablaDiagnosticos.getSelectionModel().select(diag);
+            Long fichaId = fichaActual.getId();
+            String cie10 = comboCie10.getValue().getCodigo();
+            Integer pieza = comboPiezaDiag.getValue();
+            boolean principal = checkPrincipal.isSelected();
+            String observacion = texto(campoObsDiag);
+            TareasFX.ejecutar(() -> AppContext.get().fichas().registrarDiagnostico(fichaId, cie10, pieza,
+                            principal, observacion),
+                    diag -> {
+                        campoObsDiag.clear();
+                        comboCie10.setValue(null);
+                        comboPiezaDiag.setValue(null);
+                        checkPrincipal.setSelected(false);
+                        recargarDiagnosticos();
+                        tablaDiagnosticos.getSelectionModel().select(diag);
+                    },
+                    error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -577,20 +617,30 @@ public class FichaClinicaController {
             mostrarInfo("Selecciona el diagnóstico a quitar.");
             return;
         }
+        Long fichaId;
         try {
-            AppContext.get().fichas().eliminarDiagnostico(fichaActual.getId(), seleccionado.getCie10Codigo());
-            recargarDiagnosticos();
+            exigirFicha();
+            fichaId = fichaActual.getId();
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
+            return;
         }
+        String cie10 = seleccionado.getCie10Codigo();
+        TareasFX.ejecutar(() -> {
+            AppContext.get().fichas().eliminarDiagnostico(fichaId, cie10);
+            return null;
+        }, ok -> recargarDiagnosticos(), error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     @FXML
     private void onQuitarTodosDiagnosticosClick() {
         try {
             exigirFicha();
-            AppContext.get().fichas().eliminarTodosLosDiagnosticos(fichaActual.getId());
-            recargarDiagnosticos();
+            Long fichaId = fichaActual.getId();
+            TareasFX.ejecutar(() -> {
+                AppContext.get().fichas().eliminarTodosLosDiagnosticos(fichaId);
+                return null;
+            }, ok -> recargarDiagnosticos(), error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -606,10 +656,18 @@ public class FichaClinicaController {
             if (comboPiezaOdonto.getValue() == null) {
                 throw new DentrixException("Selecciona la pieza dental");
             }
-            AppContext.get().fichas().actualizarEstadoPieza(paciente.getId(), comboPiezaOdonto.getValue(),
-                    comboEstadoPieza.getValue(), comboCara.getValue(), texto(campoObsPieza));
-            campoObsPieza.clear();
-            recargarOdontograma();
+            Integer pacienteId = paciente.getId();
+            Integer pieza = comboPiezaOdonto.getValue();
+            String estado = comboEstadoPieza.getValue();
+            String cara = comboCara.getValue();
+            String observacion = texto(campoObsPieza);
+            TareasFX.ejecutar(() -> {
+                AppContext.get().fichas().actualizarEstadoPieza(pacienteId, pieza, estado, cara, observacion);
+                return null;
+            }, ok -> {
+                campoObsPieza.clear();
+                recargarOdontograma();
+            }, error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -623,12 +681,12 @@ public class FichaClinicaController {
             mostrarInfo("Selecciona la pieza del odontograma a quitar.");
             return;
         }
-        try {
-            AppContext.get().fichas().eliminarHallazgo(paciente.getId(), seleccionado.getPiezaFdi());
-            recargarOdontograma();
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
+        Integer pacienteId = paciente.getId();
+        Integer pieza = seleccionado.getPiezaFdi();
+        TareasFX.ejecutar(() -> {
+            AppContext.get().fichas().eliminarHallazgo(pacienteId, pieza);
+            return null;
+        }, ok -> recargarOdontograma(), error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     @FXML
@@ -647,10 +705,14 @@ public class FichaClinicaController {
             PlanTratamiento linea = new PlanTratamiento(fichaActual.getPacienteId(),
                     comboTratamiento.getValue().getId(), comboPiezaPlan.getValue(), cantidad, null, null);
             linea.setFichaId(fichaActual.getId());
-            AppContext.get().fichas().agregarLinea(linea);
-            campoCantidadPlan.setText("1");
-            comboPiezaPlan.setValue(null);
-            recargarPlan();
+            TareasFX.ejecutar(() -> {
+                AppContext.get().fichas().agregarLinea(linea);
+                return null;
+            }, ok -> {
+                campoCantidadPlan.setText("1");
+                comboPiezaPlan.setValue(null);
+                recargarPlan();
+            }, error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -663,12 +725,11 @@ public class FichaClinicaController {
             mostrarInfo("Selecciona la línea del plan a marcar como ejecutada.");
             return;
         }
-        try {
-            AppContext.get().fichas().marcarEjecutada(seleccionada.getId());
-            recargarPlan();
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
+        Long lineaId = seleccionada.getId();
+        TareasFX.ejecutar(() -> {
+            AppContext.get().fichas().marcarEjecutada(lineaId);
+            return null;
+        }, ok -> recargarPlan(), error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     @FXML
@@ -678,21 +739,25 @@ public class FichaClinicaController {
             mostrarInfo("Selecciona la línea del plan a eliminar.");
             return;
         }
-        try {
-            AppContext.get().fichas().eliminarLinea(seleccionada.getId());
-            recargarPlan();
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
+        Long lineaId = seleccionada.getId();
+        TareasFX.ejecutar(() -> {
+            AppContext.get().fichas().eliminarLinea(lineaId);
+            return null;
+        }, ok -> recargarPlan(), error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     @FXML
     private void onDerivarClick() {
         try {
             exigirFicha();
-            AppContext.get().fichas().derivarACaja(fichaActual.getId());
-            refrescarFichaActual();
-            etiquetaDerivResultado.setText("Ficha derivada a caja con estado ACEPTADA; ya puede facturarse (RF-07).");
+            Long fichaId = fichaActual.getId();
+            TareasFX.ejecutar(() -> {
+                AppContext.get().fichas().derivarACaja(fichaId);
+                return null;
+            }, ok -> {
+                refrescarFichaActual();
+                etiquetaDerivResultado.setText("Ficha derivada a caja con estado ACEPTADA; ya puede facturarse (RF-07).");
+            }, error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -702,9 +767,14 @@ public class FichaClinicaController {
     private void onRechazarClick() {
         try {
             exigirFicha();
-            AppContext.get().fichas().rechazarDerivacion(fichaActual.getId());
-            refrescarFichaActual();
-            etiquetaDerivResultado.setText("Derivación marcada como RECHAZADA.");
+            Long fichaId = fichaActual.getId();
+            TareasFX.ejecutar(() -> {
+                AppContext.get().fichas().rechazarDerivacion(fichaId);
+                return null;
+            }, ok -> {
+                refrescarFichaActual();
+                etiquetaDerivResultado.setText("Derivación marcada como RECHAZADA.");
+            }, error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }

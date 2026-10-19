@@ -16,6 +16,7 @@ import pe.edu.utp.dentrix.model.Tratamiento;
 import pe.edu.utp.dentrix.model.Usuario;
 import pe.edu.utp.dentrix.ui.Badges;
 import pe.edu.utp.dentrix.ui.Navegador;
+import pe.edu.utp.dentrix.ui.TareasFX;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 public class DashboardController {
 
@@ -90,40 +92,49 @@ public class DashboardController {
         LocalDate hoy = LocalDate.now();
         etiquetaFechaAgenda.setText(hoy.format(DateTimeFormatter.ofPattern(
                 "EEEE dd 'de' MMMM 'de' yyyy", new Locale("es", "PE"))));
-        try {
-            cargarDiccionarios(contexto);
-            cargarKpis(contexto, hoy);
-            cargarAgenda(contexto, hoy);
-        } catch (DentrixException e) {
-            kpiCitas.setText("—");
-        }
+        TareasFX.ejecutar(() -> cargarTodo(hoy),
+                this::aplicarTodo,
+                error -> kpiCitas.setText("—"));
     }
 
-    private void cargarDiccionarios(AppContext contexto) throws DentrixException {
+    private record DatosDashboard(Map<Integer, String> pacientes, Map<Integer, String> odontologos,
+                                  Map<Integer, String> tratamientos, KpiDia kpi, List<Cita> citas) {
+    }
+
+    private DatosDashboard cargarTodo(LocalDate hoy) throws DentrixException {
+        AppContext contexto = AppContext.get();
+        Map<Integer, String> pacientes = new HashMap<>();
         for (Paciente p : contexto.pacientes().listar()) {
-            nombresPacientes.put(p.getId(), p.getApellidos() + ", " + p.getNombres());
+            pacientes.put(p.getId(), p.getApellidos() + ", " + p.getNombres());
         }
+        Map<Integer, String> odontologos = new HashMap<>();
         for (Usuario u : contexto.usuarios().listarTodos()) {
-            nombresOdontologos.put(u.getId(), "Dr. " + u.getNombres() + " " + u.getApellidos());
+            odontologos.put(u.getId(), "Dr. " + u.getNombres() + " " + u.getApellidos());
         }
+        Map<Integer, String> tratamientos = new HashMap<>();
         for (Tratamiento t : contexto.catalogo().listarTratamientos()) {
-            nombresTratamientos.put(t.getId(), t.getNombre());
+            tratamientos.put(t.getId(), t.getNombre());
         }
+        KpiDia kpi = contexto.reportes().kpisDeFecha(hoy);
+        List<Cita> citas = contexto.agenda().agendaDelDia(hoy).stream()
+                .filter(c -> "CITA".equals(c.getTipo()))
+                .toList();
+        return new DatosDashboard(pacientes, odontologos, tratamientos, kpi, citas);
     }
 
-    private void cargarKpis(AppContext contexto, LocalDate fecha) throws DentrixException {
-        KpiDia kpi = contexto.reportes().kpisDeFecha(fecha);
+    private void aplicarTodo(DatosDashboard datos) {
+        nombresPacientes.clear();
+        nombresPacientes.putAll(datos.pacientes());
+        nombresOdontologos.clear();
+        nombresOdontologos.putAll(datos.odontologos());
+        nombresTratamientos.clear();
+        nombresTratamientos.putAll(datos.tratamientos());
+        KpiDia kpi = datos.kpi();
         kpiCitas.setText(String.valueOf(kpi.citas()));
         kpiSala.setText(String.valueOf(kpi.enSala()));
         kpiRecaudado.setText("S/ " + String.format(Locale.US, "%,.2f", kpi.recaudado()));
         kpiDeudores.setText(String.valueOf(kpi.deudores()));
-    }
-
-    private void cargarAgenda(AppContext contexto, LocalDate fecha) throws DentrixException {
-        List<Cita> citas = contexto.agenda().agendaDelDia(fecha).stream()
-                .filter(c -> "CITA".equals(c.getTipo()))
-                .toList();
-        tablaAgenda.setItems(FXCollections.observableArrayList(citas));
+        tablaAgenda.setItems(FXCollections.observableArrayList(datos.citas()));
     }
 
     @FXML
@@ -138,13 +149,11 @@ public class DashboardController {
             return;
         }
         try {
-            List<Paciente> encontrados = AppContext.get().pacientes().buscar(dni).stream()
-                    .filter(p -> dni.equals(p.getDni()))
-                    .toList();
-            if (encontrados.isEmpty()) {
+            Optional<Paciente> encontrado = AppContext.get().pacientes().buscarPorDni(dni);
+            if (encontrado.isEmpty()) {
                 etiquetaBusqueda.setText("🔍 No se encontró paciente con ese DNI — usa \"+ Registrar Nuevo Paciente\".");
             } else {
-                Paciente p = encontrados.get(0);
+                Paciente p = encontrado.get();
                 etiquetaBusqueda.setText("✔ " + p.getCodigoHc() + " · " + p.getApellidos() + ", "
                         + p.getNombres() + " (" + p.getEstado() + ")");
             }

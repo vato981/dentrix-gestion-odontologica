@@ -18,7 +18,7 @@
                         <Label HBox.hgrow="ALWAYS" text=" " />
                         <Button text="Volver" onAction="#onVolverClick" />
                         <Button text="⟳ Refrescar" onAction="#onRefrescarClick" />
-                        <Button styleClass="boton-primario" text="📋 Ver en Agenda →" onAction="#onVerAgendaClick" />
+                        <Button styleClass="button, boton-primario" text="📋 Ver en Agenda →" onAction="#onVerAgendaClick" />
                     </children>
                 </HBox>
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
@@ -55,7 +55,7 @@
                         <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="ESTADO DE ASISTENCIA DEL TURNO (RF-03):" />
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <children>
-                                <Button fx:id="btnAsistio" disable="true" onAction="#onAsistioClick" styleClass="boton-primario" text="✔ Asistió (En Sala)" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                                <Button fx:id="btnAsistio" disable="true" onAction="#onAsistioClick" styleClass="button, boton-primario" text="✔ Asistió (En Sala)" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                                 <Button fx:id="btnFalto" disable="true" onAction="#onFaltoClick" text="✖ No Asistió (Faltó)" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                             </children>
                         </HBox>
@@ -72,7 +72,7 @@
                                 <Label styleClass="tarjeta-etiqueta" text="Consultorios 1 y 2" />
                             </children>
                         </HBox>
-                        <TableView fx:id="tablaCola" styleClass="tabla-datos" VBox.vgrow="ALWAYS">
+                        <TableView fx:id="tablaCola" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
                             <columns>
                                 <TableColumn fx:id="colHora" prefWidth="120.0" text="HORARIO" />
                                 <TableColumn fx:id="colDoctor" prefWidth="170.0" text="CONSULT. / DOCTOR" />

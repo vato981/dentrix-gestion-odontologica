@@ -82,6 +82,13 @@ public class CitaDAOImpl implements CitaDAO {
     }
 
     @Override
+    public List<Cita> listarPorPacienteEnFecha(Integer pacienteId, LocalDate fecha) throws DentrixException {
+        String sql = "SELECT " + COLUMNAS + " FROM cita WHERE paciente_id = ? AND fecha_cita = ? "
+                + "ORDER BY hora_inicio, id";
+        return listar(sql, new Object[]{pacienteId, fecha});
+    }
+
+    @Override
     public Optional<Cita> buscarPorId(Long id) throws DentrixException {
         String sql = "SELECT " + COLUMNAS + " FROM cita WHERE id = ?";
         try (Connection cn = ConexionBD.abrir();

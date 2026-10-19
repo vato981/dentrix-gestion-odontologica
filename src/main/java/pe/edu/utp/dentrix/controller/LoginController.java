@@ -5,11 +5,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
 import pe.edu.utp.dentrix.config.AppContext;
-import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.Rol;
 import pe.edu.utp.dentrix.model.Usuario;
+import pe.edu.utp.dentrix.ui.TareasFX;
 
 public class LoginController {
 
@@ -25,34 +25,47 @@ public class LoginController {
     private Label etiquetaError;
 
     @FXML
-    private void initialize() {
-        campoClave.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.ENTER) {
-                onIngresarClick();
-            }
-        });
-    }
+    private HBox cajaError;
+
+    private boolean ingresando;
 
     @FXML
     private void onIngresarClick() {
-        etiquetaError.setText("");
+        if (ingresando) {
+            return;
+        }
+        mostrarError("");
         String usuario = campoUsuario.getText() == null ? "" : campoUsuario.getText().trim();
         String clave = campoClave.getText() == null ? "" : campoClave.getText();
         if (usuario.isEmpty() || clave.isEmpty()) {
-            etiquetaError.setText("Escribe tu usuario y tu contraseña.");
+            mostrarError("Escribe tu usuario y tu contraseña.");
             return;
         }
-        try {
+        ingresando = true;
+        TareasFX.ejecutar(() -> {
             AppContext contexto = AppContext.get();
             Usuario logueado = contexto.autenticacion().iniciarSesion(usuario, clave);
             Rol rol = contexto.autenticacion().rolDe(logueado);
             contexto.sesion().abrir(logueado, rol);
+            return null;
+        }, ok -> {
+            ingresando = false;
             campoClave.clear();
-            campoUsuario.getScene().setRoot(FXMLLoader.load(getClass().getResource(FXML_MENU)));
-        } catch (DentrixException e) {
-            etiquetaError.setText(e.getMessage());
-        } catch (Exception e) {
-            etiquetaError.setText("No se pudo iniciar la aplicación: " + e.getMessage());
-        }
+            try {
+                campoUsuario.getScene().setRoot(FXMLLoader.load(getClass().getResource(FXML_MENU)));
+            } catch (Exception e) {
+                mostrarError("No se pudo iniciar la aplicación: " + e.getMessage());
+            }
+        }, error -> {
+            ingresando = false;
+            mostrarError(TareasFX.mensaje(error));
+        });
+    }
+
+    private void mostrarError(String mensaje) {
+        boolean hay = mensaje != null && !mensaje.isEmpty();
+        etiquetaError.setText(hay ? mensaje : "");
+        cajaError.setVisible(hay);
+        cajaError.setManaged(hay);
     }
 }

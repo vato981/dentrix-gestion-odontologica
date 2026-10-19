@@ -18,12 +18,12 @@
         <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 0 0 14 0;">
             <children>
                 <Label text="📅 Fecha:" />
-                <DatePicker fx:id="campoFecha" prefWidth="150.0" styleClass="campo-formulario" />
+                <DatePicker fx:id="campoFecha" prefWidth="150.0" />
                 <Label fx:id="etiquetaConteo" styleClass="etiqueta-estado" text="" />
                 <Label HBox.hgrow="ALWAYS" text=" " />
                 <Button text="Volver" onAction="#onVolverClick" />
                 <Button text="⟳ Refrescar" onAction="#onRefrescarClick" />
-                <Button styleClass="boton-primario" text="🗓 Nueva Cita" onAction="#onNuevaCitaClick" />
+                <Button styleClass="button, boton-primario" text="🗓 Nueva Cita" onAction="#onNuevaCitaClick" />
                 <Button text="⬛ Bloquear Hora" onAction="#onBloquearClick" />
             </children>
         </HBox>
@@ -47,28 +47,28 @@
                             </columnConstraints>
                             <children>
                                 <Label fx:id="etiquetaTipo" style="-fx-font-size: 11px;" text="Tipo:" GridPane.rowIndex="0" />
-                                <ComboBox fx:id="comboTipo" styleClass="combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                <ComboBox fx:id="comboTipo" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
                                 <Label style="-fx-font-size: 11px;" text="Hora inicio:" GridPane.rowIndex="1" />
-                                <TextField fx:id="campoInicio" promptText="09:00" styleClass="campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <TextField fx:id="campoInicio" promptText="09:00" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                 <Label style="-fx-font-size: 11px;" text="Hora fin:" GridPane.rowIndex="2" />
-                                <TextField fx:id="campoFin" promptText="09:45" styleClass="campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                <TextField fx:id="campoFin" promptText="09:45" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                 <Label fx:id="etiquetaPaciente" style="-fx-font-size: 11px;" text="Paciente:" GridPane.rowIndex="3" />
-                                <ComboBox fx:id="comboPaciente" styleClass="combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                <ComboBox fx:id="comboPaciente" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                                 <Label style="-fx-font-size: 11px;" text="Odontólogo:" GridPane.rowIndex="4" />
-                                <ComboBox fx:id="comboOdontologo" styleClass="combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                <ComboBox fx:id="comboOdontologo" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                 <Label style="-fx-font-size: 11px;" text="Consultorio:" GridPane.rowIndex="5" />
-                                <ComboBox fx:id="comboConsultorio" styleClass="combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                <ComboBox fx:id="comboConsultorio" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                                 <Label fx:id="etiquetaTratamiento" style="-fx-font-size: 11px;" text="Tratamiento (opcional):" GridPane.rowIndex="6" />
-                                <ComboBox fx:id="comboTratamiento" styleClass="combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                <ComboBox fx:id="comboTratamiento" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                                 <Label fx:id="etiquetaMotivo" style="-fx-font-size: 11px;" text="Motivo:" GridPane.rowIndex="7" />
-                                <TextField fx:id="campoMotivo" promptText="Motivo de la cita o del bloque" styleClass="campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                                <TextField fx:id="campoMotivo" promptText="Motivo de la cita o del bloque" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="7" />
                             </children>
                         </GridPane>
                         <Label fx:id="etiquetaError" styleClass="etiqueta-error" text="" wrapText="true" />
                         <HBox alignment="CENTER_RIGHT" spacing="10.0">
                             <children>
                                 <Button text="Cancelar" onAction="#onCancelarClick" />
-                                <Button defaultButton="true" styleClass="boton-primario" text="💾 Guardar" onAction="#onGuardarClick" />
+                                <Button defaultButton="true" styleClass="button, boton-primario" text="💾 Guardar" onAction="#onGuardarClick" />
                             </children>
                         </HBox>
                     </children>
@@ -82,7 +82,7 @@
                                 <Label styleClass="tarjeta-etiqueta" text="Consultorios 1 y 2" />
                             </children>
                         </HBox>
-                        <TableView fx:id="tablaAgenda" styleClass="tabla-datos" VBox.vgrow="ALWAYS">
+                        <TableView fx:id="tablaAgenda" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
                             <columns>
                                 <TableColumn fx:id="colHora" prefWidth="110.0" text="HORA" />
                                 <TableColumn fx:id="colConsultorio" prefWidth="110.0" text="CONSULT." />

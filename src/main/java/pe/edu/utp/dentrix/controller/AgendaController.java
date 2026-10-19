@@ -22,6 +22,7 @@ import pe.edu.utp.dentrix.model.Paciente;
 import pe.edu.utp.dentrix.model.Tratamiento;
 import pe.edu.utp.dentrix.model.Usuario;
 import pe.edu.utp.dentrix.ui.Badges;
+import pe.edu.utp.dentrix.ui.TareasFX;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -35,6 +36,7 @@ public class AgendaController {
 
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm");
     private static final List<String> TIPOS = List.of("CITA", "ALMUERZO", "CIERRE", "BLOQUEADO");
+    private static final String FXML_FICHA = "/pe/edu/utp/dentrix/fxml/ficha-clinica.fxml";
 
     @FXML
     private DatePicker campoFecha;
@@ -137,7 +139,7 @@ public class AgendaController {
                 btnFalto.getStyleClass().add("boton-mini");
                 btnEliminar.getStyleClass().addAll("boton-mini", "boton-peligro");
                 btnAtender.setOnAction(e -> atender(getTableRow().getItem()));
-                btnFalto.setOnAction(e -> aplicarTransicion(getTableRow().getItem(), AppContext.get().agenda()::marcarFalto));
+                btnFalto.setOnAction(e -> aplicarTransicion(getTableRow().getItem(), AppContext.get().agenda()::marcarFalto, null));
                 btnEliminar.setOnAction(e -> eliminar(getTableRow().getItem()));
             }
 
@@ -168,14 +170,14 @@ public class AgendaController {
         campoFecha.setValue(java.time.LocalDate.now());
         comboTipo.setItems(FXCollections.observableArrayList(TIPOS));
         comboTipo.setValue("CITA");
-        try {
-            cargarDiccionarios();
-            cargarCombos();
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
-        }
+        comboPaciente.setConverter(pacienteConverter());
+        comboTratamiento.setConverter(tratamientoConverter());
+        comboOdontologo.setConverter(odontologoConverter());
+        comboConsultorio.setConverter(consultorioConverter());
         limpiarForma();
-        recargar();
+        TareasFX.ejecutar(this::cargarDatosIniciales,
+                this::aplicarDatosIniciales,
+                error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     private String estadoTabla(Cita cita) {
@@ -185,53 +187,67 @@ public class AgendaController {
         return cita.getEstado();
     }
 
-    private void cargarDiccionarios() throws DentrixException {
-        AppContext contexto = AppContext.get();
-        nombresPacientes.clear();
-        nombresOdontologos.clear();
-        consultoriosPorCodigo.clear();
-        nombresTratamientos.clear();
-        for (Paciente p : contexto.pacientes().listar()) {
-            nombresPacientes.put(p.getId(), p.getApellidos() + ", " + p.getNombres());
-        }
-        for (Usuario u : contexto.usuarios().listarTodos()) {
-            nombresOdontologos.put(u.getId(), "Dr. " + u.getNombres() + " " + u.getApellidos());
-        }
-        for (Consultorio c : contexto.catalogo().listarConsultorios()) {
-            consultoriosPorCodigo.put(c.getId(), c.getCodigo());
-        }
-        for (Tratamiento t : contexto.catalogo().listarTratamientos()) {
-            nombresTratamientos.put(t.getId(), t.getNombre());
-        }
+    private record DatosIniciales(Map<Integer, String> pacientes, Map<Integer, String> odontologos,
+                                  Map<Integer, String> consultorios, Map<Integer, String> tratamientos,
+                                  List<Paciente> pacientesActivos, List<Tratamiento> tratamientosActivos,
+                                  List<Usuario> odontologosCombo, List<Consultorio> consultoriosCombo) {
     }
 
-    private void cargarCombos() throws DentrixException {
+    private DatosIniciales cargarDatosIniciales() throws DentrixException {
         AppContext contexto = AppContext.get();
-        List<Paciente> activos = new ArrayList<>();
+
+        Map<Integer, String> pacientes = new HashMap<>();
+        List<Paciente> pacientesActivos = new ArrayList<>();
         for (Paciente p : contexto.pacientes().listar()) {
+            pacientes.put(p.getId(), p.getApellidos() + ", " + p.getNombres());
             if ("ACTIVO".equals(p.getEstado())) {
-                activos.add(p);
+                pacientesActivos.add(p);
             }
         }
-        comboPaciente.setItems(FXCollections.observableArrayList(activos));
-        comboPaciente.setConverter(pacienteConverter());
-        comboTratamiento.setItems(FXCollections.observableArrayList(contexto.catalogo().listarTratamientosActivos()));
-        comboTratamiento.setConverter(tratamientoConverter());
+
         Integer rolOdontologo = contexto.roles().buscarPorCodigo("ODONTOLOGO")
                 .orElseThrow(() -> new DentrixException("Rol ODONTOLOGO no configurado")).getId();
         Integer rolAdmin = contexto.roles().buscarPorCodigo("ADMINISTRADOR")
                 .orElseThrow(() -> new DentrixException("Rol ADMINISTRADOR no configurado")).getId();
-        List<Usuario> odontologos = new ArrayList<>();
+        Map<Integer, String> odontologos = new HashMap<>();
+        List<Usuario> odontologosCombo = new ArrayList<>();
         for (Usuario u : contexto.usuarios().listarTodos()) {
+            odontologos.put(u.getId(), "Dr. " + u.getNombres() + " " + u.getApellidos());
             if ("ACTIVO".equals(u.getEstado())
                     && (rolOdontologo.equals(u.getRolId()) || rolAdmin.equals(u.getRolId()))) {
-                odontologos.add(u);
+                odontologosCombo.add(u);
             }
         }
-        comboOdontologo.setItems(FXCollections.observableArrayList(odontologos));
-        comboOdontologo.setConverter(odontologoConverter());
-        comboConsultorio.setItems(FXCollections.observableArrayList(contexto.catalogo().listarConsultorios()));
-        comboConsultorio.setConverter(consultorioConverter());
+
+        Map<Integer, String> consultorios = new HashMap<>();
+        List<Consultorio> listaConsultorios = contexto.catalogo().listarConsultorios();
+        for (Consultorio c : listaConsultorios) {
+            consultorios.put(c.getId(), c.getCodigo());
+        }
+
+        Map<Integer, String> tratamientos = new HashMap<>();
+        for (Tratamiento t : contexto.catalogo().listarTratamientos()) {
+            tratamientos.put(t.getId(), t.getNombre());
+        }
+
+        return new DatosIniciales(pacientes, odontologos, consultorios, tratamientos, pacientesActivos,
+                contexto.catalogo().listarTratamientosActivos(), odontologosCombo, listaConsultorios);
+    }
+
+    private void aplicarDatosIniciales(DatosIniciales datos) {
+        nombresPacientes.clear();
+        nombresPacientes.putAll(datos.pacientes());
+        nombresOdontologos.clear();
+        nombresOdontologos.putAll(datos.odontologos());
+        consultoriosPorCodigo.clear();
+        consultoriosPorCodigo.putAll(datos.consultorios());
+        nombresTratamientos.clear();
+        nombresTratamientos.putAll(datos.tratamientos());
+        comboPaciente.setItems(FXCollections.observableArrayList(datos.pacientesActivos()));
+        comboTratamiento.setItems(FXCollections.observableArrayList(datos.tratamientosActivos()));
+        comboOdontologo.setItems(FXCollections.observableArrayList(datos.odontologosCombo()));
+        comboConsultorio.setItems(FXCollections.observableArrayList(datos.consultoriosCombo()));
+        recargar();
     }
 
     private StringConverter<Paciente> pacienteConverter() {
@@ -331,18 +347,19 @@ public class AgendaController {
     }
 
     private void recargar() {
-        try {
-            java.time.LocalDate fecha = campoFecha.getValue();
-            if (fecha == null) {
-                return;
-            }
-            List<Cita> citas = AppContext.get().agenda().agendaDelDia(fecha);
-            tablaAgenda.setItems(FXCollections.observableArrayList(citas));
-            long bloques = citas.stream().filter(c -> !"CITA".equals(c.getTipo())).count();
-            etiquetaConteo.setText((citas.size() - bloques) + " cita(s) · " + bloques + " bloque(s)");
-        } catch (DentrixException e) {
-            mostrarError(e.getMessage());
+        java.time.LocalDate fecha = campoFecha.getValue();
+        if (fecha == null) {
+            return;
         }
+        TareasFX.ejecutar(() -> AppContext.get().agenda().agendaDelDia(fecha),
+                this::aplicarAgenda,
+                error -> mostrarError(TareasFX.mensaje(error)));
+    }
+
+    private void aplicarAgenda(List<Cita> citas) {
+        tablaAgenda.setItems(FXCollections.observableArrayList(citas));
+        long bloques = citas.stream().filter(c -> !"CITA".equals(c.getTipo())).count();
+        etiquetaConteo.setText((citas.size() - bloques) + " cita(s) · " + bloques + " bloque(s)");
     }
 
     @FXML
@@ -385,14 +402,14 @@ public class AgendaController {
                 throw new DentrixException("Selecciona el consultorio");
             }
             cita.setConsultorioId(comboConsultorio.getValue().getId());
-            if (esModoBloque()) {
+            boolean modoBloque = esModoBloque();
+            if (modoBloque) {
                 cita.setTipo(comboTipo.getValue());
                 String motivo = texto(campoMotivo);
                 if (motivo == null) {
                     throw new DentrixException("El motivo del bloque es obligatorio");
                 }
                 cita.setMotivo(motivo);
-                AppContext.get().agenda().bloquear(cita);
             } else {
                 cita.setTipo("CITA");
                 if (comboPaciente.getValue() == null) {
@@ -403,10 +420,18 @@ public class AgendaController {
                     cita.setTratamientoId(comboTratamiento.getValue().getId());
                 }
                 cita.setMotivo(texto(campoMotivo));
-                AppContext.get().agenda().agendar(cita);
             }
-            limpiarForma();
-            recargar();
+            TareasFX.ejecutar(() -> {
+                if (modoBloque) {
+                    AppContext.get().agenda().bloquear(cita);
+                } else {
+                    AppContext.get().agenda().agendar(cita);
+                }
+                return null;
+            }, ok -> {
+                limpiarForma();
+                recargar();
+            }, error -> etiquetaError.setText(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
             etiquetaError.setText(e.getMessage());
         }
@@ -423,26 +448,43 @@ public class AgendaController {
         }
         String estado = cita.getEstado();
         if ("PENDIENTE".equals(estado)) {
-            aplicarTransicion(cita, AppContext.get().agenda()::confirmar);
+            aplicarTransicion(cita, AppContext.get().agenda()::confirmar, null);
         } else if ("CONFIRMADA".equals(estado)) {
-            aplicarTransicion(cita, AppContext.get().agenda()::marcarLlegada);
+            aplicarTransicion(cita, AppContext.get().agenda()::marcarLlegada, null);
         } else if ("EN_SALA".equals(estado)) {
-            aplicarTransicion(cita, AppContext.get().agenda()::iniciarAtencion);
+            aplicarTransicion(cita, AppContext.get().agenda()::iniciarAtencion, () -> abrirFicha(cita));
         } else if ("EN_ATENCION".equals(estado)) {
-            aplicarTransicion(cita, AppContext.get().agenda()::finalizar);
+            aplicarTransicion(cita, AppContext.get().agenda()::finalizar, null);
         }
     }
 
-    private void aplicarTransicion(Cita cita, TransicionAccion accion) {
-        if (cita == null || !"CITA".equals(cita.getTipo())) {
+    private void abrirFicha(Cita cita) {
+        if (cita == null || cita.getPacienteId() == null) {
             return;
         }
         try {
-            accion.aplicar(cita.getId());
-            recargar();
+            Paciente paciente = AppContext.get().pacientes().buscarPorId(cita.getPacienteId());
+            AppContext.get().sesion().setPacienteEnAtencion(paciente);
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
+            return;
         }
+        pe.edu.utp.dentrix.ui.Navegador.ir(FXML_FICHA);
+    }
+
+    private void aplicarTransicion(Cita cita, TransicionAccion accion, Runnable alExito) {
+        if (cita == null || !"CITA".equals(cita.getTipo())) {
+            return;
+        }
+        TareasFX.ejecutar(() -> {
+            accion.aplicar(cita.getId());
+            return null;
+        }, ok -> {
+            recargar();
+            if (alExito != null) {
+                alExito.run();
+            }
+        }, error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     private void eliminar(Cita cita) {
@@ -455,12 +497,10 @@ public class AgendaController {
         confirmacion.setContentText("¿Eliminar esta fila de la agenda?");
         confirmacion.showAndWait().ifPresent(respuesta -> {
             if (respuesta == javafx.scene.control.ButtonType.OK) {
-                try {
+                TareasFX.ejecutar(() -> {
                     AppContext.get().agenda().eliminar(cita.getId());
-                    recargar();
-                } catch (DentrixException e) {
-                    mostrarError(e.getMessage());
-                }
+                    return null;
+                }, ok -> recargar(), error -> mostrarError(TareasFX.mensaje(error)));
             }
         });
     }

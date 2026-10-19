@@ -11,6 +11,8 @@ public interface CierreCajaDAO {
 
     List<CierreCaja> listarTodos() throws DentrixException;
 
+    Optional<CierreCaja> buscarPorId(Long id) throws DentrixException;
+
     Optional<CierreCaja> buscarPorFecha(LocalDate fecha) throws DentrixException;
 
     Optional<CierreCaja> buscarPorFechaYTurno(LocalDate fecha, String turno) throws DentrixException;

@@ -76,7 +76,10 @@ Sin esto falla con `release version 25 not supported`.
    ```
    psql -U postgres -f sql/01_schema_v2.sql
    psql -U postgres -f sql/02_datos_prueba_v2.sql
+   psql -U postgres -f sql/03_optimizacion_rendimiento.sql
    ```
+   `03` agrega indices de rendimiento, trigramas para la busqueda de
+   pacientes y califica las funciones trigger (idempotente).
    Al final deben imprimirse los avisos `CASO 1 OK` … `CASO 6 OK` y
    `==== LOS 6 CASOS DUROS PASARON ===`.
 3. Crea tu usuario de BD y dale acceso al esquema `dentrix`.
@@ -103,13 +106,13 @@ dentrix-dental/
 ├── pom.xml
 ├── nbactions.xml                     # F6 → javafx:run
 ├── config.properties.example         # plantilla de conexión (sin secretos)
-├── sql/                              # 01_schema_v2.sql (14 tablas) + 02_datos_prueba_v2.sql
+├── sql/                              # 01_schema_v2.sql (14 tablas) + 02_datos + 03_optimizacion_rendimiento.sql
 ├── docs/modelo_er.md                 # modelo ER con trazabilidad módulo → RF
 ├── demos/agenda-swing/               # prototipo Swing de referencia (no se compila)
 └── src/
     ├── main/java/pe/edu/utp/dentrix/
     │   ├── DentrixApp.java           # arranque de la aplicación
-    │   ├── config/                   # AppConfig + ConexionBD (JDBC)
+    │   ├── config/                   # AppConfig + ConexionBD (pool HikariCP)
     │   ├── model/                    # 1 clase por tabla (14)
     │   ├── dao/                      # interfaces DAO (1 por tabla)
     │   ├── dao/impl/                 # implementaciones JDBC (únicos con SQL)
@@ -139,6 +142,7 @@ plugin Maven solo.
 | Librería | Uso en el proyecto |
 |---|---|
 | PostgreSQL JDBC | conexión a la BD |
+| HikariCP | pool de conexiones (reúso de conexiones en lugar de reconectar por consulta) |
 | Logback | logging (base del plan de monitoreo, Semana 16) |
 | Guava | utilidades del dominio |
 | Apache Commons Lang3 | validaciones y utilidades de texto |

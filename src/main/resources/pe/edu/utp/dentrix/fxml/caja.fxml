@@ -20,7 +20,7 @@
                 <Label fx:id="etiquetaCajero" styleClass="etiqueta-estado" text="" />
                 <Label HBox.hgrow="ALWAYS" text=" " />
                 <Button text="Volver" onAction="#onVolverClick" />
-                <Button styleClass="boton-primario" text="🧾 Caja" onAction="#onCajaClick" />
+                <Button styleClass="button, boton-primario" text="🧾 Caja" onAction="#onCajaClick" />
                 <Button text="🏦 Cierre del día" onAction="#onCierreClick" />
             </children>
         </HBox>
@@ -42,13 +42,13 @@
                                 <HBox alignment="CENTER_LEFT" spacing="8.0">
                                     <children>
                                         <ComboBox fx:id="comboTratamiento" prefWidth="280.0" />
-                                        <TextField fx:id="campoPieza" prefWidth="90.0" promptText="Pieza FDI" styleClass="campo-formulario" />
-                                        <TextField fx:id="campoCantidad" prefWidth="50.0" styleClass="campo-formulario" text="1" />
+                                        <TextField fx:id="campoPieza" prefWidth="90.0" promptText="Pieza FDI" styleClass="text-field, campo-formulario" />
+                                        <TextField fx:id="campoCantidad" prefWidth="50.0" styleClass="text-field, campo-formulario" text="1" />
                                         <Button text="Agregar" onAction="#onAgregarLineaClick" />
                                         <Button text="Quitar" onAction="#onQuitarLineaClick" />
                                     </children>
                                 </HBox>
-                                <TableView fx:id="tablaLineas" prefHeight="240.0" styleClass="tabla-datos">
+                                <TableView fx:id="tablaLineas" prefHeight="240.0" styleClass="table-view, tabla-datos">
                                     <columns>
                                         <TableColumn fx:id="colTratamiento" prefWidth="210.0" text="TRATAMIENTO" />
                                         <TableColumn fx:id="colPieza" prefWidth="70.0" text="PIEZA" />
@@ -61,7 +61,7 @@
                                     <children>
                                         <Label style="-fx-font-size: 11px;" text="Modalidad:" />
                                         <ComboBox fx:id="comboModalidad" prefWidth="120.0" />
-                                        <TextField fx:id="campoOperacion" prefWidth="200.0" promptText="N° operación" styleClass="campo-formulario" />
+                                        <TextField fx:id="campoOperacion" prefWidth="200.0" promptText="N° operación" styleClass="text-field, campo-formulario" />
                                     </children>
                                 </HBox>
                                 <Label fx:id="etiquetaResultado" styleClass="etiqueta-error" text="" wrapText="true" />
@@ -69,7 +69,7 @@
                                     <children>
                                         <Label style="-fx-font-size: 11px;" text="TOTAL:" />
                                         <Label fx:id="lblTotal" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: Consolas;" text="S/ 0.00" />
-                                        <Button defaultButton="true" styleClass="boton-primario" text="Emitir boleta" onAction="#onEmitirClick" />
+                                        <Button defaultButton="true" styleClass="button, boton-primario" text="Emitir boleta" onAction="#onEmitirClick" />
                                     </children>
                                 </HBox>
                             </children>
@@ -86,7 +86,7 @@
                                                 <Button text="⟳" onAction="#onRefrescarBoletasClick" />
                                             </children>
                                         </HBox>
-                                        <TableView fx:id="tablaBoletas" styleClass="tabla-datos" VBox.vgrow="ALWAYS">
+                                        <TableView fx:id="tablaBoletas" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
                                             <columns>
                                                 <TableColumn fx:id="colBNumero" prefWidth="130.0" text="NÚMERO" />
                                                 <TableColumn fx:id="colBFecha" prefWidth="140.0" text="FECHA" />
@@ -104,12 +104,12 @@
                                         <HBox alignment="CENTER_LEFT" spacing="8.0">
                                             <children>
                                                 <Label style="-fx-font-size: 11px;" text="N° boleta:" />
-                                                <TextField fx:id="campoNumeroBoleta" prefWidth="150.0" promptText="B001-000458" styleClass="campo-formulario" />
+                                                <TextField fx:id="campoNumeroBoleta" prefWidth="150.0" promptText="B001-000458" styleClass="text-field, campo-formulario" />
                                                 <Button text="Cargar boleta" onAction="#onCargarBoletaClick" />
                                             </children>
                                         </HBox>
                                         <Label fx:id="etiquetaDocumento" styleClass="etiqueta-estado" text="Ingresa el número de una boleta con saldo para abonar." wrapText="true" />
-                                        <TableView fx:id="tablaAbonos" prefHeight="110.0" styleClass="tabla-datos">
+                                        <TableView fx:id="tablaAbonos" prefHeight="110.0" styleClass="table-view, tabla-datos">
                                             <columns>
                                                 <TableColumn fx:id="colAFecha" prefWidth="160.0" text="FECHA" />
                                                 <TableColumn fx:id="colAMonto" prefWidth="100.0" text="MONTO" />
@@ -120,10 +120,10 @@
                                         <HBox alignment="CENTER_LEFT" spacing="8.0">
                                             <children>
                                                 <Label style="-fx-font-size: 11px;" text="Abonar S/" />
-                                                <TextField fx:id="campoMontoAbono" prefWidth="90.0" promptText="0.00" styleClass="campo-formulario" />
+                                                <TextField fx:id="campoMontoAbono" prefWidth="90.0" promptText="0.00" styleClass="text-field, campo-formulario" />
                                                 <ComboBox fx:id="comboModalidadAbono" prefWidth="120.0" />
-                                                <TextField fx:id="campoOpAbono" prefWidth="180.0" promptText="N° operación si no es efectivo" styleClass="campo-formulario" />
-                                                <Button defaultButton="true" styleClass="boton-primario" text="Registrar abono" onAction="#onRegistrarAbonoClick" />
+                                                <TextField fx:id="campoOpAbono" prefWidth="180.0" promptText="N° operación si no es efectivo" styleClass="text-field, campo-formulario" />
+                                                <Button defaultButton="true" styleClass="button, boton-primario" text="Registrar abono" onAction="#onRegistrarAbonoClick" />
                                             </children>
                                         </HBox>
                                         <Label fx:id="etiquetaAbonoResultado" styleClass="etiqueta-error" text="" />
@@ -141,8 +141,8 @@
                                 <Label style="-fx-font-size: 11px;" text="Turno:" />
                                 <ComboBox fx:id="comboTurno" prefWidth="120.0" />
                                 <Label style="-fx-font-size: 11px;" text="Fondo inicial S/" />
-                                <TextField fx:id="campoFondo" prefWidth="90.0" promptText="100.00" styleClass="campo-formulario" />
-                                <Button styleClass="boton-primario" text="Abrir cierre" onAction="#onAbrirCierreClick" />
+                                <TextField fx:id="campoFondo" prefWidth="90.0" promptText="100.00" styleClass="text-field, campo-formulario" />
+                                <Button styleClass="button, boton-primario" text="Abrir cierre" onAction="#onAbrirCierreClick" />
                             </children>
                         </HBox>
                         <Label fx:id="etiquetaSinCierre" styleClass="etiqueta-estado" text="" wrapText="true" />
@@ -150,15 +150,15 @@
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <children>
                                 <Label style="-fx-font-size: 11px;" text="Nuevo fondo S/" />
-                                <TextField fx:id="campoNuevoFondo" prefWidth="90.0" styleClass="campo-formulario" />
+                                <TextField fx:id="campoNuevoFondo" prefWidth="90.0" styleClass="text-field, campo-formulario" />
                                 <Button text="Cambiar fondo (RF-09)" onAction="#onCambiarFondoClick" />
                             </children>
                         </HBox>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <children>
                                 <Label style="-fx-font-size: 11px;" text="Efectivo contado S/" />
-                                <TextField fx:id="campoContado" prefWidth="90.0" styleClass="campo-formulario" />
-                                <Button styleClass="boton-primario" text="Consolidar cierre" onAction="#onConsolidarClick" />
+                                <TextField fx:id="campoContado" prefWidth="90.0" styleClass="text-field, campo-formulario" />
+                                <Button styleClass="button, boton-primario" text="Consolidar cierre" onAction="#onConsolidarClick" />
                                 <Button text="Marcar acta generada" onAction="#onActaClick" />
                             </children>
                         </HBox>

@@ -35,17 +35,17 @@
                             </children>
                         </HBox>
                         <Label style="-fx-font-size: 11px;" text="Username:" />
-                        <TextField fx:id="campoUsername" promptText="jvallejos" styleClass="campo-formulario" />
+                        <TextField fx:id="campoUsername" promptText="jvallejos" styleClass="text-field, campo-formulario" />
                         <Label style="-fx-font-size: 11px;" text="Nombres:" />
-                        <TextField fx:id="campoNombres" styleClass="campo-formulario" />
+                        <TextField fx:id="campoNombres" styleClass="text-field, campo-formulario" />
                         <Label style="-fx-font-size: 11px;" text="Apellidos:" />
-                        <TextField fx:id="campoApellidos" styleClass="campo-formulario" />
+                        <TextField fx:id="campoApellidos" styleClass="text-field, campo-formulario" />
                         <HBox alignment="CENTER_LEFT" spacing="8.0">
                             <children>
                                 <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                                     <children>
                                         <Label style="-fx-font-size: 11px;" text="DNI:" />
-                                        <TextField fx:id="campoDni" prefWidth="120.0" promptText="8 dígitos" styleClass="campo-formulario" />
+                                        <TextField fx:id="campoDni" prefWidth="120.0" promptText="8 dígitos" styleClass="text-field, campo-formulario" />
                                     </children>
                                 </VBox>
                                 <VBox spacing="4.0" HBox.hgrow="ALWAYS">
@@ -61,24 +61,24 @@
                                 <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                                     <children>
                                         <Label style="-fx-font-size: 11px;" text="Colegiatura (odólogos):" />
-                                        <TextField fx:id="campoColegiatura" styleClass="campo-formulario" />
+                                        <TextField fx:id="campoColegiatura" styleClass="text-field, campo-formulario" />
                                     </children>
                                 </VBox>
                                 <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                                     <children>
                                         <Label style="-fx-font-size: 11px;" text="Especialidad:" />
-                                        <TextField fx:id="campoEspecialidad" styleClass="campo-formulario" />
+                                        <TextField fx:id="campoEspecialidad" styleClass="text-field, campo-formulario" />
                                     </children>
                                 </VBox>
                             </children>
                         </HBox>
                         <Label style="-fx-font-size: 11px;" text="Clave (obligatoria al crear; vacía = no cambiar):" />
-                        <PasswordField fx:id="campoClave" promptText="Mínimo 8 caracteres" styleClass="campo-formulario" />
+                        <PasswordField fx:id="campoClave" promptText="Mínimo 8 caracteres" styleClass="password-field, campo-formulario" />
                         <Label fx:id="etiquetaError" styleClass="etiqueta-error" text="" wrapText="true" />
                         <HBox alignment="CENTER_RIGHT" spacing="10.0">
                             <children>
                                 <Button text="Cancelar" onAction="#onNuevoClick" />
-                                <Button defaultButton="true" styleClass="boton-primario" text="💾 Guardar" onAction="#onGuardarClick" />
+                                <Button defaultButton="true" styleClass="button, boton-primario" text="💾 Guardar" onAction="#onGuardarClick" />
                             </children>
                         </HBox>
                     </children>
@@ -92,7 +92,7 @@
                                 <Label fx:id="etiquetaConteo" styleClass="tarjeta-etiqueta" text="" />
                             </children>
                         </HBox>
-                        <TableView fx:id="tablaUsuarios" styleClass="tabla-datos" VBox.vgrow="ALWAYS">
+                        <TableView fx:id="tablaUsuarios" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
                             <columns>
                                 <TableColumn fx:id="colUsername" prefWidth="130.0" text="USERNAME" />
                                 <TableColumn fx:id="colNombre" prefWidth="230.0" text="NOMBRE" />

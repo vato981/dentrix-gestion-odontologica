@@ -104,6 +104,10 @@ public class UsuarioService {
         Usuario usuario = usuarioDAO.buscarPorId(usuarioId)
                 .orElseThrow(() -> new DentrixException("No existe el usuario."));
         usuario.setEstado(nuevoEstado);
+        if ("ACTIVO".equals(nuevoEstado)) {
+            usuario.setIntentosFallidos(0);
+            usuario.setBloqueadoHasta(null);
+        }
         try {
             if (!usuarioDAO.actualizar(usuario)) {
                 throw new DentrixException("No se pudo cambiar el estado del usuario.");

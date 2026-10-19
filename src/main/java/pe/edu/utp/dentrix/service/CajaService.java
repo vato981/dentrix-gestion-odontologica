@@ -12,7 +12,6 @@ import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.CierreCaja;
 import pe.edu.utp.dentrix.model.Configuracion;
 import pe.edu.utp.dentrix.model.FichaClinica;
-import pe.edu.utp.dentrix.model.Paciente;
 import pe.edu.utp.dentrix.model.Pago;
 import pe.edu.utp.dentrix.model.PlanTratamiento;
 import pe.edu.utp.dentrix.model.Tratamiento;
@@ -23,8 +22,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 public class CajaService {
@@ -74,6 +75,10 @@ public class CajaService {
                         + "; solo se factura con derivación ACEPTADA (RF-07)");
             }
         }
+        Map<Integer, Tratamiento> tarifarioPorId = new HashMap<>();
+        for (Tratamiento tratamiento : tratamientoDAO.listarTodos()) {
+            tarifarioPorId.put(tratamiento.getId(), tratamiento);
+        }
         List<Tratamiento> tarifario = new ArrayList<>();
         for (LineaBoleta linea : lineas) {
             if (linea.tratamientoId() == null) {
@@ -86,9 +91,12 @@ public class CajaService {
                 throw new DentrixException("La pieza FDI " + linea.piezaFdi()
                         + " no es valida: debe estar entre 11 y 48 y su segundo digito entre 1 y 8");
             }
-            tarifario.add(tratamientoDAO.buscarPorId(linea.tratamientoId())
-                    .orElseThrow(() -> new DentrixException(
-                            "Tratamiento no encontrado en el tarifario: " + linea.tratamientoId())));
+            Tratamiento encontrado = tarifarioPorId.get(linea.tratamientoId());
+            if (encontrado == null) {
+                throw new DentrixException(
+                        "Tratamiento no encontrado en el tarifario: " + linea.tratamientoId());
+            }
+            tarifario.add(encontrado);
         }
         Pago pago = new Pago();
         pago.setNumero(siguienteNumeroBoleta());
@@ -181,15 +189,7 @@ public class CajaService {
         if (fecha == null) {
             throw new DentrixException("La fecha de las boletas es obligatoria");
         }
-        List<Pago> boletas = new ArrayList<>();
-        for (Pago pago : todosLosPagos()) {
-            if (!pago.esAbono()
-                    && "EMITIDO".equals(pago.getEstado())
-                    && pago.getFecha() != null
-                    && fecha.equals(pago.getFecha().toLocalDate())) {
-                boletas.add(pago);
-            }
-        }
+        List<Pago> boletas = new ArrayList<>(pagoDAO.listarBoletasPorFecha(fecha));
         boletas.sort(Comparator.comparing(Pago::getFecha).thenComparing(Pago::getId));
         return boletas;
     }
@@ -333,34 +333,15 @@ public class CajaService {
                 .orElse("B001")
                 .trim();
         String prefijo = serie + "-";
-        long maximo = 0L;
-        for (Pago pago : todosLosPagos()) {
-            if (pago.esAbono() || pago.getNumero() == null || !pago.getNumero().startsWith(prefijo)) {
-                continue;
-            }
-            String sufijo = pago.getNumero().substring(prefijo.length());
-            if (sufijo.matches("\\d+") && Long.parseLong(sufijo) > maximo) {
-                maximo = Long.parseLong(sufijo);
-            }
-        }
+        long maximo = pagoDAO.maximoCorrelativo(prefijo);
         return serie + "-" + String.format(Locale.ROOT, "%06d", maximo + 1);
-    }
-
-    private List<Pago> todosLosPagos() throws DentrixException {
-        List<Pago> pagos = new ArrayList<>();
-        for (Paciente paciente : pacienteDAO.listarTodos()) {
-            pagos.addAll(pagoDAO.listarPorPaciente(paciente.getId()));
-        }
-        return pagos;
     }
 
     private CierreCaja cierrePorId(Long cierreId) throws DentrixException {
         if (cierreId == null) {
             throw new DentrixException("El identificador del cierre de caja es obligatorio");
         }
-        return cierreCajaDAO.listarTodos().stream()
-                .filter(cierre -> cierreId.equals(cierre.getId()))
-                .findFirst()
+        return cierreCajaDAO.buscarPorId(cierreId)
                 .orElseThrow(() -> new DentrixException("Cierre de caja no encontrado: " + cierreId));
     }
 

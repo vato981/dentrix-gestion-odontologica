@@ -17,6 +17,8 @@ public interface CitaDAO {
 
     List<Cita> listarPorPaciente(Integer pacienteId) throws DentrixException;
 
+    List<Cita> listarPorPacienteEnFecha(Integer pacienteId, LocalDate fecha) throws DentrixException;
+
     Optional<Cita> buscarPorId(Long id) throws DentrixException;
 
     int insertar(Cita cita) throws DentrixException;

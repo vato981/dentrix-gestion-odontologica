@@ -99,7 +99,7 @@
                                 <VBox spacing="8.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                                     <children>
                                         <Label styleClass="tarjeta-titulo" text="SALDOS POR PACIENTE" />
-                                        <TableView fx:id="tablaSaldos" prefHeight="260.0" styleClass="tabla-datos" VBox.vgrow="ALWAYS">
+                                        <TableView fx:id="tablaSaldos" prefHeight="260.0" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
                                             <columns>
                                                 <TableColumn fx:id="colSaldoHc" prefWidth="110.0" text="HC" />
                                                 <TableColumn fx:id="colSaldoNombre" prefWidth="260.0" text="PACIENTE" />
@@ -113,7 +113,7 @@
                                 <VBox spacing="8.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                                     <children>
                                         <Label styleClass="tarjeta-titulo" text="RANKING DE TRATAMIENTOS" />
-                                        <TableView fx:id="tablaRanking" prefHeight="260.0" styleClass="tabla-datos" VBox.vgrow="ALWAYS">
+                                        <TableView fx:id="tablaRanking" prefHeight="260.0" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
                                             <columns>
                                                 <TableColumn fx:id="colRankCodigo" prefWidth="100.0" text="CÓDIGO" />
                                                 <TableColumn fx:id="colRankNombre" prefWidth="280.0" text="TRATAMIENTO" />
@@ -128,7 +128,7 @@
                         <VBox spacing="8.0" styleClass="tarjeta">
                             <children>
                                 <Label styleClass="tarjeta-titulo" text="PRODUCTIVIDAD POR ODONTÓLOGO (PERIODO)" />
-                                <TableView fx:id="tablaProductividad" prefHeight="180.0" styleClass="tabla-datos">
+                                <TableView fx:id="tablaProductividad" prefHeight="180.0" styleClass="table-view, tabla-datos">
                                     <columns>
                                         <TableColumn fx:id="colProdOdontologo" prefWidth="260.0" text="ODONTÓLOGO" />
                                         <TableColumn fx:id="colProdAtendidas" prefWidth="120.0" text="ATENDIDAS" />
@@ -141,7 +141,7 @@
                         <VBox spacing="8.0" styleClass="tarjeta">
                             <children>
                                 <Label styleClass="tarjeta-titulo" text="DOCUMENTOS CON SALDO" />
-                                <TableView fx:id="tablaDocumentos" prefHeight="260.0" styleClass="tabla-datos">
+                                <TableView fx:id="tablaDocumentos" prefHeight="260.0" styleClass="table-view, tabla-datos">
                                     <columns>
                                         <TableColumn fx:id="colDocNumero" prefWidth="130.0" text="NÚMERO" />
                                         <TableColumn fx:id="colDocFecha" prefWidth="150.0" text="FECHA" />

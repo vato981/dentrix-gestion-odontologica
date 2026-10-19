@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import pe.edu.utp.dentrix.config.ConexionBD;
 
 import java.io.IOException;
 
@@ -22,6 +23,11 @@ public class DentrixApp extends Application {
         stage.setTitle("Dentrix - Sistema de Gestion Clinica");
         stage.setScene(scene);
         stage.show();
+    }
+
+    @Override
+    public void stop() {
+        ConexionBD.cerrar();
     }
 
     public static void main(String[] args) {

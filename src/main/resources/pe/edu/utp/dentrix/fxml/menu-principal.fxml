@@ -23,23 +23,51 @@
     <left>
         <VBox spacing="4.0" styleClass="sidebar" BorderPane.alignment="CENTER" prefWidth="220.0">
             <children>
-                <Label text="Dentrix" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #0F766E;" />
-                <Label text="Centro Odontológico" style="-fx-font-size: 11px; -fx-text-fill: #64748B;" />
-                <Label text=" " style="-fx-font-size: 6px;" />
-                <Button fx:id="btnInicio" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="⌂  Inicio" />
-                <Button fx:id="btnSalaEspera" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="🚑  Sala de espera" />
-                <Button fx:id="btnPacientes" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="▦  Pacientes" />
-                <Button fx:id="btnAgenda" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="📅  Agenda" />
-                <Button fx:id="btnFicha" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="🩺  Ficha clínica" />
-                <Button fx:id="btnCaja" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="💰  Caja / Cobros" />
-                <Button fx:id="btnReportes" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="📊  Reportes" />
-                <Button fx:id="btnUsuarios" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="👥  Usuarios" />
-                <Button fx:id="btnConfiguracion" maxWidth="Infinity" onAction="#onModuloClick" styleClass="nav-boton" text="⚙  Configuración" />
+                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="sidebar-logo">
+                    <children>
+                        <StackPane maxHeight="28.0" maxWidth="28.0" minHeight="28.0" minWidth="28.0" styleClass="sidebar-isotipo">
+                            <children>
+                                <Label text="🦷" styleClass="sidebar-isotipo-icono" />
+                            </children>
+                        </StackPane>
+                        <VBox spacing="1.0">
+                            <children>
+                                <Label text="Dentrix" styleClass="sidebar-marca" />
+                                <Label text="Centro Odontológico" styleClass="sidebar-submarca" />
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+                <Button fx:id="btnInicio" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="🏠  Inicio" />
+                <Button fx:id="btnSalaEspera" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="🚨  Sala de espera" />
+                <Button fx:id="btnPacientes" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="👥  Pacientes" />
+                <Button fx:id="btnAgenda" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="📅  Agenda" />
+                <Button fx:id="btnFicha" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="📋  Ficha clínica" />
+                <Button fx:id="btnCaja" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="💳  Caja / Cobros" />
+                <Button fx:id="btnReportes" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="📊  Reportes" />
+                <Button fx:id="btnUsuarios" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="🔐  Usuarios" />
+                <Button fx:id="btnConfiguracion" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="⚙  Configuración" />
                 <Region VBox.vgrow="ALWAYS" />
-                <Label fx:id="etiquetaUsuario" text="" style="-fx-font-weight: bold;" />
-                <Label fx:id="etiquetaRol" text="" style="-fx-font-size: 11px; -fx-text-fill: #64748B;" />
-                <Label text=" " style="-fx-font-size: 4px;" />
-                <Button maxWidth="Infinity" onAction="#onSalirClick" styleClass="boton-peligro, nav-boton" text="⏻  Cerrar sesión" />
+                <VBox spacing="10.0" styleClass="usuario-bloque">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                            <children>
+                                <StackPane maxHeight="28.0" maxWidth="28.0" minHeight="28.0" minWidth="28.0" styleClass="usuario-avatar">
+                                    <children>
+                                        <Label fx:id="etiquetaAvatar" styleClass="usuario-avatar-texto" text="" />
+                                    </children>
+                                </StackPane>
+                                <VBox spacing="1.0">
+                                    <children>
+                                        <Label fx:id="etiquetaUsuario" styleClass="usuario-nombre" text="" />
+                                        <Label fx:id="etiquetaRol" styleClass="usuario-rol" text="" />
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+                        <Button maxWidth="Infinity" onAction="#onSalirClick" styleClass="button, boton-salir" text="🔒  Cerrar sesión" />
+                    </children>
+                </VBox>
             </children>
         </VBox>
     </left>

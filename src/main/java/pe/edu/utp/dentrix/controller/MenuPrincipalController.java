@@ -34,6 +34,9 @@ public class MenuPrincipalController {
     private Label etiquetaRol;
 
     @FXML
+    private Label etiquetaAvatar;
+
+    @FXML
     private Label etiquetaPantalla;
 
     @FXML
@@ -76,7 +79,9 @@ public class MenuPrincipalController {
         }
         botonesNav = List.of(btnInicio, btnSalaEspera, btnPacientes, btnAgenda, btnFicha, btnCaja,
                 btnReportes, btnUsuarios, btnConfiguracion);
-        etiquetaUsuario.setText(sesion.getNombreCompleto());
+        String nombre = sesion.getNombreCompleto() == null ? "" : sesion.getNombreCompleto().trim();
+        etiquetaUsuario.setText(nombre);
+        etiquetaAvatar.setText(nombre.isEmpty() ? "" : nombre.substring(0, 1).toUpperCase());
         etiquetaRol.setText(sesion.getRol().getNombre());
         String codigo = sesion.getCodigoRol();
         boolean esAdmin = "ADMINISTRADOR".equals(codigo);

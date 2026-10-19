@@ -112,6 +112,9 @@ public class FichaClinicaService {
             validarPiezaFdi(piezaFdi);
         }
         FichaDiagnostico diagnostico = new FichaDiagnostico(fichaId, codigoCie10, piezaFdi, principal, observacion);
+        if (principal) {
+            diagnosticoDAO.desmarcarPrincipales(fichaId);
+        }
         try {
             diagnosticoDAO.insertar(diagnostico);
         } catch (DentrixException e) {

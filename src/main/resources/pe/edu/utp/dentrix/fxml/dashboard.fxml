@@ -16,8 +16,8 @@
         <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="tarjeta">
             <children>
                 <Label styleClass="tarjeta-titulo" text="BÚSQUEDA RÁPIDA" />
-                <TextField fx:id="campoDni" prefWidth="220.0" promptText="DNI del paciente (8 dígitos)..." styleClass="campo-formulario" />
-                <Button defaultButton="true" text="🔍 Buscar" onAction="#onBuscarClick" styleClass="boton-primario" />
+                <TextField fx:id="campoDni" prefWidth="220.0" promptText="DNI del paciente (8 dígitos)..." styleClass="text-field, campo-formulario" />
+                <Button defaultButton="true" text="🔍 Buscar" onAction="#onBuscarClick" styleClass="button, boton-primario" />
                 <Button text="+ Registrar Nuevo Paciente" onAction="#onRegistrarPacienteClick" />
                 <Label fx:id="etiquetaBusqueda" HBox.hgrow="ALWAYS" text="" wrapText="true" />
             </children>
@@ -66,7 +66,7 @@
                         <Label styleClass="tarjeta-etiqueta" text="Consultorios 1 y 2" />
                     </children>
                 </HBox>
-                <TableView fx:id="tablaAgenda" prefHeight="360.0" styleClass="tabla-datos">
+                <TableView fx:id="tablaAgenda" prefHeight="360.0" styleClass="table-view, tabla-datos">
                     <columns>
                         <TableColumn fx:id="colHora" prefWidth="120.0" text="HORA" />
                         <TableColumn fx:id="colPaciente" prefWidth="220.0" text="PACIENTE" />

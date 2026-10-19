@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 
 public class PacienteService {
 
@@ -88,6 +89,10 @@ public class PacienteService {
     public Paciente buscarPorId(Integer id) throws DentrixException {
         return pacienteDAO.buscarPorId(id)
                 .orElseThrow(() -> new DentrixException("Paciente no encontrado"));
+    }
+
+    public Optional<Paciente> buscarPorDni(String dni) throws DentrixException {
+        return pacienteDAO.buscarPorDni(dni);
     }
 
     public void inactivar(Integer id) throws DentrixException {

@@ -28,6 +28,10 @@ public class AutenticacionService {
         Usuario usuario = usuarioDAO.buscarPorUsername(username)
                 .orElseThrow(() -> new DentrixException("Usuario o contraseña incorrectos"));
 
+        if ("INACTIVO".equals(usuario.getEstado())) {
+            throw new DentrixException("El usuario está inactivo. Pide al administrador que lo reactive.");
+        }
+
         if (ESTADO_BLOQUEADO.equals(usuario.getEstado())) {
             LocalDateTime ahora = LocalDateTime.now();
             if (usuario.getBloqueadoHasta() != null && usuario.getBloqueadoHasta().isBefore(ahora)) {

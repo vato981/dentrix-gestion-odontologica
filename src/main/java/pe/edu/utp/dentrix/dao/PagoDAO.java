@@ -3,6 +3,7 @@ package pe.edu.utp.dentrix.dao;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.Pago;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +22,10 @@ public interface PagoDAO {
     List<Pago> listarAbonos(Long documentoId) throws DentrixException;
 
     List<Pago> listarDocumentosConSaldo() throws DentrixException;
+
+    List<Pago> listarBoletasPorFecha(LocalDate fecha) throws DentrixException;
+
+    long maximoCorrelativo(String prefijo) throws DentrixException;
 
     int insertar(Pago pago) throws DentrixException;
 
