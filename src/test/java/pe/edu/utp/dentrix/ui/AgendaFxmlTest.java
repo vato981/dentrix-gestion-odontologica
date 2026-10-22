@@ -114,6 +114,7 @@ class AgendaFxmlTest {
         assertNotNull((ComboBox<?>) pantalla.lookup("#comboTratamiento"), "Falta el combo de tratamientos");
         assertNotNull((ComboBox<?>) pantalla.lookup("#comboOdontologo"), "Falta el combo de odontologos");
         assertNotNull((ComboBox<?>) pantalla.lookup("#comboConsultorio"), "Falta el combo de consultorios");
+        assertNotNull((Button) pantalla.lookup("#btnNuevoPaciente"), "Falta el atajo Nuevo paciente");
         assertNotNull((CheckBox) pantalla.lookup("#checkPrimeraVez"), "Falta el check Primera vez");
         assertNotNull((TextField) pantalla.lookup("#campoInicio"), "Falta la hora de inicio");
         assertNotNull((TextField) pantalla.lookup("#campoFin"), "Falta la hora de fin calculada");

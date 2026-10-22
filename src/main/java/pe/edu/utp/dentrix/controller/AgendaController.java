@@ -780,8 +780,7 @@ public class AgendaController {
     }
 
     @FXML
-    private void onBuscarPacienteClick() {
-        String dni = texto(campoDniPaciente);
+    private void onBuscarPacienteClick() {        String dni = texto(campoDniPaciente);
         if (dni == null) {
             etiquetaError.setText("Ingresa el DNI del paciente para buscarlo.");
             return;
@@ -789,7 +788,8 @@ public class AgendaController {
         TareasFX.ejecutar(() -> AppContext.get().pacientes().buscarPorDni(dni),
                 encontrado -> {
                     if (encontrado.isEmpty()) {
-                        etiquetaError.setText("No existe un paciente con DNI " + dni + ".");
+                        etiquetaError.setText("No existe un paciente con DNI " + dni
+                                + ". Usa \"Nuevo paciente\" para registrarlo.");
                         return;
                     }
                     Paciente paciente = encontrado.get();
@@ -805,6 +805,11 @@ public class AgendaController {
                     etiquetaError.setText("");
                 },
                 error -> etiquetaError.setText(TareasFX.mensaje(error)));
+    }
+
+    @FXML
+    private void onNuevoPacienteClick() {
+        pe.edu.utp.dentrix.ui.Navegador.ir(pe.edu.utp.dentrix.ui.Navegador.PACIENTES);
     }
 
     private void actualizarTarjetaPaciente() {

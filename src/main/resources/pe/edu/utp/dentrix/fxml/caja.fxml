@@ -290,7 +290,7 @@
                                                         <ComboBox fx:id="comboMotivoDiferencia" disable="true" maxWidth="Infinity" prefWidth="250.0" promptText="Sin diferencia" styleClass="combo-box, combo-formulario" HBox.hgrow="ALWAYS" />
                                                     </children>
                                                 </HBox>
-                                                <Label styleClass="dato-secundario" text="El servicio de cierre aun no registra motivo, autorizador ni tolerancia; se muestran como referencia (R30)." wrapText="true" />
+                                                <Label styleClass="dato-secundario" text="Tolerancia S/ 1.00: si la diferencia la supera, el motivo es obligatorio y se guarda con el cierre (P6, R30)." wrapText="true" />
                                                 <HBox alignment="CENTER_LEFT" spacing="8.0">
                                                     <children>
                                                         <Label styleClass="seccion-titulo" text="HISTORIAL DEL FONDO" />

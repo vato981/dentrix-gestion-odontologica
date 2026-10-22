@@ -136,12 +136,14 @@ class PacienteServiceTest {
         try {
             creado = servicio.registrar(pacienteTemporal("90000015", "Pruebas Temporal", "Rosa"));
 
-            servicio.inactivar(creado.getId());
+            servicio.inactivar(creado.getId(), "Prueba de baja logica");
 
             Paciente consultado = servicio.buscarPorId(creado.getId());
             assertEquals("INACTIVO", consultado.getEstado(), "La baja debe ser lógica (RF-04)");
             assertEquals(creado.getCodigoHc(), consultado.getCodigoHc(),
                     "El expediente no debe perderse al inactivar");
+            assertEquals("Prueba de baja logica", consultado.getMotivoAnulacion(),
+                    "R22: el motivo de la anulacion debe quedar registrado");
         } finally {
             if (creado != null && creado.getId() != null) {
                 pacienteDAO.eliminar(creado.getId());

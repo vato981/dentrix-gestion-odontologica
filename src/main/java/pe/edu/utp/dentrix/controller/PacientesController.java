@@ -389,24 +389,24 @@ public class PacientesController {
         if (paciente == null) {
             return;
         }
-        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmacion.setTitle("Anular paciente");
-        confirmacion.setHeaderText(null);
-        confirmacion.setContentText("Anular a " + paciente.getNombres() + " " + paciente.getApellidos()
-                + " (HC " + paciente.getCodigoHc() + ")?\nEl paciente pasa a INACTIVO y conserva su "
-                + "historia clinica (R22).");
-        confirmacion.showAndWait().ifPresent(respuesta -> {
-            if (respuesta == javafx.scene.control.ButtonType.OK) {
-                TareasFX.ejecutar(() -> {
-                    AppContext.get().pacientes().inactivar(paciente.getId());
-                    return null;
-                }, ignorado -> {
-                    limpiarForma();
-                    recargar();
-                    indicar("Paciente anulado: queda INACTIVO con su historia intacta.", false);
-                }, error -> mostrarError(TareasFX.mensaje(error)));
-            }
-        });
+        javafx.scene.control.TextInputDialog dialogo = new javafx.scene.control.TextInputDialog();
+        dialogo.setTitle("Anular paciente");
+        dialogo.setHeaderText("Anular a " + paciente.getNombres() + " " + paciente.getApellidos()
+                + " (HC " + paciente.getCodigoHc() + ")");
+        dialogo.setContentText("Motivo de la anulacion (R22):");
+        java.util.Optional<String> motivo = dialogo.showAndWait();
+        if (motivo.isEmpty() || motivo.get().isBlank()) {
+            indicar("La anulacion exige un motivo (R22).", true);
+            return;
+        }
+        TareasFX.ejecutar(() -> {
+            AppContext.get().pacientes().inactivar(paciente.getId(), motivo.get());
+            return null;
+        }, ignorado -> {
+            limpiarForma();
+            recargar();
+            indicar("Paciente anulado: queda INACTIVO con su historia intacta.", false);
+        }, error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     private void reactivar(Paciente paciente) {

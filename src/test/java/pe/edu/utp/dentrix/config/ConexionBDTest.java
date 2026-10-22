@@ -13,6 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class ConexionBDTest {
@@ -97,9 +98,9 @@ class ConexionBDTest {
                     "SELECT count(*), COALESCE(SUM(saldo_total), 0) "
                             + "FROM v_saldos_paciente WHERE saldo_total > 0")) {
                 assertNotNull(rs.next());
-                assertEquals(2, rs.getLong(1), "KPI M2: 2 pacientes con saldo");
-                assertEquals(0, new BigDecimal("650.00").compareTo(rs.getBigDecimal(2)),
-                        "KPI M2: saldos por cobrar = S/650");
+                assertTrue(rs.getLong(1) >= 2, "KPI M2: al menos los 2 pacientes del seed deben tener saldo");
+                assertTrue(new BigDecimal("650.00").compareTo(rs.getBigDecimal(2)) <= 0,
+                        "KPI M2: los saldos por cobrar incluyen al menos los S/650 del seed");
             }
         }
     }

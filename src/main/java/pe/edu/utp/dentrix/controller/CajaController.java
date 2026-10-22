@@ -45,6 +45,8 @@ public class CajaController {
 
     private static final DateTimeFormatter FECHA_CORTA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final List<String> MODALIDADES = List.of("EFECTIVO", "YAPE", "PLIN", "TARJETA");
+    private static final List<String> MOTIVOS_DIFERENCIA = List.of(
+            "Vuelto pendiente", "Pago no registrado", "Retiro de caja", "Error de digitacion", "Otro");
     private static final List<String> TURNOS = List.of("DIURNO", "NOCTURNO");
 
     public record LineaGrilla(Integer tratamientoId, String codigo, String nombre, Integer pieza,
@@ -220,6 +222,12 @@ public class CajaController {
     private Label lblDiferenciaDetalle;
 
     @FXML
+    private Label lblTolerancia;
+
+    @FXML
+    private ComboBox<String> comboMotivoDiferencia;
+
+    @FXML
     private Label lblCierreNumero;
 
     @FXML
@@ -281,6 +289,7 @@ public class CajaController {
 
         comboModalidad.setItems(FXCollections.observableArrayList(MODALIDADES));
         comboModalidadAbono.setItems(FXCollections.observableArrayList(MODALIDADES));
+        comboMotivoDiferencia.setItems(FXCollections.observableArrayList(MOTIVOS_DIFERENCIA));
         comboTurno.setItems(FXCollections.observableArrayList(TURNOS));
 
         comboPaciente.setConverter(new StringConverter<Paciente>() {
@@ -671,7 +680,8 @@ public class CajaController {
                 throw new DentrixException("El efectivo contado debe ser un número (ej. 350.00)");
             }
             Long cierreId = cierreActual.getId();
-            TareasFX.ejecutar(() -> AppContext.get().caja().consolidar(cierreId, contado, usuarioCajaId),
+            String motivo = comboMotivoDiferencia.getValue();
+            TareasFX.ejecutar(() -> AppContext.get().caja().consolidar(cierreId, contado, null, motivo, usuarioCajaId),
                     cierre -> {
                         cierreActual = cierre;
                         campoContado.clear();
@@ -738,6 +748,9 @@ public class CajaController {
             ponerDiferencia(lblDiferenciaDetalle, null);
             lblCierreNumero.setText("Sin cierre");
             aplicarBadge(lblActaEstado, "PENDIENTE", "badge-gris");
+            lblTolerancia.setText("S/ 1.00");
+            comboMotivoDiferencia.getSelectionModel().clearSelection();
+            comboMotivoDiferencia.setDisable(true);
             return;
         }
         etiquetaSinCierre.setText("");
@@ -752,6 +765,17 @@ public class CajaController {
         lblBilleterasContado.setText(moneda(cierreActual.getBilleterasSistema()));
         ponerDiferencia(lblDiferencia, cierreActual.getDiferencia());
         ponerDiferencia(lblDiferenciaDetalle, cierreActual.getDiferencia());
+        BigDecimal tolerancia = cierreActual.getTolerancia() == null
+                ? BigDecimal.ONE : cierreActual.getTolerancia();
+        lblTolerancia.setText(moneda(tolerancia));
+        boolean excede = cierreActual.getDiferencia() != null
+                && cierreActual.getDiferencia().abs().compareTo(tolerancia) > 0;
+        comboMotivoDiferencia.setDisable(!"ABIERTO".equals(cierreActual.getEstado()) || !excede);
+        if (cierreActual.getMotivoDiferencia() != null) {
+            comboMotivoDiferencia.setValue(cierreActual.getMotivoDiferencia());
+        } else {
+            comboMotivoDiferencia.getSelectionModel().clearSelection();
+        }
         lblCierreNumero.setText(cierreActual.getId() == null ? "Sin cierre" : "N° " + cierreActual.getId());
         aplicarBadge(lblActaEstado, cierreActual.isActaGenerada() ? "GENERADA" : "PENDIENTE",
                 cierreActual.isActaGenerada() ? "badge-verde" : "badge-gris");
@@ -768,6 +792,10 @@ public class CajaController {
             info.append('\n');
             info.append("Efectivo contado: S/ ").append(cierreActual.getEfectivoContado().toPlainString()).append('\n');
             info.append("Diferencia: S/ ").append(cierreActual.getDiferencia().toPlainString());
+            info.append("   Tolerancia: S/ ").append(tolerancia.toPlainString());
+            if (cierreActual.getMotivoDiferencia() != null) {
+                info.append('\n').append("Motivo de la diferencia: ").append(cierreActual.getMotivoDiferencia());
+            }
         }
         if (cierreActual.getConsolidadoEn() != null) {
             info.append('\n');

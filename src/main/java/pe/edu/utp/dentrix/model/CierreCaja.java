@@ -17,6 +17,8 @@ public class CierreCaja {
     private BigDecimal totalSistema;
     private BigDecimal efectivoContado;
     private BigDecimal diferencia;
+    private BigDecimal tolerancia;
+    private String motivoDiferencia;
     private String estado;
     private Integer consolidadoPor;
     private LocalDateTime consolidadoEn;
@@ -111,6 +113,22 @@ public class CierreCaja {
 
     public void setDiferencia(BigDecimal diferencia) {
         this.diferencia = diferencia;
+    }
+
+    public BigDecimal getTolerancia() {
+        return tolerancia;
+    }
+
+    public void setTolerancia(BigDecimal tolerancia) {
+        this.tolerancia = tolerancia;
+    }
+
+    public String getMotivoDiferencia() {
+        return motivoDiferencia;
+    }
+
+    public void setMotivoDiferencia(String motivoDiferencia) {
+        this.motivoDiferencia = motivoDiferencia;
     }
 
     public String getEstado() {

@@ -16,6 +16,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import pe.edu.utp.dentrix.config.AppContext;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
+import pe.edu.utp.dentrix.model.Consultorio;
 import pe.edu.utp.dentrix.model.Rol;
 import pe.edu.utp.dentrix.model.Usuario;
 import pe.edu.utp.dentrix.service.UsuarioService;
@@ -51,6 +52,7 @@ public class UsuariosController {
     @FXML private TextField campoEspecialidad;
     @FXML private PasswordField campoClave;
     @FXML private ComboBox<Rol> comboRol;
+    @FXML private ComboBox<Consultorio> comboConsultorio;
     @FXML private ComboBox<String> comboEstado;
     @FXML private Label etiquetaModo;
     @FXML private Label etiquetaError;
@@ -87,6 +89,18 @@ public class UsuariosController {
             }
         });
         comboEstado.setItems(estados);
+        comboConsultorio.setConverter(new javafx.util.StringConverter<>() {
+            @Override
+            public String toString(Consultorio consultorio) {
+                return consultorio == null ? ""
+                        : consultorio.getCodigo() + " - " + consultorio.getNombre();
+            }
+
+            @Override
+            public Consultorio fromString(String string) {
+                return null;
+            }
+        });
 
         colUsername.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue().getUsername()));
         colNombre.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue().nombreCompleto()));
@@ -193,6 +207,7 @@ public class UsuariosController {
         campoEspecialidad.clear();
         campoClave.clear();
         comboRol.getSelectionModel().clearSelection();
+        comboConsultorio.getSelectionModel().clearSelection();
         estados.setAll(ESTADOS_MANUALES);
         comboEstado.setValue("ACTIVO");
         comboEstado.setDisable(false);
@@ -270,6 +285,10 @@ public class UsuariosController {
                 .filter(r -> r.getId().equals(usuario.getRolId()))
                 .findFirst()
                 .ifPresent(r -> comboRol.getSelectionModel().select(r));
+        comboConsultorio.getItems().stream()
+                .filter(c -> c.getId().equals(usuario.getConsultorioId()))
+                .findFirst()
+                .ifPresent(c -> comboConsultorio.getSelectionModel().select(c));
         String estado = usuario.getEstado();
         estados.setAll(ESTADOS_MANUALES);
         if (estado != null && !estado.isBlank() && !estados.contains(estado)) {
@@ -302,25 +321,29 @@ public class UsuariosController {
         usuario.setEspecialidad(vacioANull(campoEspecialidad.getText()));
         Rol rol = comboRol.getSelectionModel().getSelectedItem();
         usuario.setRolId(rol == null ? null : rol.getId());
+        Consultorio consultorio = comboConsultorio.getSelectionModel().getSelectedItem();
+        usuario.setConsultorioId(consultorio == null ? null : consultorio.getId());
         return usuario;
     }
 
     private void recargarAsync() {
-        TareasFX.ejecutar(() -> new DatosUsuarios(servicio.listarRoles(), servicio.listar()),
+        TareasFX.ejecutar(() -> new DatosUsuarios(servicio.listarRoles(), servicio.listar(),
+                        AppContext.get().catalogo().listarConsultorios()),
                 this::aplicarDatos,
-                error -> etiquetaError.setText("No se pudo cargar el padrón: " + TareasFX.mensaje(error)));
+                error -> etiquetaError.setText("No se pudo cargar el padr��n: " + TareasFX.mensaje(error)));
     }
 
     private void aplicarDatos(DatosUsuarios datos) {
         roles.setAll(datos.roles());
         comboRol.setItems(roles);
+        comboConsultorio.setItems(FXCollections.observableArrayList(datos.consultorios()));
         filas.setAll(datos.usuarios());
         etiquetaConteo.setText(datos.usuarios().size() + " USUARIOS · M9.1");
         long activos = datos.usuarios().stream().filter(u -> "ACTIVO".equals(u.getEstado())).count();
         etiquetaSesiones.setText("Cuentas activas: " + activos + " de " + datos.usuarios().size());
     }
 
-    private record DatosUsuarios(List<Rol> roles, List<Usuario> usuarios) {
+    private record DatosUsuarios(List<Rol> roles, List<Usuario> usuarios, List<Consultorio> consultorios) {
     }
 
     public record PermisoRol(String modulo, String administrador, String odontologo, String recepcion) {

@@ -22,7 +22,7 @@ public class PacienteDAOImpl implements PacienteDAO {
             "id, codigo_hc, dni, apellidos, nombres, fecha_nac, celular, email, direccion, "
                     + "alergias, antecedentes, tutor_nombre, tutor_documento, tutor_vinculo, "
                     + "pagador_nombre, pagador_documento, fecha_apertura, estado, usuario_registro_id, "
-                    + "fecha_registro";
+                    + "fecha_registro, motivo_anulacion, fecha_anulacion";
 
     private Paciente leer(ResultSet rs) throws SQLException {
         Paciente paciente = new Paciente();
@@ -46,6 +46,8 @@ public class PacienteDAOImpl implements PacienteDAO {
         paciente.setEstado(rs.getString(18));
         paciente.setUsuarioRegistroId(rs.getObject(19, Integer.class));
         paciente.setFechaRegistro(rs.getObject(20, LocalDateTime.class));
+        paciente.setMotivoAnulacion(rs.getObject(21, String.class));
+        paciente.setFechaAnulacion(rs.getObject(22, LocalDateTime.class));
         return paciente;
     }
 
@@ -166,7 +168,8 @@ public class PacienteDAOImpl implements PacienteDAO {
         String sql = "UPDATE paciente SET dni = ?, apellidos = ?, nombres = ?, fecha_nac = ?, celular = ?, "
                 + "email = ?, direccion = ?, alergias = ?, antecedentes = ?, tutor_nombre = ?, "
                 + "tutor_documento = ?, tutor_vinculo = ?, pagador_nombre = ?, pagador_documento = ?, "
-                + "fecha_apertura = ?, estado = ?, usuario_registro_id = ? WHERE id = ?";
+                + "fecha_apertura = ?, estado = ?, usuario_registro_id = ?, motivo_anulacion = ?, "
+                + "fecha_anulacion = ? WHERE id = ?";
         try (Connection cn = ConexionBD.abrir();
              PreparedStatement ps = cn.prepareStatement(sql)) {
             ps.setObject(1, paciente.getDni());
@@ -186,7 +189,9 @@ public class PacienteDAOImpl implements PacienteDAO {
             ps.setObject(15, paciente.getFechaApertura());
             ps.setObject(16, paciente.getEstado());
             ps.setObject(17, paciente.getUsuarioRegistroId());
-            ps.setObject(18, paciente.getId());
+            ps.setObject(18, paciente.getMotivoAnulacion());
+            ps.setObject(19, paciente.getFechaAnulacion());
+            ps.setObject(20, paciente.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DentrixException("No se pudo actualizar el paciente.", e);

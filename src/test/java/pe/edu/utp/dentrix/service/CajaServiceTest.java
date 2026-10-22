@@ -281,6 +281,38 @@ class CajaServiceTest {
     }
 
     @Test
+    void elArqueoExigeMotivoCuandoLaDiferenciaSuperaLaTolerancia() throws Exception {
+        assumeTrue(hayBaseDeDatos(), "BD o config no disponibles: se omite esta prueba");
+        LocalDate fecha = LocalDate.of(2026, 12, 24);
+        try {
+            CierreCaja abierto = servicio.abrirCierre(fecha, "DIURNO", 1, BigDecimal.ZERO);
+            Long id = abierto.getId();
+
+            DentrixException sinMotivo = assertThrows(DentrixException.class,
+                    () -> servicio.consolidar(id, new BigDecimal("50.00"), null, null, 1));
+            assertTrue(sinMotivo.getMessage().contains("P6"),
+                    "P6: la diferencia sobre la tolerancia exige motivo: " + sinMotivo.getMessage());
+
+            CierreCaja consolidado = servicio.consolidar(id, new BigDecimal("50.00"), null,
+                    "Vuelto pendiente", 1);
+            assertEquals("CONSOLIDADO", consolidado.getEstado());
+            assertEquals(0, new BigDecimal("1.00").compareTo(consolidado.getTolerancia()),
+                    "La tolerancia por defecto es S/ 1.00");
+            assertEquals("Vuelto pendiente", consolidado.getMotivoDiferencia(),
+                    "El motivo del arqueo debe quedar registrado");
+            assertEquals(0, new BigDecimal("50.00").compareTo(consolidado.getDiferencia()),
+                    "La diferencia es contado - fondo - efectivo del sistema");
+        } finally {
+            try (Connection cn = ConexionBD.abrir();
+                 PreparedStatement ps = cn.prepareStatement("DELETE FROM cierre_caja WHERE fecha = ?")) {
+                ps.setObject(1, fecha);
+                ps.executeUpdate();
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    @Test
     void calculaTotalesDelCierreSoloConAbonos() {
         List<Pago> pagos = List.of(abono("EFECTIVO", "100.00"), abono("YAPE", "50.00"),
                 abono("TARJETA", "30.00"));

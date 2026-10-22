@@ -95,10 +95,15 @@ public class PacienteService {
         return pacienteDAO.buscarPorDni(dni);
     }
 
-    public void inactivar(Integer id) throws DentrixException {
+    public void inactivar(Integer id, String motivo) throws DentrixException {
+        if (motivo == null || motivo.isBlank()) {
+            throw new DentrixException("R22: anular el paciente exige un motivo");
+        }
         try {
             Paciente paciente = buscarPorId(id);
             paciente.setEstado("INACTIVO");
+            paciente.setMotivoAnulacion(motivo.trim());
+            paciente.setFechaAnulacion(java.time.LocalDateTime.now());
             if (!pacienteDAO.actualizar(paciente)) {
                 throw new DentrixException("Paciente no encontrado");
             }

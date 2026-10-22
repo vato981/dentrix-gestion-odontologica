@@ -94,6 +94,7 @@ class UsuariosFxmlTest {
         assertNotNull(pantalla.lookup("#campoColegiatura"), "Falta la colegiatura de la ficha");
         assertNotNull(pantalla.lookup("#campoEspecialidad"), "Falta la especialidad de la ficha");
         assertNotNull(pantalla.lookup("#comboRol"), "Falta el rol de la ficha");
+        assertNotNull(pantalla.lookup("#comboConsultorio"), "Falta el consultorio de la ficha");
         assertNotNull(pantalla.lookup("#campoClave"), "Falta la clave de la ficha");
         assertNotNull(pantalla.lookup("#etiquetaModo"), "Falta la etiqueta de modo de la ficha");
         assertNotNull(pantalla.lookup("#etiquetaSesiones"), "Falta el contador de cuentas activas");

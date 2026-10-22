@@ -23,6 +23,8 @@ public class Paciente {
     private String pagadorDocumento;
     private LocalDate fechaApertura;
     private String estado;
+    private String motivoAnulacion;
+    private LocalDateTime fechaAnulacion;
     private Integer usuarioRegistroId;
     private LocalDateTime fechaRegistro;
 
@@ -171,6 +173,22 @@ public class Paciente {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public String getMotivoAnulacion() {
+        return motivoAnulacion;
+    }
+
+    public void setMotivoAnulacion(String motivoAnulacion) {
+        this.motivoAnulacion = motivoAnulacion;
+    }
+
+    public LocalDateTime getFechaAnulacion() {
+        return fechaAnulacion;
+    }
+
+    public void setFechaAnulacion(LocalDateTime fechaAnulacion) {
+        this.fechaAnulacion = fechaAnulacion;
     }
 
     public Integer getUsuarioRegistroId() {

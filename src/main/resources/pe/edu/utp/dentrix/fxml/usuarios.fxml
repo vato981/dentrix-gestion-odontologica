@@ -82,6 +82,8 @@
                                         <TextField fx:id="campoColegiatura" promptText="Solo odontologos" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                         <Label styleClass="fila-dato-label" text="Especialidad" GridPane.rowIndex="5" />
                                         <TextField fx:id="campoEspecialidad" promptText="Especialidad clinica" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                        <Label styleClass="fila-dato-label" text="Consultorio" GridPane.rowIndex="6" />
+                                        <ComboBox fx:id="comboConsultorio" maxWidth="Infinity" promptText="Sin asignar" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                                     </children>
                                 </GridPane>
                                 <HBox alignment="CENTER_LEFT" spacing="8.0">

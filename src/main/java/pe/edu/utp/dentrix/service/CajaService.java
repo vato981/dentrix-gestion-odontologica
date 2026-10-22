@@ -469,6 +469,8 @@ public class CajaService {
         cierre.setBilleterasSistema(BigDecimal.ZERO);
         cierre.setTotalSistema(BigDecimal.ZERO);
         cierre.setEfectivoContado(null);
+        cierre.setTolerancia(BigDecimal.ONE);
+        cierre.setMotivoDiferencia(null);
         cierre.setEstado("ABIERTO");
         cierre.setActaGenerada(false);
         try {
@@ -514,6 +516,12 @@ public class CajaService {
 
     public CierreCaja consolidar(Long cierreId, BigDecimal efectivoContado, Integer usuarioId)
             throws DentrixException {
+        return consolidar(cierreId, efectivoContado, null, null, usuarioId);
+    }
+
+    public CierreCaja consolidar(Long cierreId, BigDecimal efectivoContado, BigDecimal tolerancia,
+                                 String motivoDiferencia, Integer usuarioId)
+            throws DentrixException {
         CierreCaja cierre = cierrePorId(cierreId);
         if (!"ABIERTO".equals(cierre.getEstado())) {
             throw new DentrixException("Solo se consolida un cierre en estado ABIERTO; el estado actual es "
@@ -525,12 +533,26 @@ public class CajaService {
         if (usuarioId == null) {
             throw new DentrixException("El usuario que consolida el cierre es obligatorio");
         }
+        BigDecimal tol = tolerancia != null ? tolerancia
+                : (cierre.getTolerancia() == null ? BigDecimal.ONE : cierre.getTolerancia());
+        if (tol.signum() < 0) {
+            throw new DentrixException("La tolerancia del arqueo no puede ser negativa");
+        }
+        String motivo = motivoDiferencia == null ? null : motivoDiferencia.trim();
         TotalesCierre totales = calcularTotales(pagoDAO.listarPorCierre(cierreId));
+        BigDecimal fondo = cierre.getFondoInicial() == null ? BigDecimal.ZERO : cierre.getFondoInicial();
+        BigDecimal diferencia = efectivoContado.subtract(fondo).subtract(totales.efectivo());
+        if (diferencia.abs().compareTo(tol) > 0 && (motivo == null || motivo.isEmpty())) {
+            throw new DentrixException("P6: la diferencia S/ " + diferencia.toPlainString()
+                    + " supera la tolerancia S/ " + tol.toPlainString() + "; registra el motivo del arqueo");
+        }
         cierre.setEfectivoSistema(totales.efectivo());
         cierre.setBilleterasSistema(totales.billeteras());
         cierre.setTotalSistema(totales.total());
-        cierre.setEstado("CONSOLIDADO");
         cierre.setEfectivoContado(efectivoContado);
+        cierre.setTolerancia(tol);
+        cierre.setMotivoDiferencia(motivo == null || motivo.isEmpty() ? null : motivo);
+        cierre.setEstado("CONSOLIDADO");
         cierre.setConsolidadoPor(usuarioId);
         cierre.setConsolidadoEn(LocalDateTime.now());
         try {

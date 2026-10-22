@@ -21,8 +21,8 @@ public class CierreCajaDAOImpl implements CierreCajaDAO {
 
     private static final String COLUMNAS =
             "id, fecha, turno, cajero_id, fondo_inicial, historial_fondos, efectivo_sistema, "
-                    + "billeteras_sistema, total_sistema, efectivo_contado, diferencia, estado, "
-                    + "consolidado_por, consolidado_en, acta_generada";
+                    + "billeteras_sistema, total_sistema, efectivo_contado, diferencia, tolerancia, "
+                    + "motivo_diferencia, estado, consolidado_por, consolidado_en, acta_generada";
 
     private CierreCaja leer(ResultSet rs) throws SQLException {
         CierreCaja cierre = new CierreCaja();
@@ -37,6 +37,8 @@ public class CierreCajaDAOImpl implements CierreCajaDAO {
         cierre.setTotalSistema(rs.getBigDecimal("total_sistema"));
         cierre.setEfectivoContado(rs.getObject("efectivo_contado", BigDecimal.class));
         cierre.setDiferencia(rs.getObject("diferencia", BigDecimal.class));
+        cierre.setTolerancia(rs.getBigDecimal("tolerancia"));
+        cierre.setMotivoDiferencia(rs.getString("motivo_diferencia"));
         cierre.setEstado(rs.getString("estado"));
         cierre.setConsolidadoPor(rs.getObject("consolidado_por", Integer.class));
         cierre.setConsolidadoEn(rs.getObject("consolidado_en", LocalDateTime.class));
@@ -92,8 +94,8 @@ public class CierreCajaDAOImpl implements CierreCajaDAO {
     @Override
     public int insertar(CierreCaja cierre) throws DentrixException {
         String sql = "INSERT INTO cierre_caja (fecha, turno, cajero_id, fondo_inicial, historial_fondos, "
-                + "efectivo_sistema, billeteras_sistema, total_sistema, efectivo_contado, estado) "
-                + "VALUES (?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?, ?::estado_cierre)";
+                + "efectivo_sistema, billeteras_sistema, total_sistema, efectivo_contado, tolerancia, estado) "
+                + "VALUES (?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?, ?, ?::estado_cierre)";
         try (Connection cn = ConexionBD.abrir();
              PreparedStatement ps = cn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setObject(1, cierre.getFecha());
@@ -105,7 +107,8 @@ public class CierreCajaDAOImpl implements CierreCajaDAO {
             ps.setObject(7, cierre.getBilleterasSistema() == null ? BigDecimal.ZERO : cierre.getBilleterasSistema());
             ps.setObject(8, cierre.getTotalSistema() == null ? BigDecimal.ZERO : cierre.getTotalSistema());
             ps.setObject(9, cierre.getEfectivoContado());
-            ps.setString(10, cierre.getEstado() == null ? "ABIERTO" : cierre.getEstado());
+            ps.setObject(10, cierre.getTolerancia() == null ? BigDecimal.ONE : cierre.getTolerancia());
+            ps.setString(11, cierre.getEstado() == null ? "ABIERTO" : cierre.getEstado());
             int filas = ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -122,7 +125,8 @@ public class CierreCajaDAOImpl implements CierreCajaDAO {
     public boolean actualizar(CierreCaja cierre) throws DentrixException {
         String sql = "UPDATE cierre_caja SET fecha = ?, turno = ?, cajero_id = ?, fondo_inicial = ?, "
                 + "historial_fondos = ?::jsonb, efectivo_sistema = ?, billeteras_sistema = ?, "
-                + "total_sistema = ?, efectivo_contado = ?, estado = ?::estado_cierre, consolidado_por = ?, "
+                + "total_sistema = ?, efectivo_contado = ?, tolerancia = ?, motivo_diferencia = ?, "
+                + "estado = ?::estado_cierre, consolidado_por = ?, "
                 + "consolidado_en = ?, acta_generada = ? WHERE id = ?";
         try (Connection cn = ConexionBD.abrir();
              PreparedStatement ps = cn.prepareStatement(sql)) {
@@ -135,11 +139,13 @@ public class CierreCajaDAOImpl implements CierreCajaDAO {
             ps.setObject(7, cierre.getBilleterasSistema() == null ? BigDecimal.ZERO : cierre.getBilleterasSistema());
             ps.setObject(8, cierre.getTotalSistema() == null ? BigDecimal.ZERO : cierre.getTotalSistema());
             ps.setObject(9, cierre.getEfectivoContado());
-            ps.setString(10, cierre.getEstado() == null ? "ABIERTO" : cierre.getEstado());
-            ps.setObject(11, cierre.getConsolidadoPor());
-            ps.setObject(12, cierre.getConsolidadoEn());
-            ps.setBoolean(13, cierre.isActaGenerada());
-            ps.setObject(14, cierre.getId());
+            ps.setObject(10, cierre.getTolerancia() == null ? BigDecimal.ONE : cierre.getTolerancia());
+            ps.setString(11, cierre.getMotivoDiferencia());
+            ps.setString(12, cierre.getEstado() == null ? "ABIERTO" : cierre.getEstado());
+            ps.setObject(13, cierre.getConsolidadoPor());
+            ps.setObject(14, cierre.getConsolidadoEn());
+            ps.setBoolean(15, cierre.isActaGenerada());
+            ps.setObject(16, cierre.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DentrixException("No se pudo actualizar el cierre de caja.", e);

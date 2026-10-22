@@ -70,6 +70,7 @@
                                             <children>
                                                 <TextField fx:id="campoDniPaciente" promptText="DNI del paciente" styleClass="text-field, campo-formulario" HBox.hgrow="ALWAYS" />
                                                 <Button text="Buscar" onAction="#onBuscarPacienteClick" />
+                                                <Button fx:id="btnNuevoPaciente" text="Nuevo paciente" onAction="#onNuevoPacienteClick" />
                                             </children>
                                         </HBox>
                                         <VBox fx:id="cajaPaciente" styleClass="card-paciente" spacing="8.0">

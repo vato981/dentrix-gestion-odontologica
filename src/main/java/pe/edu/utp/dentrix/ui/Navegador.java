@@ -8,6 +8,8 @@ public final class Navegador {
 
     public static final String PRESUPUESTOS = "/pe/edu/utp/dentrix/fxml/presupuesto.fxml";
 
+    public static final String PACIENTES = "/pe/edu/utp/dentrix/fxml/pacientes.fxml";
+
     public static final String EJECUCION = "/pe/edu/utp/dentrix/fxml/ejecucion.fxml";
 
     private static Consumer<String> manejador;

@@ -140,7 +140,8 @@ class CajaFxmlTest {
         assertNotNull(pantalla.lookup("#lblEfectivoSistema"), "Falta el efectivo del sistema");
         assertNotNull(pantalla.lookup("#lblBilleterasSistema"), "Faltan las billeteras del sistema");
         assertNotNull(pantalla.lookup("#lblTotalSistema"), "Falta el total del sistema");
-        assertNotNull(pantalla.lookup("#lblFondoInicial"), "Falta el fondo inicial consolidado");
+        assertNotNull(pantalla.lookup("#lblTolerancia"), "Falta la tolerancia del arqueo");
+        assertNotNull(pantalla.lookup("#comboMotivoDiferencia"), "Falta el motivo de la diferencia");        assertNotNull(pantalla.lookup("#lblFondoInicial"), "Falta el fondo inicial consolidado");
         assertNotNull(pantalla.lookup("#campoContado"), "Falta el efectivo contado");
         assertNotNull(pantalla.lookup("#lblEfectivoContado"), "Falta el efectivo contado consolidado");
         assertNotNull(pantalla.lookup("#lblDiferencia"), "Falta la diferencia del arqueo");
