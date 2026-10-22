@@ -258,6 +258,12 @@ public class CatalogoService {
         if (tratamiento.getPrecio().signum() < 0) {
             throw new DentrixException("El precio del tratamiento no puede ser negativo.");
         }
+        if (tratamiento.getDuracionMinutos() == null) {
+            tratamiento.setDuracionMinutos(30);
+        }
+        if (tratamiento.getDuracionMinutos() < 5 || tratamiento.getDuracionMinutos() > 480) {
+            throw new DentrixException("La duracion del tratamiento debe estar entre 5 y 480 minutos.");
+        }
     }
 
     private void validarDiagnostico(DiagnosticoCie10 diagnostico) throws DentrixException {

@@ -2,6 +2,7 @@ package pe.edu.utp.dentrix.dao.impl;
 
 import pe.edu.utp.dentrix.config.ConexionBD;
 import pe.edu.utp.dentrix.dao.FichaDiagnosticoDAO;
+import pe.edu.utp.dentrix.dto.CambioPrincipal;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.FichaDiagnostico;
 
@@ -62,6 +63,49 @@ public class FichaDiagnosticoDAOImpl implements FichaDiagnosticoDAO {
         } catch (SQLException e) {
             throw new DentrixException("No se pudo actualizar el diagnostico principal: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public int reemplazarPrincipal(Long fichaId, String cie10Nuevo, String motivo, Integer usuarioId)
+            throws DentrixException {
+        String sql = "WITH anterior AS ("
+                + " UPDATE ficha_diagnostico SET es_principal = FALSE"
+                + "  WHERE ficha_id = ? AND es_principal = TRUE AND cie10_codigo <> ?"
+                + " RETURNING ficha_id, cie10_codigo)"
+                + " INSERT INTO historial_diagnostico_principal"
+                + " (ficha_id, cie10_anterior, cie10_nuevo, motivo, usuario_id)"
+                + " SELECT ficha_id, cie10_codigo, ?, ?, ? FROM anterior";
+        try (Connection cn = ConexionBD.abrir();
+             PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setObject(1, fichaId);
+            ps.setObject(2, cie10Nuevo);
+            ps.setObject(3, cie10Nuevo);
+            ps.setObject(4, motivo);
+            ps.setObject(5, usuarioId);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DentrixException("No se pudo cambiar el diagnostico principal: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<CambioPrincipal> historialPrincipal(Long fichaId) throws DentrixException {
+        String sql = "SELECT ficha_id, cie10_anterior, cie10_nuevo, motivo, usuario_id, fecha "
+                + "FROM historial_diagnostico_principal WHERE ficha_id = ? ORDER BY fecha DESC, id DESC";
+        List<CambioPrincipal> cambios = new ArrayList<>();
+        try (Connection cn = ConexionBD.abrir();
+             PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setObject(1, fichaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    cambios.add(new CambioPrincipal(rs.getLong(1), rs.getString(2), rs.getString(3),
+                            rs.getString(4), (Integer) rs.getObject(5), rs.getTimestamp(6).toLocalDateTime()));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DentrixException("No se pudo leer el historial del diagnostico principal: " + e.getMessage(), e);
+        }
+        return cambios;
     }
 
     @Override

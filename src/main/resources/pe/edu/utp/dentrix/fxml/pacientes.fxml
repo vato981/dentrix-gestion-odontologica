@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextArea?>
@@ -11,90 +13,141 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pe.edu.utp.dentrix.controller.PacientesController">
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 0 0 14 0;">
+        <VBox spacing="10.0" style="-fx-padding: 0 0 14 0;">
             <children>
-                <TextField fx:id="campoBusqueda" prefWidth="300.0" promptText="Buscar por DNI, Apellidos o Código..." styleClass="text-field, campo-formulario" />
-                <Button text="🔍 Buscar" onAction="#onBuscarClick" />
-                <Label HBox.hgrow="ALWAYS" text=" " />
-                <Button text="Volver" onAction="#onVolverClick" />
-                <Button text="⟳ Refrescar" onAction="#onRefrescarClick" />
-                <Button styleClass="button, boton-primario" text="➕ Nuevo Paciente" onAction="#onNuevoClick" />
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <children>
+                        <Label styleClass="label-titulo" text="Pacientes" />
+                        <Label styleClass="tarjeta-etiqueta" text="Padron general de pacientes" />
+                        <Label HBox.hgrow="ALWAYS" text=" " />
+                        <Button text="Volver" onAction="#onVolverClick" />
+                        <Button text="⟳ Refrescar" onAction="#onRefrescarClick" />
+                        <Button styleClass="button, boton-primario" text="＋ Nuevo paciente" onAction="#onNuevoClick" />
+                    </children>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="tarjeta">
+                    <children>
+                        <Label style="-fx-font-size: 13px; -fx-text-fill: #94A3B8;" text="🔍" />
+                        <TextField fx:id="campoBusqueda" prefWidth="300.0" promptText="DNI, apellido, nombre o codigo" styleClass="text-field, campo-formulario" />
+                        <Button styleClass="button, boton-primario" text="Buscar" onAction="#onBuscarClick" />
+                        <Label HBox.hgrow="ALWAYS" text=" " />
+                        <Label fx:id="etiquetaConteo" styleClass="badge, badge-gris" text="" />
+                        <Label fx:id="etiquetaEstado" styleClass="etiqueta-estado" text="" />
+                    </children>
+                </HBox>
             </children>
-        </HBox>
+        </VBox>
     </top>
     <center>
-        <HBox spacing="16.0" BorderPane.alignment="CENTER">
+        <HBox spacing="14.0" BorderPane.alignment="CENTER">
             <children>
-                <VBox spacing="10.0" styleClass="tarjeta" prefWidth="360.0" HBox.hgrow="NEVER">
-                    <children>
-                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefWidth="360.0" minWidth="350.0" style="-fx-background-color: transparent; -fx-background-insets: 0;" HBox.hgrow="NEVER">
+                    <content>
+                        <VBox spacing="9.0" styleClass="tarjeta">
                             <children>
-                                <Label styleClass="tarjeta-titulo" text="FICHA DEMOGRÁFICA DEL PACIENTE" />
-                                <Label HBox.hgrow="ALWAYS" text=" " />
-                                <Label fx:id="etiquetaModo" styleClass="tarjeta-etiqueta" text="NUEVO" />
+                                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                    <children>
+                                        <Label styleClass="tarjeta-titulo" text="FICHA DEMOGRAFICA DEL PACIENTE" />
+                                        <Label HBox.hgrow="ALWAYS" text=" " />
+                                        <Label fx:id="etiquetaModo" styleClass="badge, badge-azul" text="NUEVO" />
+                                    </children>
+                                </HBox>
+                                <Label fx:id="etiquetaCodigo" styleClass="dato-secundario" text="El codigo HC se genera automaticamente" wrapText="true" />
+                                <GridPane hgap="8.0" vgap="7.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints percentWidth="34.0" />
+                                        <ColumnConstraints percentWidth="66.0" hgrow="ALWAYS" />
+                                    </columnConstraints>
+                                    <children>
+                                        <Label styleClass="fila-dato-label" text="DNI *" GridPane.rowIndex="0" />
+                                        <TextField fx:id="campoDni" promptText="8 digitos" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                        <Label styleClass="fila-dato-label" text="Codigo HC" GridPane.rowIndex="1" />
+                                        <TextField fx:id="campoCodigo" disable="true" promptText="Autogenerado" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <Label styleClass="fila-dato-label" text="Apellidos *" GridPane.rowIndex="2" />
+                                        <TextField fx:id="campoApellidos" promptText="Apellidos del paciente" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        <Label styleClass="fila-dato-label" text="Nombres *" GridPane.rowIndex="3" />
+                                        <TextField fx:id="campoNombres" promptText="Nombres del paciente" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <Label styleClass="fila-dato-label" text="F. nacimiento" GridPane.rowIndex="4" />
+                                        <DatePicker fx:id="campoFechaNac" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                        <Label styleClass="fila-dato-label" text="Telefono" GridPane.rowIndex="5" />
+                                        <TextField fx:id="campoCelular" promptText="9 digitos" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                        <Label styleClass="fila-dato-label" text="Email" GridPane.rowIndex="6" />
+                                        <TextField fx:id="campoEmail" promptText="correo@ejemplo.com" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                        <Label styleClass="fila-dato-label" text="Direccion" GridPane.rowIndex="7" />
+                                        <TextField fx:id="campoDireccion" promptText="Direccion completa" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                                        <Label styleClass="fila-dato-label" text="Alergias" GridPane.rowIndex="8" />
+                                        <TextArea fx:id="campoAlergias" prefRowCount="2" styleClass="text-area, campo-formulario" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                                        <Label styleClass="fila-dato-label" text="Antecedentes" GridPane.rowIndex="9" />
+                                        <TextArea fx:id="campoAntecedentes" prefRowCount="2" styleClass="text-area, campo-formulario" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+                                    </children>
+                                </GridPane>
+                                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                    <children>
+                                        <Label styleClass="seccion-titulo" text="TUTOR Y RESPONSABLE DE PAGO" />
+                                        <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
+                                    </children>
+                                </HBox>
+                                <GridPane hgap="8.0" vgap="7.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints percentWidth="34.0" />
+                                        <ColumnConstraints percentWidth="66.0" hgrow="ALWAYS" />
+                                    </columnConstraints>
+                                    <children>
+                                        <Label styleClass="fila-dato-label" text="Tutor (menor)" GridPane.rowIndex="0" />
+                                        <TextField fx:id="campoTutorNombre" promptText="Nombre del tutor" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                        <Label styleClass="fila-dato-label" text="Documento tutor" GridPane.rowIndex="1" />
+                                        <TextField fx:id="campoTutorDocumento" promptText="DNI del tutor" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <Label styleClass="fila-dato-label" text="Vinculo" GridPane.rowIndex="2" />
+                                        <ComboBox fx:id="comboTutorVinculo" maxWidth="Infinity" promptText="Vinculo con el paciente" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        <Label styleClass="fila-dato-label" text="Pagador" GridPane.rowIndex="3" />
+                                        <TextField fx:id="campoPagadorNombre" promptText="Responsable de pago" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <Label styleClass="fila-dato-label" text="Documento pago" GridPane.rowIndex="4" />
+                                        <TextField fx:id="campoPagadorDocumento" promptText="DNI o RUC del pagador" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                        <Label styleClass="fila-dato-label" text="Estado" GridPane.rowIndex="5" />
+                                        <ComboBox fx:id="comboEstado" maxWidth="Infinity" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                    </children>
+                                </GridPane>
+                                <Label fx:id="etiquetaError" styleClass="etiqueta-error" text="" wrapText="true" />
+                                <HBox alignment="CENTER_RIGHT" spacing="6.0">
+                                    <children>
+                                        <Button text="Cancelar" onAction="#onCancelarClick" />
+                                        <Button fx:id="btnAnular" styleClass="button, boton-peligro" text="✖ Anular" onAction="#onAnularClick" />
+                                        <Button fx:id="btnReactivar" styleClass="button, boton-primario" text="Reactivar" onAction="#onReactivarClick" />
+                                    </children>
+                                </HBox>
+                                <Button defaultButton="true" maxWidth="Infinity" styleClass="button, boton-primario" text="💾 Guardar paciente" onAction="#onGuardarClick" />
                             </children>
-                        </HBox>
-                        <Label fx:id="etiquetaCodigo" styleClass="etiqueta-estado" text="El código HC se genera automáticamente" wrapText="true" />
-                        <GridPane hgap="8.0" vgap="8.0">
-                            <columnConstraints>
-                                <ColumnConstraints percentWidth="34.0" />
-                                <ColumnConstraints percentWidth="66.0" hgrow="ALWAYS" />
-                            </columnConstraints>
-                            <children>
-                                <Label style="-fx-font-size: 11px;" text="DNI *" GridPane.rowIndex="0" />
-                                <TextField fx:id="campoDni" promptText="8 dígitos" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                                <Label style="-fx-font-size: 11px;" text="Código HC" GridPane.rowIndex="1" />
-                                <TextField fx:id="campoCodigo" disable="true" promptText="Autogenerado" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                <Label style="-fx-font-size: 11px;" text="Apellidos *" GridPane.rowIndex="2" />
-                                <TextField fx:id="campoApellidos" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                <Label style="-fx-font-size: 11px;" text="Nombres *" GridPane.rowIndex="3" />
-                                <TextField fx:id="campoNombres" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                <Label style="-fx-font-size: 11px;" text="F. Nacimiento" GridPane.rowIndex="4" />
-                                <DatePicker fx:id="campoFechaNac" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                <Label style="-fx-font-size: 11px;" text="Celular" GridPane.rowIndex="5" />
-                                <TextField fx:id="campoCelular" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                                <Label style="-fx-font-size: 11px;" text="Email" GridPane.rowIndex="6" />
-                                <TextField fx:id="campoEmail" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                                <Label style="-fx-font-size: 11px;" text="Dirección" GridPane.rowIndex="7" />
-                                <TextField fx:id="campoDireccion" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                                <Label style="-fx-font-size: 11px;" text="Alergias" GridPane.rowIndex="8" />
-                                <TextArea fx:id="campoAlergias" prefRowCount="2" styleClass="text-area, campo-formulario" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="8" />
-                                <Label style="-fx-font-size: 11px;" text="Antecedentes" GridPane.rowIndex="9" />
-                                <TextArea fx:id="campoAntecedentes" prefRowCount="2" styleClass="text-area, campo-formulario" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="9" />
-                            </children>
-                        </GridPane>
-                        <Label fx:id="etiquetaError" styleClass="etiqueta-error" text="" wrapText="true" />
-                        <HBox alignment="CENTER_RIGHT" spacing="10.0">
-                            <children>
-                                <Button text="Cancelar" onAction="#onCancelarClick" />
-                                <Button defaultButton="true" styleClass="button, boton-primario" text="💾 Guardar Datos del Paciente" onAction="#onGuardarClick" />
-                            </children>
-                        </HBox>
-                    </children>
-                </VBox>
+                        </VBox>
+                    </content>
+                </ScrollPane>
                 <VBox spacing="10.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                     <children>
                         <HBox alignment="CENTER_LEFT" spacing="8.0">
                             <children>
-                                <Label styleClass="tarjeta-titulo" text="PADRÓN GENERAL REGISTRADO" />
+                                <Label styleClass="tarjeta-titulo" text="PADRON GENERAL REGISTRADO" />
                                 <Label HBox.hgrow="ALWAYS" text=" " />
-                                <Label fx:id="etiquetaConteo" styleClass="tarjeta-etiqueta" text="" />
+                                <Label styleClass="tarjeta-etiqueta" text="Doble clic en una fila para editarla" />
                             </children>
                         </HBox>
                         <TableView fx:id="tablaPacientes" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
                             <columns>
-                                <TableColumn fx:id="colCodigo" prefWidth="100.0" text="CÓDIGO" />
-                                <TableColumn fx:id="colDni" prefWidth="100.0" text="DNI" />
-                                <TableColumn fx:id="colNombre" prefWidth="230.0" text="APELLIDOS Y NOMBRES" />
-                                <TableColumn fx:id="colCelular" prefWidth="120.0" text="CELULAR" />
-                                <TableColumn fx:id="colAcciones" prefWidth="150.0" text="ACCIONES" />
+                                <TableColumn fx:id="colCodigo" minWidth="96.0" prefWidth="100.0" text="CODIGO" />
+                                <TableColumn fx:id="colNombre" minWidth="130.0" prefWidth="185.0" text="PACIENTE" />
+                                <TableColumn fx:id="colDni" minWidth="78.0" prefWidth="85.0" text="DNI" />
+                                <TableColumn fx:id="colEdad" minWidth="44.0" prefWidth="48.0" text="EDAD" />
+                                <TableColumn fx:id="colCelular" minWidth="86.0" prefWidth="95.0" text="TELEFONO" />
+                                <TableColumn fx:id="colEstado" minWidth="76.0" prefWidth="82.0" text="ESTADO" />
+                                <TableColumn fx:id="colAcciones" minWidth="116.0" prefWidth="120.0" text="ACCIONES" />
                             </columns>
+                            <placeholder>
+                                <Label styleClass="etiqueta-estado" text="No hay pacientes que coincidan con la busqueda." />
+                            </placeholder>
                         </TableView>
-                        <Label fx:id="etiquetaEstado" styleClass="etiqueta-estado" text="" />
                     </children>
                 </VBox>
             </children>

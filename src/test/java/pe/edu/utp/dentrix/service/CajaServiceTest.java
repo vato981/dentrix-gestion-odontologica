@@ -3,31 +3,40 @@ package pe.edu.utp.dentrix.service;
 import org.junit.jupiter.api.Test;
 import pe.edu.utp.dentrix.config.ConexionBD;
 import pe.edu.utp.dentrix.dao.CierreCajaDAO;
-import pe.edu.utp.dentrix.dao.ConfiguracionDAO;
+import pe.edu.utp.dentrix.dao.ComprobanteDAO;
 import pe.edu.utp.dentrix.dao.FichaClinicaDAO;
 import pe.edu.utp.dentrix.dao.PacienteDAO;
 import pe.edu.utp.dentrix.dao.PagoDAO;
-import pe.edu.utp.dentrix.dao.PlanTratamientoDAO;
+import pe.edu.utp.dentrix.dao.PresupuestoDAO;
 import pe.edu.utp.dentrix.dao.TratamientoDAO;
 import pe.edu.utp.dentrix.dao.impl.CierreCajaDAOImpl;
-import pe.edu.utp.dentrix.dao.impl.ConfiguracionDAOImpl;
+import pe.edu.utp.dentrix.dao.impl.ComprobanteDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.FichaClinicaDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.PacienteDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.PagoDAOImpl;
-import pe.edu.utp.dentrix.dao.impl.PlanTratamientoDAOImpl;
+import pe.edu.utp.dentrix.dao.impl.PresupuestoDAOImpl;
+import pe.edu.utp.dentrix.dao.impl.TarifarioDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.TratamientoDAOImpl;
 import pe.edu.utp.dentrix.dto.LineaBoleta;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.CierreCaja;
 import pe.edu.utp.dentrix.model.Paciente;
 import pe.edu.utp.dentrix.model.Pago;
+import pe.edu.utp.dentrix.model.Presupuesto;
+import pe.edu.utp.dentrix.model.PresupuestoItem;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -39,13 +48,14 @@ class CajaServiceTest {
 
     private final PacienteDAO pacienteDAO = new PacienteDAOImpl();
     private final PagoDAO pagoDAO = new PagoDAOImpl();
+    private final ComprobanteDAO comprobanteDAO = new ComprobanteDAOImpl();
     private final CierreCajaDAO cierreCajaDAO = new CierreCajaDAOImpl();
     private final TratamientoDAO tratamientoDAO = new TratamientoDAOImpl();
     private final FichaClinicaDAO fichaClinicaDAO = new FichaClinicaDAOImpl();
-    private final PlanTratamientoDAO planTratamientoDAO = new PlanTratamientoDAOImpl();
-    private final ConfiguracionDAO configuracionDAO = new ConfiguracionDAOImpl();
+    private final PresupuestoDAO presupuestoDAO = new PresupuestoDAOImpl();
+    private final TarifarioService tarifario = new TarifarioService(new TarifarioDAOImpl());
     private final CajaService servicio = new CajaService(pagoDAO, cierreCajaDAO, pacienteDAO,
-            tratamientoDAO, fichaClinicaDAO, planTratamientoDAO, configuracionDAO);
+            tratamientoDAO, fichaClinicaDAO, presupuestoDAO, tarifario, comprobanteDAO);
 
     private boolean hayBaseDeDatos() {
         try (Connection cn = ConexionBD.abrir();
@@ -94,10 +104,30 @@ class CajaServiceTest {
                 ps.setInt(1, pacienteId);
                 ps.executeUpdate();
             }
-            try (PreparedStatement ps = cn.prepareStatement(
-                    "DELETE FROM pago WHERE paciente_id = ?")) {
-                ps.setInt(1, pacienteId);
-                ps.executeUpdate();
+            try (Statement st = cn.createStatement()) {
+                st.execute("ALTER TABLE pago DISABLE TRIGGER tr_pago_no_delete");
+            }
+            try {
+                try (PreparedStatement ps = cn.prepareStatement(
+                        "DELETE FROM imputacion WHERE pago_id IN "
+                                + "(SELECT id FROM pago WHERE paciente_id = ?)")) {
+                    ps.setInt(1, pacienteId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = cn.prepareStatement(
+                        "DELETE FROM pago WHERE paciente_id = ? AND pago_origen_id IS NOT NULL")) {
+                    ps.setInt(1, pacienteId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = cn.prepareStatement(
+                        "DELETE FROM pago WHERE paciente_id = ?")) {
+                    ps.setInt(1, pacienteId);
+                    ps.executeUpdate();
+                }
+            } finally {
+                try (Statement st = cn.createStatement()) {
+                    st.execute("ALTER TABLE pago ENABLE TRIGGER tr_pago_no_delete");
+                }
             }
             try (PreparedStatement ps = cn.prepareStatement(
                     "DELETE FROM paciente WHERE id = ?")) {
@@ -118,7 +148,7 @@ class CajaServiceTest {
             pacienteDAO.insertar(nuevo);
             creado = pacienteDAO.buscarPorDni("90000031").orElseThrow();
 
-            List<LineaBoleta> lineas = List.of(new LineaBoleta(1, 21, 1), new LineaBoleta(2, null, 2));
+            List<LineaBoleta> lineas = List.of(LineaBoleta.directa(1, 21, 1), LineaBoleta.directa(2, null, 2));
             Pago boleta = servicio.emitirBoleta(creado.getId(), "EFECTIVO", null, null, null, 1, null, lineas);
 
             assertNotNull(boleta.getId(), "La boleta debe quedar registrada con id");
@@ -147,7 +177,7 @@ class CajaServiceTest {
             pacienteDAO.insertar(nuevo);
             Paciente creado = pacienteDAO.buscarPorDni("90000032").orElseThrow();
 
-            List<LineaBoleta> lineas = List.of(new LineaBoleta(1, null, 1));
+            List<LineaBoleta> lineas = List.of(LineaBoleta.directa(1, null, 1));
             DentrixException error = assertThrows(DentrixException.class,
                     () -> servicio.emitirBoleta(creado.getId(), "EFECTIVO", null, 2L, null, 1, null, lineas));
             assertTrue(error.getMessage().contains("RF-07"),
@@ -167,7 +197,7 @@ class CajaServiceTest {
             pacienteDAO.insertar(nuevo);
             creado = pacienteDAO.buscarPorDni("90000033").orElseThrow();
 
-            List<LineaBoleta> lineas = List.of(new LineaBoleta(5, 31, 1));
+            List<LineaBoleta> lineas = List.of(LineaBoleta.directa(5, 31, 1));
             Pago boleta = servicio.emitirBoleta(creado.getId(), "EFECTIVO", null, null, null, 1, null, lineas);
 
             Pago abono = servicio.registrarAbono(boleta.getId(), new BigDecimal("50.00"),
@@ -197,7 +227,7 @@ class CajaServiceTest {
             pacienteDAO.insertar(nuevo);
             Paciente creado = pacienteDAO.buscarPorDni("90000034").orElseThrow();
 
-            List<LineaBoleta> lineas = List.of(new LineaBoleta(2, null, 1));
+            List<LineaBoleta> lineas = List.of(LineaBoleta.directa(2, null, 1));
             DentrixException error = assertThrows(DentrixException.class,
                     () -> servicio.emitirBoleta(creado.getId(), "YAPE", null, null, null, 1, null, lineas));
             assertTrue(error.getMessage().contains("RF-08"),
@@ -248,5 +278,140 @@ class CajaServiceTest {
             } catch (Exception ignored) {
             }
         }
+    }
+
+    @Test
+    void calculaTotalesDelCierreSoloConAbonos() {
+        List<Pago> pagos = List.of(abono("EFECTIVO", "100.00"), abono("YAPE", "50.00"),
+                abono("TARJETA", "30.00"));
+        CajaService.TotalesCierre totales = CajaService.calcularTotales(pagos);
+        assertEquals(0, new BigDecimal("100.00").compareTo(totales.efectivo()),
+                "El efectivo del sistema suma solo los abonos en efectivo");
+        assertEquals(0, new BigDecimal("50.00").compareTo(totales.billeteras()),
+                "Las billeteras del sistema suman Yape y Plin");
+        assertEquals(0, new BigDecimal("180.00").compareTo(totales.total()),
+                "El total del sistema incluye tarjeta");
+    }
+
+    @Test
+    void ignoraLasBoletasEnLosTotalesDelCierre() {
+        Pago boleta = new Pago();
+        boleta.setModalidad("EFECTIVO");
+        boleta.setMonto(new BigDecimal("200.00"));
+        List<Pago> pagos = List.of(boleta, abono("PLIN", "40.00"));
+        CajaService.TotalesCierre totales = CajaService.calcularTotales(pagos);
+        assertEquals(0, BigDecimal.ZERO.compareTo(totales.efectivo()),
+                "La boleta no es efectivo que entra: solo cuentan los abonos");
+        assertEquals(0, new BigDecimal("40.00").compareTo(totales.billeteras()),
+                "Solo el abono Plin suma en billeteras");
+        assertEquals(0, new BigDecimal("40.00").compareTo(totales.total()),
+                "El total del sistema excluye la boleta");
+    }
+
+    private Pago abono(String modalidad, String monto) {
+        Pago pago = new Pago();
+        pago.setPagoOrigenId(1L);
+        pago.setModalidad(modalidad);
+        pago.setMonto(new BigDecimal(monto));
+        return pago;
+    }
+
+    @Test
+    void rechazaUnItemQueYaFueFacturado() {
+        Paciente paciente = pacienteFalso(2);
+        Map<Long, PresupuestoItem> items = Map.of(58L, itemDePresupuesto(58L, 53L));
+        Map<Long, Presupuesto> presupuestos = Map.of(53L, presupuestoAceptado(53L, 2));
+        CajaService validacion = servicioDeValidacion(presupuestosFalsos(items, presupuestos, Set.of(58L)),
+                paciente);
+
+        DentrixException error = assertThrows(DentrixException.class,
+                () -> validacion.emitirBoleta(2, "EFECTIVO", null, null, null, 1, null,
+                        List.of(LineaBoleta.deItem(58L))));
+        assertTrue(error.getMessage().contains("ya fue facturado"), error.getMessage());
+    }
+
+    @Test
+    void rechazaItemsDePresupuestosDistintosEnLaMismaBoleta() {
+        Paciente paciente = pacienteFalso(2);
+        Map<Long, PresupuestoItem> items = Map.of(
+                58L, itemDePresupuesto(58L, 53L),
+                60L, itemDePresupuesto(60L, 99L));
+        Map<Long, Presupuesto> presupuestos = Map.of(
+                53L, presupuestoAceptado(53L, 2),
+                99L, presupuestoAceptado(99L, 2));
+        CajaService validacion = servicioDeValidacion(presupuestosFalsos(items, presupuestos, Set.of()),
+                paciente);
+
+        DentrixException error = assertThrows(DentrixException.class,
+                () -> validacion.emitirBoleta(2, "EFECTIVO", null, null, null, 1, null,
+                        List.of(LineaBoleta.deItem(58L), LineaBoleta.deItem(60L))));
+        assertTrue(error.getMessage().contains("mismo presupuesto"), error.getMessage());
+    }
+
+    @Test
+    void rechazaMezclarItemsDelPresupuestoConVentaDirecta() {
+        Paciente paciente = pacienteFalso(2);
+        Map<Long, PresupuestoItem> items = Map.of(58L, itemDePresupuesto(58L, 53L));
+        Map<Long, Presupuesto> presupuestos = Map.of(53L, presupuestoAceptado(53L, 2));
+        CajaService validacion = servicioDeValidacion(presupuestosFalsos(items, presupuestos, Set.of()),
+                paciente);
+
+        DentrixException error = assertThrows(DentrixException.class,
+                () -> validacion.emitirBoleta(2, "EFECTIVO", null, null, null, 1, null,
+                        List.of(LineaBoleta.deItem(58L), LineaBoleta.directa(5, 31, 1))));
+        assertTrue(error.getMessage().contains("mezclar"), error.getMessage());
+    }
+
+    private Paciente pacienteFalso(int id) {
+        Paciente paciente = new Paciente();
+        paciente.setId(id);
+        return paciente;
+    }
+
+    private PresupuestoItem itemDePresupuesto(long id, long presupuestoId) {
+        PresupuestoItem item = new PresupuestoItem();
+        item.setId(id);
+        item.setPresupuestoId(presupuestoId);
+        item.setTratamientoId(5);
+        item.setPiezaFdi(31);
+        item.setCantidad(1);
+        item.setSubtotal(new BigDecimal("120.00"));
+        item.setMontoNeto(new BigDecimal("112.00"));
+        item.setEstado("ACEPTADO");
+        return item;
+    }
+
+    private Presupuesto presupuestoAceptado(long id, int pacienteId) {
+        Presupuesto presupuesto = new Presupuesto();
+        presupuesto.setId(id);
+        presupuesto.setPacienteId(pacienteId);
+        presupuesto.setEstado("ACEPTADO");
+        return presupuesto;
+    }
+
+    private CajaService servicioDeValidacion(PresupuestoDAO presupuestos, Paciente paciente) {
+        PacienteDAO pacientes = proxy(PacienteDAO.class, (objeto, metodo, argumentos) -> {
+            if ("buscarPorId".equals(metodo.getName())) {
+                return Optional.of(paciente);
+            }
+            throw new UnsupportedOperationException(metodo.getName());
+        });
+        return new CajaService(null, null, pacientes, null, null, presupuestos, null, null);
+    }
+
+    private PresupuestoDAO presupuestosFalsos(Map<Long, PresupuestoItem> items,
+                                              Map<Long, Presupuesto> presupuestos,
+                                              Set<Long> facturados) {
+        return proxy(PresupuestoDAO.class, (objeto, metodo, argumentos) -> switch (metodo.getName()) {
+            case "buscarItem" -> Optional.ofNullable(items.get((Long) argumentos[0]));
+            case "buscarPorId" -> Optional.ofNullable(presupuestos.get((Long) argumentos[0]));
+            case "estaFacturado" -> facturados.contains((Long) argumentos[0]);
+            default -> throw new UnsupportedOperationException(metodo.getName());
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T proxy(Class<T> tipo, InvocationHandler manejador) {
+        return (T) Proxy.newProxyInstance(tipo.getClassLoader(), new Class<?>[]{tipo}, manejador);
     }
 }

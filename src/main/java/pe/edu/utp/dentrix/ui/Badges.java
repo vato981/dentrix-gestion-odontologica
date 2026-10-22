@@ -15,6 +15,24 @@ public final class Badges {
         return etiqueta;
     }
 
+    public static Label rol(String nombre) {
+        String texto = nombre == null ? "" : nombre;
+        String clave = texto.toLowerCase();
+        String clase;
+        if (clave.contains("admin")) {
+            clase = "badge-amarillo";
+        } else if (clave.contains("odonto")) {
+            clase = "badge-azul";
+        } else if (clave.contains("recep")) {
+            clase = "badge-gris";
+        } else {
+            clase = "badge-gris";
+        }
+        Label etiqueta = new Label(texto.isBlank() ? "—" : texto);
+        etiqueta.getStyleClass().addAll("badge", clase);
+        return etiqueta;
+    }
+
     public static <T> void aplicarEn(TableColumn<T, String> columna) {
         columna.setCellFactory(col -> new TableCell<>() {
             @Override
@@ -34,8 +52,10 @@ public final class Badges {
             return "badge-gris";
         }
         return switch (valor) {
-            case "PENDIENTE" -> "badge-gris";
-            case "CONFIRMADA", "PAGADO", "ACTIVO" -> "badge-verde";
+            case "PENDIENTE", "BORRADOR" -> "badge-gris";
+            case "CONFIRMADA", "PAGADO", "ACTIVO", "GENERADA" -> "badge-verde";
+            case "EMITIDO" -> "badge-azul";
+            case "PARCIAL" -> "badge-amarillo";
             case "EN_SALA" -> "badge-amarillo";
             case "EN_ATENCION" -> "badge-naranja";
             case "ATENDIDA" -> "badge-verde";

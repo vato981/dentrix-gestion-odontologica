@@ -4,105 +4,162 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pe.edu.utp.dentrix.controller.UsuariosController">
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="12.0" style="-fx-padding: 0 0 14 0;">
+        <VBox spacing="10.0" style="-fx-padding: 0 0 14 0;">
             <children>
-                <Label text="Usuarios y accesos" styleClass="label-titulo" />
-                <Label HBox.hgrow="ALWAYS" text=" " />
-                <Button text="Volver" onAction="#onVolverClick" />
-                <Button text="⟳ Refrescar" onAction="#onRefrescarClick" />
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <children>
+                        <Label styleClass="label-titulo" text="Usuarios y accesos" />
+                        <Label styleClass="tarjeta-etiqueta" text="M9.1 · Matriz de roles del sistema" />
+                        <Label HBox.hgrow="ALWAYS" text=" " />
+                        <Label fx:id="etiquetaSesiones" styleClass="badge, badge-gris" text="Cuentas activas: --" />
+                        <Button text="Volver" onAction="#onVolverClick" />
+                        <Button text="⟳ Refrescar" onAction="#onRefrescarClick" />
+                    </children>
+                </HBox>
             </children>
-        </HBox>
+        </VBox>
     </top>
     <center>
-        <HBox spacing="16.0" BorderPane.alignment="CENTER">
+        <HBox spacing="14.0" BorderPane.alignment="CENTER">
             <children>
-                <VBox spacing="10.0" prefWidth="420.0" styleClass="tarjeta" HBox.hgrow="NEVER">
-                    <children>
-                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefWidth="404.0" minWidth="396.0" style="-fx-background-color: transparent; -fx-background-insets: 0;" HBox.hgrow="NEVER">
+                    <content>
+                        <VBox spacing="9.0" styleClass="tarjeta">
                             <children>
-                                <Label styleClass="tarjeta-titulo" text="FICHA DEL USUARIO" />
-                                <Label HBox.hgrow="ALWAYS" text=" " />
-                                <Label fx:id="etiquetaModo" styleClass="tarjeta-etiqueta" text="NUEVO" />
-                            </children>
-                        </HBox>
-                        <Label style="-fx-font-size: 11px;" text="Username:" />
-                        <TextField fx:id="campoUsername" promptText="jvallejos" styleClass="text-field, campo-formulario" />
-                        <Label style="-fx-font-size: 11px;" text="Nombres:" />
-                        <TextField fx:id="campoNombres" styleClass="text-field, campo-formulario" />
-                        <Label style="-fx-font-size: 11px;" text="Apellidos:" />
-                        <TextField fx:id="campoApellidos" styleClass="text-field, campo-formulario" />
-                        <HBox alignment="CENTER_LEFT" spacing="8.0">
-                            <children>
-                                <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                <HBox alignment="CENTER_LEFT" spacing="8.0">
                                     <children>
-                                        <Label style="-fx-font-size: 11px;" text="DNI:" />
-                                        <TextField fx:id="campoDni" prefWidth="120.0" promptText="8 dígitos" styleClass="text-field, campo-formulario" />
+                                        <Label styleClass="tarjeta-titulo" text="FICHA DEL USUARIO" />
+                                        <Label HBox.hgrow="ALWAYS" text=" " />
+                                        <Label styleClass="tarjeta-etiqueta" text="MOD-USER" />
+                                        <Label fx:id="etiquetaModo" styleClass="badge, badge-azul" text="NUEVO" />
                                     </children>
-                                </VBox>
-                                <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="card-paciente">
                                     <children>
-                                        <Label style="-fx-font-size: 11px;" text="Rol (M9.1 · matriz RBAC):" />
-                                        <ComboBox fx:id="comboRol" />
+                                        <Label fx:id="avatarUsuario" styleClass="avatar" text="US" />
+                                        <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <Label fx:id="etiquetaUsuarioForm" styleClass="nombre-paciente" text="Nuevo usuario" />
+                                                <Label fx:id="etiquetaAyudaForm" styleClass="dato-secundario" text="Completa los datos del personal y asigna un rol del sistema." wrapText="true" />
+                                            </children>
+                                        </VBox>
                                     </children>
-                                </VBox>
-                            </children>
-                        </HBox>
-                        <HBox alignment="CENTER_LEFT" spacing="8.0">
-                            <children>
-                                <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT" spacing="8.0">
                                     <children>
-                                        <Label style="-fx-font-size: 11px;" text="Colegiatura (odólogos):" />
-                                        <TextField fx:id="campoColegiatura" styleClass="text-field, campo-formulario" />
+                                        <Label styleClass="seccion-titulo" text="DATOS DEL PERSONAL" />
+                                        <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
                                     </children>
-                                </VBox>
-                                <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                </HBox>
+                                <GridPane hgap="8.0" vgap="7.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints percentWidth="36.0" />
+                                        <ColumnConstraints percentWidth="64.0" hgrow="ALWAYS" />
+                                    </columnConstraints>
                                     <children>
-                                        <Label style="-fx-font-size: 11px;" text="Especialidad:" />
-                                        <TextField fx:id="campoEspecialidad" styleClass="text-field, campo-formulario" />
+                                        <Label styleClass="fila-dato-label" text="Usuario *" GridPane.rowIndex="0" />
+                                        <TextField fx:id="campoUsername" promptText="ej. jperez" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                        <Label styleClass="fila-dato-label" text="Nombres *" GridPane.rowIndex="1" />
+                                        <TextField fx:id="campoNombres" promptText="Nombres" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <Label styleClass="fila-dato-label" text="Apellidos *" GridPane.rowIndex="2" />
+                                        <TextField fx:id="campoApellidos" promptText="Apellidos" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        <Label styleClass="fila-dato-label" text="DNI" GridPane.rowIndex="3" />
+                                        <TextField fx:id="campoDni" promptText="8 digitos" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <Label styleClass="fila-dato-label" text="Colegiatura" GridPane.rowIndex="4" />
+                                        <TextField fx:id="campoColegiatura" promptText="Solo odontologos" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                        <Label styleClass="fila-dato-label" text="Especialidad" GridPane.rowIndex="5" />
+                                        <TextField fx:id="campoEspecialidad" promptText="Especialidad clinica" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                                     </children>
-                                </VBox>
+                                </GridPane>
+                                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                    <children>
+                                        <Label styleClass="seccion-titulo" text="ACCESO Y ESTADO" />
+                                        <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
+                                    </children>
+                                </HBox>
+                                <GridPane hgap="8.0" vgap="7.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints percentWidth="36.0" />
+                                        <ColumnConstraints percentWidth="64.0" hgrow="ALWAYS" />
+                                    </columnConstraints>
+                                    <children>
+                                        <Label styleClass="fila-dato-label" text="Rol *" GridPane.rowIndex="0" />
+                                        <ComboBox fx:id="comboRol" maxWidth="Infinity" promptText="Selecciona el rol" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                        <Label styleClass="fila-dato-label" text="Estado" GridPane.rowIndex="1" />
+                                        <ComboBox fx:id="comboEstado" maxWidth="Infinity" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <Label styleClass="fila-dato-label" text="Clave" GridPane.rowIndex="2" />
+                                        <PasswordField fx:id="campoClave" promptText="Minimo 8 caracteres" styleClass="password-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    </children>
+                                </GridPane>
+                                <Label styleClass="dato-secundario" text="Clave obligatoria al crear; en edicion, vacia = no cambiar." wrapText="true" />
+                                <Label fx:id="etiquetaError" styleClass="etiqueta-error" text="" wrapText="true" />
+                                <HBox alignment="CENTER_RIGHT" spacing="8.0">
+                                    <children>
+                                        <Button maxWidth="Infinity" HBox.hgrow="ALWAYS" text="Limpiar" onAction="#onNuevoClick" />
+                                        <Button defaultButton="true" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="button, boton-primario" text="💾 Guardar" onAction="#onGuardarClick" />
+                                    </children>
+                                </HBox>
                             </children>
-                        </HBox>
-                        <Label style="-fx-font-size: 11px;" text="Clave (obligatoria al crear; vacía = no cambiar):" />
-                        <PasswordField fx:id="campoClave" promptText="Mínimo 8 caracteres" styleClass="password-field, campo-formulario" />
-                        <Label fx:id="etiquetaError" styleClass="etiqueta-error" text="" wrapText="true" />
-                        <HBox alignment="CENTER_RIGHT" spacing="10.0">
-                            <children>
-                                <Button text="Cancelar" onAction="#onNuevoClick" />
-                                <Button defaultButton="true" styleClass="button, boton-primario" text="💾 Guardar" onAction="#onGuardarClick" />
-                            </children>
-                        </HBox>
-                    </children>
-                </VBox>
+                        </VBox>
+                    </content>
+                </ScrollPane>
                 <VBox spacing="10.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                     <children>
                         <HBox alignment="CENTER_LEFT" spacing="8.0">
                             <children>
-                                <Label styleClass="tarjeta-titulo" text="PADRÓN DE USUARIOS Y ACCESOS" />
+                                <Label styleClass="tarjeta-titulo" text="PADRON DE USUARIOS Y ACCESOS" />
                                 <Label HBox.hgrow="ALWAYS" text=" " />
-                                <Label fx:id="etiquetaConteo" styleClass="tarjeta-etiqueta" text="" />
+                                <Label fx:id="etiquetaConteo" styleClass="badge, badge-gris" text="" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                            <children>
+                                <Label styleClass="seccion-titulo" text="CUENTAS REGISTRADAS" />
+                                <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
+                                <Label styleClass="dato-secundario" text="El ultimo acceso lo registra el login" />
                             </children>
                         </HBox>
                         <TableView fx:id="tablaUsuarios" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
                             <columns>
-                                <TableColumn fx:id="colUsername" prefWidth="130.0" text="USERNAME" />
-                                <TableColumn fx:id="colNombre" prefWidth="230.0" text="NOMBRE" />
-                                <TableColumn fx:id="colDni" prefWidth="100.0" text="DNI" />
-                                <TableColumn fx:id="colRol" prefWidth="140.0" text="ROL" />
-                                <TableColumn fx:id="colColegiatura" prefWidth="120.0" text="COLEGIATURA" />
-                                <TableColumn fx:id="colEstado" prefWidth="110.0" text="ESTADO" />
-                                <TableColumn fx:id="colAcciones" prefWidth="170.0" text="ACCIONES" />
+                                <TableColumn fx:id="colUsername" minWidth="96.0" prefWidth="108.0" text="USUARIO" />
+                                <TableColumn fx:id="colNombre" minWidth="150.0" prefWidth="188.0" text="NOMBRE" />
+                                <TableColumn fx:id="colRol" minWidth="104.0" prefWidth="118.0" text="ROL" />
+                                <TableColumn fx:id="colEstado" minWidth="88.0" prefWidth="96.0" text="ESTADO" />
+                                <TableColumn fx:id="colAcciones" minWidth="132.0" prefWidth="146.0" text="ACCIONES" />
+                            </columns>
+                            <placeholder>
+                                <Label styleClass="etiqueta-estado" text="No hay usuarios registrados." />
+                            </placeholder>
+                        </TableView>
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                            <children>
+                                <Label styleClass="seccion-titulo" text="MATRIZ DE ACCESO POR ROL (RBAC)" />
+                                <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
+                                <Label styleClass="badge, badge-estado, badge-estado-info" text="SOLO LECTURA" />
+                            </children>
+                        </HBox>
+                        <TableView fx:id="tablaPermisos" prefHeight="164.0" minHeight="150.0" styleClass="table-view, tabla-datos">
+                            <columns>
+                                <TableColumn fx:id="colPermModulo" minWidth="150.0" prefWidth="220.0" text="MODULO" />
+                                <TableColumn fx:id="colPermAdmin" minWidth="104.0" prefWidth="130.0" text="ADMINISTRADOR" />
+                                <TableColumn fx:id="colPermOdontologo" minWidth="104.0" prefWidth="130.0" text="ODONTOLOGO" />
+                                <TableColumn fx:id="colPermRecepcion" minWidth="104.0" prefWidth="130.0" text="RECEPCION" />
                             </columns>
                         </TableView>
+                        <Label styleClass="dato-secundario" text="Fuente: prototipo M9.1. Total = crea y modifica; Consulta = solo lectura; sin marca = sin acceso." wrapText="true" />
                     </children>
                 </VBox>
             </children>

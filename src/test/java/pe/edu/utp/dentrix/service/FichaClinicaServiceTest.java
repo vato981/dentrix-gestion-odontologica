@@ -10,9 +10,11 @@ import pe.edu.utp.dentrix.dao.impl.HallazgoDentalDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.PacienteDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.PlanTratamientoDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.TratamientoDAOImpl;
+import pe.edu.utp.dentrix.dto.CambioPrincipal;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.Cita;
 import pe.edu.utp.dentrix.model.FichaClinica;
+import pe.edu.utp.dentrix.model.FichaDiagnostico;
 import pe.edu.utp.dentrix.model.HallazgoDental;
 import pe.edu.utp.dentrix.model.Paciente;
 import pe.edu.utp.dentrix.model.PlanTratamiento;
@@ -22,6 +24,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -65,11 +68,30 @@ class FichaClinicaServiceTest {
                 .findFirst();
     }
 
-    private void verificarUnSoloPrincipal(FichaClinicaService service, Long fichaId) {
-        DentrixException excepcion = assertThrows(DentrixException.class,
-                () -> service.registrarDiagnostico(fichaId, "K05.1", null, true, "Segundo principal"));
-        assertTrue(excepcion.getMessage().contains("RF-06"),
-                () -> "Debe rechazar el segundo principal con RF-06: " + excepcion.getMessage());
+    private void verificarCambioDePrincipal(FichaClinicaService service, Long fichaId) throws DentrixException {
+        DentrixException sinMotivo = assertThrows(DentrixException.class,
+                () -> service.registrarDiagnostico(fichaId, "K05.1", null, true, "Gingivitis", null));
+        assertTrue(sinMotivo.getMessage().contains("motivo"),
+                () -> "El cambio de principal debe exigir motivo (RF-06): " + sinMotivo.getMessage());
+
+        service.registrarDiagnostico(fichaId, "K05.1", null, true, "Gingivitis generalizada",
+                "Correccion clinica del principal");
+
+        List<FichaDiagnostico> diagnosticos = service.listarDiagnosticos(fichaId);
+        FichaDiagnostico principal = diagnosticos.stream()
+                .filter(FichaDiagnostico::isEsPrincipal)
+                .findFirst()
+                .orElseThrow(() -> new DentrixException("La ficha quedo sin diagnostico principal"));
+        assertEquals("K05.1", principal.getCie10Codigo(),
+                "El principal debe ser el diagnostico nuevo");
+        assertTrue(diagnosticos.stream().noneMatch(d -> "K02.1".equals(d.getCie10Codigo()) && d.isEsPrincipal()),
+                "El principal anterior debe quedar como secundario");
+
+        List<CambioPrincipal> historial = service.historialPrincipal(fichaId);
+        assertEquals(1, historial.size(), "Debe quedar constancia del cambio de principal");
+        assertEquals("K02.1", historial.get(0).cie10Anterior());
+        assertEquals("K05.1", historial.get(0).cie10Nuevo());
+        assertEquals("Correccion clinica del principal", historial.get(0).motivo());
     }
 
     @Test
@@ -162,11 +184,10 @@ class FichaClinicaServiceTest {
             assertEquals("PENDIENTE", creada.getEstadoDerivacion());
             assertFalse(creada.isDerivadoACaja());
 
-            service.registrarDiagnostico(idFicha, "K02.1", 18, true, "Caries oclusal pieza 18");
-            verificarUnSoloPrincipal(service, idFicha);
-            service.registrarDiagnostico(idFicha, "K05.1", null, false, "Gingivitis generalizada");
+            service.registrarDiagnostico(idFicha, "K02.1", 18, true, "Caries oclusal pieza 18", null);
+            verificarCambioDePrincipal(service, idFicha);
             assertEquals(2, service.listarDiagnosticos(idFicha).size(),
-                    "La ficha debe tener 2 diagnosticos (K02.1 principal y K05.1 secundario)");
+                    "La ficha debe tener 2 diagnosticos (K02.1 secundario y K05.1 principal)");
 
             HallazgoDental hallazgo = new HallazgoDental(pacienteId, 48, "CARIES", "Caries distal de prueba");
             hallazgo.setCara("distal");

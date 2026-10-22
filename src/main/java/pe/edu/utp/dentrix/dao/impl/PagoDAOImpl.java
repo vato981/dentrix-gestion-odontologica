@@ -2,6 +2,8 @@ package pe.edu.utp.dentrix.dao.impl;
 
 import pe.edu.utp.dentrix.config.ConexionBD;
 import pe.edu.utp.dentrix.dao.PagoDAO;
+import pe.edu.utp.dentrix.dto.Imputacion;
+import pe.edu.utp.dentrix.dto.ItemFacturado;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.Pago;
 
@@ -140,33 +142,84 @@ public class PagoDAOImpl implements PagoDAO {
     }
 
     @Override
-    public long maximoCorrelativo(String prefijo) throws DentrixException {
-        String sql = "SELECT COALESCE(MAX(CAST(SUBSTRING(numero FROM ?) AS BIGINT)), 0) FROM pago "
-                + "WHERE pago_origen_id IS NULL AND starts_with(numero, ?) "
-                + "AND SUBSTRING(numero FROM ?) ~ '^[0-9]+$'";
-        try (Connection cn = ConexionBD.abrir();
-             PreparedStatement ps = cn.prepareStatement(sql)) {
-            int inicio = prefijo.length() + 1;
-            ps.setInt(1, inicio);
-            ps.setString(2, prefijo);
-            ps.setInt(3, inicio);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getLong(1) : 0L;
-            }
+    public int insertar(Pago pago) throws DentrixException {
+        try (Connection cn = ConexionBD.abrir()) {
+            return (int) insertar(cn, pago);
         } catch (SQLException e) {
-            throw new DentrixException("No se pudo calcular el correlativo de la boleta.", e);
+            throw new DentrixException("No se pudo registrar el pago.", e);
         }
     }
 
     @Override
-    public int insertar(Pago pago) throws DentrixException {
+    public Long insertarConImputaciones(Pago pago, List<Imputacion> imputaciones, Integer usuarioId)
+            throws DentrixException {
+        try (Connection cn = ConexionBD.abrir()) {
+            cn.setAutoCommit(false);
+            try {
+                long pagoId = insertar(cn, pago);
+                if (imputaciones != null && !imputaciones.isEmpty()) {
+                    String sql = "INSERT INTO imputacion (pago_id, presupuesto_item_id, monto, usuario_id) "
+                            + "VALUES (?, ?, ?, ?)";
+                    try (PreparedStatement ps = cn.prepareStatement(sql)) {
+                        for (Imputacion imputacion : imputaciones) {
+                            ps.setObject(1, pagoId);
+                            ps.setObject(2, imputacion.presupuestoItemId());
+                            ps.setObject(3, imputacion.monto());
+                            ps.setObject(4, usuarioId);
+                            ps.addBatch();
+                        }
+                        ps.executeBatch();
+                    }
+                }
+                cn.commit();
+                return pagoId;
+            } catch (SQLException e) {
+                cn.rollback();
+                throw new DentrixException("No se pudo registrar el abono con sus imputaciones.", e);
+            } catch (DentrixException e) {
+                cn.rollback();
+                throw e;
+            } finally {
+                cn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new DentrixException("No se pudo registrar el abono con sus imputaciones.", e);
+        }
+    }
+
+    @Override
+    public List<ItemFacturado> listarItemsFacturados(Long pagoId) throws DentrixException {
+        String sql = "SELECT presupuesto_item_id, SUM(monto) AS monto FROM ("
+                + "SELECT presupuesto_item_id, precio_unitario * cantidad AS monto "
+                + "FROM plan_tratamiento WHERE pago_id = ? AND presupuesto_item_id IS NOT NULL "
+                + "UNION ALL "
+                + "SELECT ci.presupuesto_item_id, ci.subtotal AS monto "
+                + "FROM comprobante_item ci JOIN pago p ON p.id = ci.pago_id "
+                + "WHERE ci.pago_id = ? AND ci.presupuesto_item_id IS NOT NULL AND p.estado = 'EMITIDO'"
+                + ") x GROUP BY presupuesto_item_id ORDER BY presupuesto_item_id";
+        List<ItemFacturado> items = new ArrayList<>();
+        try (Connection cn = ConexionBD.abrir();
+             PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setObject(1, pagoId);
+            ps.setObject(2, pagoId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    items.add(new ItemFacturado(rs.getLong("presupuesto_item_id"), rs.getBigDecimal("monto")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DentrixException("No se pudieron consultar los items facturados de la boleta.", e);
+        }
+        return items;
+    }
+
+    private long insertar(Connection cn, Pago pago) throws SQLException, DentrixException {
         String sql = "INSERT INTO pago (numero, tipo, estado, pago_origen_id, fecha, paciente_id, ficha_id, "
                 + "odontologo_id, usuario_caja_id, cierre_id, modalidad, operacion_ref, subtotal, igv, monto, "
                 + "saldo_deudor, estado_pago) "
                 + "VALUES (?, ?::tipo_documento, ?::estado_documento, ?, ?, ?, ?, ?, ?, ?, "
                 + "?::modalidad_pago, ?, ?, ?, ?, ?, ?::estado_pago)";
-        try (Connection cn = ConexionBD.abrir();
-             PreparedStatement ps = cn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = cn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setObject(1, pago.getNumero());
             ps.setString(2, pago.getTipo() == null ? "BOLETA" : pago.getTipo());
             ps.setString(3, pago.getEstado() == null ? "EMITIDO" : pago.getEstado());
@@ -188,12 +241,10 @@ public class PagoDAOImpl implements PagoDAO {
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
                     pago.setId(rs.getLong(1));
-                    return (int) rs.getLong(1);
+                    return rs.getLong(1);
                 }
             }
             throw new DentrixException("No se generó el identificador del pago.");
-        } catch (SQLException e) {
-            throw new DentrixException("No se pudo registrar el pago.", e);
         }
     }
 

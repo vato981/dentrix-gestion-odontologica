@@ -24,6 +24,4 @@ public interface CitaDAO {
     int insertar(Cita cita) throws DentrixException;
 
     boolean actualizar(Cita cita) throws DentrixException;
-
-    boolean eliminar(Long id) throws DentrixException;
 }

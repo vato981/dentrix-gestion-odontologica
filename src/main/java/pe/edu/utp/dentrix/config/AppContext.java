@@ -1,32 +1,46 @@
 package pe.edu.utp.dentrix.config;
 
 import pe.edu.utp.dentrix.dao.CierreCajaDAO;
+import pe.edu.utp.dentrix.dao.AgendaExtraDAO;
 import pe.edu.utp.dentrix.dao.CitaDAO;
+import pe.edu.utp.dentrix.dao.ComprobanteDAO;
 import pe.edu.utp.dentrix.dao.ConfiguracionDAO;
 import pe.edu.utp.dentrix.dao.ConsultorioDAO;
 import pe.edu.utp.dentrix.dao.DiagnosticoCie10DAO;
+import pe.edu.utp.dentrix.dao.EjecucionDAO;
+import pe.edu.utp.dentrix.dao.EnmiendaDAO;
 import pe.edu.utp.dentrix.dao.FichaClinicaDAO;
 import pe.edu.utp.dentrix.dao.FichaDiagnosticoDAO;
 import pe.edu.utp.dentrix.dao.HallazgoDentalDAO;
+import pe.edu.utp.dentrix.dao.LaboratorioDAO;
 import pe.edu.utp.dentrix.dao.PacienteDAO;
 import pe.edu.utp.dentrix.dao.PagoDAO;
 import pe.edu.utp.dentrix.dao.PlanTratamientoDAO;
+import pe.edu.utp.dentrix.dao.PresupuestoDAO;
 import pe.edu.utp.dentrix.dao.RolDAO;
+import pe.edu.utp.dentrix.dao.TarifarioDAO;
 import pe.edu.utp.dentrix.dao.TratamientoDAO;
 import pe.edu.utp.dentrix.dao.UsuarioDAO;
 import pe.edu.utp.dentrix.dao.impl.CierreCajaDAOImpl;
+import pe.edu.utp.dentrix.dao.impl.AgendaExtraDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.CitaDAOImpl;
+import pe.edu.utp.dentrix.dao.impl.ComprobanteDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.ConfiguracionDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.ConsultorioDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.DiagnosticoCie10DAOImpl;
+import pe.edu.utp.dentrix.dao.impl.EjecucionDAOImpl;
+import pe.edu.utp.dentrix.dao.impl.EnmiendaDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.FichaClinicaDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.FichaDiagnosticoDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.HallazgoDentalDAOImpl;
+import pe.edu.utp.dentrix.dao.impl.LaboratorioDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.PacienteDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.PagoDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.PlanTratamientoDAOImpl;
+import pe.edu.utp.dentrix.dao.impl.PresupuestoDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.ReporteDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.RolDAOImpl;
+import pe.edu.utp.dentrix.dao.impl.TarifarioDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.TratamientoDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.UsuarioDAOImpl;
 import pe.edu.utp.dentrix.service.AgendaService;
@@ -34,9 +48,14 @@ import pe.edu.utp.dentrix.service.AutenticacionService;
 import pe.edu.utp.dentrix.service.BackupService;
 import pe.edu.utp.dentrix.service.CajaService;
 import pe.edu.utp.dentrix.service.CatalogoService;
+import pe.edu.utp.dentrix.service.EjecucionService;
+import pe.edu.utp.dentrix.service.EnmiendaService;
 import pe.edu.utp.dentrix.service.FichaClinicaService;
+import pe.edu.utp.dentrix.service.LaboratorioService;
 import pe.edu.utp.dentrix.service.PacienteService;
+import pe.edu.utp.dentrix.service.PresupuestoService;
 import pe.edu.utp.dentrix.service.ReporteService;
+import pe.edu.utp.dentrix.service.TarifarioService;
 import pe.edu.utp.dentrix.service.UsuarioService;
 
 public final class AppContext {
@@ -51,12 +70,19 @@ public final class AppContext {
     private final DiagnosticoCie10DAO diagnosticoCie10DAO = new DiagnosticoCie10DAOImpl();
     private final TratamientoDAO tratamientoDAO = new TratamientoDAOImpl();
     private final CitaDAO citaDAO = new CitaDAOImpl();
+    private final AgendaExtraDAO agendaExtraDAO = new AgendaExtraDAOImpl();
     private final FichaClinicaDAO fichaClinicaDAO = new FichaClinicaDAOImpl();
     private final FichaDiagnosticoDAO fichaDiagnosticoDAO = new FichaDiagnosticoDAOImpl();
     private final HallazgoDentalDAO hallazgoDentalDAO = new HallazgoDentalDAOImpl();
     private final CierreCajaDAO cierreCajaDAO = new CierreCajaDAOImpl();
     private final PagoDAO pagoDAO = new PagoDAOImpl();
+    private final ComprobanteDAO comprobanteDAO = new ComprobanteDAOImpl();
     private final PlanTratamientoDAO planTratamientoDAO = new PlanTratamientoDAOImpl();
+    private final TarifarioDAO tarifarioDAO = new TarifarioDAOImpl();
+    private final PresupuestoDAO presupuestoDAO = new PresupuestoDAOImpl();
+    private final EnmiendaDAO enmiendaDAO = new EnmiendaDAOImpl();
+    private final EjecucionDAO ejecucionDAO = new EjecucionDAOImpl();
+    private final LaboratorioDAO laboratorioDAO = new LaboratorioDAOImpl();
 
     private final AutenticacionService autenticacion;
     private final CatalogoService catalogo;
@@ -67,20 +93,31 @@ public final class AppContext {
     private final ReporteService reportes;
     private final UsuarioService usuariosService;
     private final BackupService respaldos;
+    private final TarifarioService tarifarios;
+    private final PresupuestoService presupuestos;
+    private final EnmiendaService enmiendas;
+    private final EjecucionService ejecucion;
+    private final LaboratorioService laboratorio;
     private final SesionActual sesion = new SesionActual();
 
     private AppContext() {
         autenticacion = new AutenticacionService(usuarioDAO, rolDAO);
         catalogo = new CatalogoService(tratamientoDAO, diagnosticoCie10DAO, consultorioDAO, configuracionDAO);
         pacientes = new PacienteService(pacienteDAO);
-        agenda = new AgendaService(citaDAO, pacienteDAO, consultorioDAO, tratamientoDAO);
+        agenda = new AgendaService(citaDAO, pacienteDAO, consultorioDAO, tratamientoDAO, agendaExtraDAO);
         fichas = new FichaClinicaService(fichaClinicaDAO, fichaDiagnosticoDAO, hallazgoDentalDAO,
                 planTratamientoDAO, citaDAO, diagnosticoCie10DAO, tratamientoDAO);
+        tarifarios = new TarifarioService(tarifarioDAO);
         caja = new CajaService(pagoDAO, cierreCajaDAO, pacienteDAO, tratamientoDAO,
-                fichaClinicaDAO, planTratamientoDAO, configuracionDAO);
+                fichaClinicaDAO, presupuestoDAO, tarifarios, comprobanteDAO);
         reportes = new ReporteService(new ReporteDAOImpl(), pagoDAO);
         usuariosService = new UsuarioService(usuarioDAO, rolDAO);
         respaldos = new BackupService();
+        presupuestos = new PresupuestoService(presupuestoDAO, tarifarios, fichaClinicaDAO,
+                tratamientoDAO, usuarioDAO, rolDAO);
+        enmiendas = new EnmiendaService(enmiendaDAO, presupuestoDAO, tarifarios, tratamientoDAO);
+        ejecucion = new EjecucionService(ejecucionDAO, presupuestoDAO, fichaClinicaDAO);
+        laboratorio = new LaboratorioService(laboratorioDAO, ejecucionDAO, presupuestoDAO);
     }
 
     public static AppContext get() {
@@ -124,6 +161,26 @@ public final class AppContext {
 
     public BackupService respaldos() {
         return respaldos;
+    }
+
+    public TarifarioService tarifario() {
+        return tarifarios;
+    }
+
+    public PresupuestoService presupuestos() {
+        return presupuestos;
+    }
+
+    public EnmiendaService enmiendas() {
+        return enmiendas;
+    }
+
+    public EjecucionService ejecucion() {
+        return ejecucion;
+    }
+
+    public LaboratorioService laboratorio() {
+        return laboratorio;
     }
 
     public SesionActual sesion() {

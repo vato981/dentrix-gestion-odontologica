@@ -13,3 +13,12 @@ logs/
 # Configuracion local (cada quien la suya; nunca se sube)
 config.properties
 src/main/resources/pe/edu/utp/dentrix/config.properties
+
+# Respaldos de base de datos (nunca se suben)
+backups/
+*.dump
+*.sql.gz
+
+# Python
+__pycache__/
+*.pyc

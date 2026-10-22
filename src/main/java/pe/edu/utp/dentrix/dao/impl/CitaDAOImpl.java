@@ -20,7 +20,7 @@ public class CitaDAOImpl implements CitaDAO {
 
     private static final String COLUMNAS =
             "id, tipo, paciente_id, usuario_id, consultorio_id, fecha_cita, hora_inicio, hora_fin, "
-                    + "tratamiento_id, estado, motivo";
+                    + "tratamiento_id, estado, motivo, cita_origen_id";
 
     private Cita leer(ResultSet rs) throws SQLException {
         Cita cita = new Cita();
@@ -35,6 +35,7 @@ public class CitaDAOImpl implements CitaDAO {
         cita.setTratamientoId(rs.getObject(9, Integer.class));
         cita.setEstado(rs.getString(10));
         cita.setMotivo(rs.getString(11));
+        cita.setCitaOrigenId(rs.getObject(12, Long.class));
         return cita;
     }
 
@@ -108,8 +109,8 @@ public class CitaDAOImpl implements CitaDAO {
     @Override
     public int insertar(Cita cita) throws DentrixException {
         String sql = "INSERT INTO cita (tipo, paciente_id, usuario_id, consultorio_id, fecha_cita, "
-                + "hora_inicio, hora_fin, tratamiento_id, estado, motivo) "
-                + "VALUES (?::tipo_bloque, ?, ?, ?, ?, ?, ?, ?, ?::estado_cita, ?)";
+                + "hora_inicio, hora_fin, tratamiento_id, estado, motivo, cita_origen_id) "
+                + "VALUES (?::tipo_bloque, ?, ?, ?, ?, ?, ?, ?, ?::estado_cita, ?, ?)";
         try (Connection cn = ConexionBD.abrir();
              PreparedStatement ps = cn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setObject(1, cita.getTipo());
@@ -122,6 +123,7 @@ public class CitaDAOImpl implements CitaDAO {
             ps.setObject(8, cita.getTratamientoId());
             ps.setObject(9, cita.getEstado());
             ps.setObject(10, cita.getMotivo());
+            ps.setObject(11, cita.getCitaOrigenId());
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -155,18 +157,6 @@ public class CitaDAOImpl implements CitaDAO {
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DentrixException("No se pudo actualizar la cita.", e);
-        }
-    }
-
-    @Override
-    public boolean eliminar(Long id) throws DentrixException {
-        String sql = "DELETE FROM cita WHERE id = ?";
-        try (Connection cn = ConexionBD.abrir();
-             PreparedStatement ps = cn.prepareStatement(sql)) {
-            ps.setObject(1, id);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            throw new DentrixException("No se pudo eliminar la cita.", e);
         }
     }
 }

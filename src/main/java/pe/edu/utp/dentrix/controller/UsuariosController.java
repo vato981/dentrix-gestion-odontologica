@@ -15,6 +15,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import pe.edu.utp.dentrix.config.AppContext;
+import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.Rol;
 import pe.edu.utp.dentrix.model.Usuario;
 import pe.edu.utp.dentrix.service.UsuarioService;
@@ -29,10 +30,18 @@ public class UsuariosController {
     private static final Tooltip TOOLTIP_SESION =
             new Tooltip("No puedes desactivar tu propia sesión");
 
+    private static final List<String> ESTADOS_MANUALES = List.of("ACTIVO", "INACTIVO");
+
     private final UsuarioService servicio = AppContext.get().gestionUsuarios();
 
     private final ObservableList<Usuario> filas = FXCollections.observableArrayList();
     private final ObservableList<Rol> roles = FXCollections.observableArrayList();
+    private final ObservableList<String> estados = FXCollections.observableArrayList(ESTADOS_MANUALES);
+    private final ObservableList<PermisoRol> permisos = FXCollections.observableArrayList(
+            new PermisoRol("Ficha clinica", "Total", "Total", "Sin acceso"),
+            new PermisoRol("Agenda de citas", "Total", "Consulta", "Total"),
+            new PermisoRol("Caja / cobros", "Total", "Sin acceso", "Total"),
+            new PermisoRol("Configuracion", "Total", "Sin acceso", "Sin acceso"));
 
     @FXML private TextField campoUsername;
     @FXML private TextField campoNombres;
@@ -42,17 +51,25 @@ public class UsuariosController {
     @FXML private TextField campoEspecialidad;
     @FXML private PasswordField campoClave;
     @FXML private ComboBox<Rol> comboRol;
+    @FXML private ComboBox<String> comboEstado;
     @FXML private Label etiquetaModo;
     @FXML private Label etiquetaError;
     @FXML private Label etiquetaConteo;
+    @FXML private Label etiquetaSesiones;
+    @FXML private Label avatarUsuario;
+    @FXML private Label etiquetaUsuarioForm;
+    @FXML private Label etiquetaAyudaForm;
     @FXML private TableView<Usuario> tablaUsuarios;
     @FXML private TableColumn<Usuario, String> colUsername;
     @FXML private TableColumn<Usuario, String> colNombre;
-    @FXML private TableColumn<Usuario, String> colDni;
     @FXML private TableColumn<Usuario, String> colRol;
-    @FXML private TableColumn<Usuario, String> colColegiatura;
     @FXML private TableColumn<Usuario, String> colEstado;
     @FXML private TableColumn<Usuario, Void> colAcciones;
+    @FXML private TableView<PermisoRol> tablaPermisos;
+    @FXML private TableColumn<PermisoRol, String> colPermModulo;
+    @FXML private TableColumn<PermisoRol, String> colPermAdmin;
+    @FXML private TableColumn<PermisoRol, String> colPermOdontologo;
+    @FXML private TableColumn<PermisoRol, String> colPermRecepcion;
 
     private Integer idEnEdicion;
 
@@ -69,13 +86,24 @@ public class UsuariosController {
                 return null;
             }
         });
+        comboEstado.setItems(estados);
+
         colUsername.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue().getUsername()));
         colNombre.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue().nombreCompleto()));
-        colDni.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(
-                d.getValue().getDni() == null ? "" : d.getValue().getDni()));
         colRol.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(rolDe(d.getValue())));
-        colColegiatura.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(
-                d.getValue().getColegiatura() == null ? "—" : d.getValue().getColegiatura()));
+        colRol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean vacio) {
+                super.updateItem(item, vacio);
+                if (vacio || item == null || item.isBlank()) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    setText(null);
+                    setGraphic(Badges.rol(item));
+                }
+            }
+        });
         colEstado.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue().getEstado()));
         colEstado.setCellFactory(col -> new TableCell<>() {
             @Override
@@ -124,6 +152,18 @@ public class UsuariosController {
             }
         });
         tablaUsuarios.setItems(filas);
+        tablaUsuarios.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+
+        colPermModulo.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue().modulo()));
+        colPermAdmin.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue().administrador()));
+        colPermOdontologo.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue().odontologo()));
+        colPermRecepcion.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue().recepcion()));
+        colPermAdmin.setCellFactory(col -> celdaPermiso());
+        colPermOdontologo.setCellFactory(col -> celdaPermiso());
+        colPermRecepcion.setCellFactory(col -> celdaPermiso());
+        tablaPermisos.setItems(permisos);
+        tablaPermisos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+
         onNuevoClick();
         recargarAsync();
     }
@@ -142,6 +182,9 @@ public class UsuariosController {
     private void onNuevoClick() {
         idEnEdicion = null;
         etiquetaModo.setText("NUEVO");
+        etiquetaUsuarioForm.setText("Nuevo usuario");
+        etiquetaAyudaForm.setText("Completa los datos del personal y asigna un rol del sistema.");
+        avatarUsuario.setText("US");
         campoUsername.clear();
         campoNombres.clear();
         campoApellidos.clear();
@@ -150,6 +193,9 @@ public class UsuariosController {
         campoEspecialidad.clear();
         campoClave.clear();
         comboRol.getSelectionModel().clearSelection();
+        estados.setAll(ESTADOS_MANUALES);
+        comboEstado.setValue("ACTIVO");
+        comboEstado.setDisable(false);
         etiquetaError.setText("");
     }
 
@@ -158,10 +204,19 @@ public class UsuariosController {
         try {
             Usuario usuario = construir();
             String clave = campoClave.getText() == null ? "" : campoClave.getText();
+            String estadoElegido = comboEstado.getValue();
             Integer idEdicion = idEnEdicion;
+            if (idEdicion == null && "BLOQUEADO".equals(estadoElegido)) {
+                throw new DentrixException("El estado BLOQUEADO solo lo asigna el login tras intentos fallidos.");
+            }
             TareasFX.ejecutar(() -> {
                 if (idEdicion == null) {
-                    return servicio.registrar(usuario, clave);
+                    Usuario registrado = servicio.registrar(usuario, clave);
+                    if ("INACTIVO".equals(estadoElegido)) {
+                        servicio.cambiarEstado(registrado.getId(), "INACTIVO");
+                        registrado.setEstado("INACTIVO");
+                    }
+                    return registrado;
                 }
                 usuario.setId(idEdicion);
                 Usuario existente = servicio.listar().stream()
@@ -177,10 +232,15 @@ public class UsuariosController {
                 if (!clave.isBlank()) {
                     servicio.cambiarClave(idEdicion, clave);
                 }
+                if (estadoElegido != null && !estadoElegido.equals(existente.getEstado())) {
+                    servicio.cambiarEstado(idEdicion, estadoElegido);
+                    usuario.setEstado(estadoElegido);
+                }
                 return usuario;
             }, guardado -> {
                 idEnEdicion = guardado.getId();
                 etiquetaModo.setText("EDITAR (id " + guardado.getId() + ")");
+                etiquetaUsuarioForm.setText(guardado.nombreCompleto());
                 campoClave.clear();
                 etiquetaError.setText("");
                 recargarAsync();
@@ -196,6 +256,9 @@ public class UsuariosController {
         }
         idEnEdicion = usuario.getId();
         etiquetaModo.setText("EDITAR (id " + usuario.getId() + ")");
+        etiquetaUsuarioForm.setText(usuario.nombreCompleto());
+        etiquetaAyudaForm.setText("Modificando la cuenta " + usuario.getUsername() + ".");
+        avatarUsuario.setText(iniciales(usuario));
         campoUsername.setText(usuario.getUsername());
         campoNombres.setText(usuario.getNombres());
         campoApellidos.setText(usuario.getApellidos());
@@ -207,6 +270,13 @@ public class UsuariosController {
                 .filter(r -> r.getId().equals(usuario.getRolId()))
                 .findFirst()
                 .ifPresent(r -> comboRol.getSelectionModel().select(r));
+        String estado = usuario.getEstado();
+        estados.setAll(ESTADOS_MANUALES);
+        if (estado != null && !estado.isBlank() && !estados.contains(estado)) {
+            estados.add(estado);
+        }
+        comboEstado.setValue(estado);
+        comboEstado.setDisable(sesionActual(usuario));
         etiquetaError.setText("");
     }
 
@@ -246,9 +316,41 @@ public class UsuariosController {
         comboRol.setItems(roles);
         filas.setAll(datos.usuarios());
         etiquetaConteo.setText(datos.usuarios().size() + " USUARIOS · M9.1");
+        long activos = datos.usuarios().stream().filter(u -> "ACTIVO".equals(u.getEstado())).count();
+        etiquetaSesiones.setText("Cuentas activas: " + activos + " de " + datos.usuarios().size());
     }
 
     private record DatosUsuarios(List<Rol> roles, List<Usuario> usuarios) {
+    }
+
+    public record PermisoRol(String modulo, String administrador, String odontologo, String recepcion) {
+    }
+
+    private TableCell<PermisoRol, String> celdaPermiso() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean vacio) {
+                super.updateItem(item, vacio);
+                if (vacio || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                    return;
+                }
+                setText(null);
+                setAlignment(Pos.CENTER);
+                Label marca = new Label(item);
+                marca.getStyleClass().addAll("badge", clasePermiso(item));
+                setGraphic(marca);
+            }
+        };
+    }
+
+    private String clasePermiso(String valor) {
+        return switch (valor) {
+            case "Total" -> "badge-verde";
+            case "Consulta" -> "badge-azul";
+            default -> "badge-gris";
+        };
     }
 
     private String rolDe(Usuario usuario) {
@@ -257,6 +359,15 @@ public class UsuariosController {
                 .map(Rol::getNombre)
                 .findFirst()
                 .orElse("—");
+    }
+
+    private String iniciales(Usuario usuario) {
+        String nombres = usuario.getNombres() == null ? "" : usuario.getNombres().trim();
+        String apellidos = usuario.getApellidos() == null ? "" : usuario.getApellidos().trim();
+        String inicialNombre = nombres.isEmpty() ? "" : nombres.substring(0, 1);
+        String inicialApellido = apellidos.isEmpty() ? "" : apellidos.substring(0, 1);
+        String resultado = (inicialNombre + inicialApellido).toUpperCase();
+        return resultado.isEmpty() ? "US" : resultado;
     }
 
     private boolean sesionActual(Usuario usuario) {

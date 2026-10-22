@@ -30,6 +30,28 @@ public class DashboardController {
 
     private static final String FXML_PACIENTES = "/pe/edu/utp/dentrix/fxml/pacientes.fxml";
 
+    private static final String FXML_AGENDA = "/pe/edu/utp/dentrix/fxml/agenda.fxml";
+
+    private static final String FXML_SALA_ESPERA = "/pe/edu/utp/dentrix/fxml/sala-espera.fxml";
+
+    private static final String FXML_CAJA = "/pe/edu/utp/dentrix/fxml/caja.fxml";
+
+    private static final String FXML_EJECUCION = "/pe/edu/utp/dentrix/fxml/ejecucion.fxml";
+
+    private static final String FXML_REPORTES = "/pe/edu/utp/dentrix/fxml/reportes.fxml";
+
+    private static final DateTimeFormatter FECHA_LARGA = DateTimeFormatter.ofPattern(
+            "EEEE dd 'de' MMMM 'de' yyyy", new Locale("es", "PE"));
+
+    @FXML
+    private Label etiquetaSaludo;
+
+    @FXML
+    private Label etiquetaAvatar;
+
+    @FXML
+    private Label etiquetaFechaHoy;
+
     @FXML
     private TextField campoDni;
 
@@ -61,6 +83,9 @@ public class DashboardController {
     private TableColumn<Cita, String> colPaciente;
 
     @FXML
+    private TableColumn<Cita, String> colDni;
+
+    @FXML
     private TableColumn<Cita, String> colTratamiento;
 
     @FXML
@@ -70,6 +95,7 @@ public class DashboardController {
     private TableColumn<Cita, String> colEstado;
 
     private final Map<Integer, String> nombresPacientes = new HashMap<>();
+    private final Map<Integer, String> dnisPacientes = new HashMap<>();
     private final Map<Integer, String> nombresOdontologos = new HashMap<>();
     private final Map<Integer, String> nombresTratamientos = new HashMap<>();
 
@@ -78,6 +104,8 @@ public class DashboardController {
         colHora.setCellValueFactory(d -> new SimpleStringProperty(hora(d.getValue())));
         colPaciente.setCellValueFactory(d -> new SimpleStringProperty(
                 nombresPacientes.getOrDefault(d.getValue().getPacienteId(), "—")));
+        colDni.setCellValueFactory(d -> new SimpleStringProperty(
+                dnisPacientes.getOrDefault(d.getValue().getPacienteId(), "—")));
         colTratamiento.setCellValueFactory(d -> new SimpleStringProperty(tratamiento(d.getValue())));
         colOdontologo.setCellValueFactory(d -> new SimpleStringProperty(
                 nombresOdontologos.getOrDefault(d.getValue().getUsuarioId(), "—")));
@@ -90,22 +118,28 @@ public class DashboardController {
             return;
         }
         LocalDate hoy = LocalDate.now();
-        etiquetaFechaAgenda.setText(hoy.format(DateTimeFormatter.ofPattern(
-                "EEEE dd 'de' MMMM 'de' yyyy", new Locale("es", "PE"))));
+        etiquetaSaludo.setText("Hola, " + contexto.sesion().getNombreCompleto());
+        etiquetaAvatar.setText(iniciales(contexto.sesion().getUsuario().getNombres(),
+                contexto.sesion().getUsuario().getApellidos()));
+        etiquetaFechaHoy.setText("Resumen operativo del " + hoy.format(FECHA_LARGA));
+        etiquetaFechaAgenda.setText(hoy.format(FECHA_LARGA));
         TareasFX.ejecutar(() -> cargarTodo(hoy),
                 this::aplicarTodo,
                 error -> kpiCitas.setText("—"));
     }
 
-    private record DatosDashboard(Map<Integer, String> pacientes, Map<Integer, String> odontologos,
+    private record DatosDashboard(Map<Integer, String> pacientes, Map<Integer, String> dnis,
+                                  Map<Integer, String> odontologos,
                                   Map<Integer, String> tratamientos, KpiDia kpi, List<Cita> citas) {
     }
 
     private DatosDashboard cargarTodo(LocalDate hoy) throws DentrixException {
         AppContext contexto = AppContext.get();
         Map<Integer, String> pacientes = new HashMap<>();
+        Map<Integer, String> dnis = new HashMap<>();
         for (Paciente p : contexto.pacientes().listar()) {
             pacientes.put(p.getId(), p.getApellidos() + ", " + p.getNombres());
+            dnis.put(p.getId(), p.getDni() == null || p.getDni().isBlank() ? "—" : p.getDni());
         }
         Map<Integer, String> odontologos = new HashMap<>();
         for (Usuario u : contexto.usuarios().listarTodos()) {
@@ -119,12 +153,14 @@ public class DashboardController {
         List<Cita> citas = contexto.agenda().agendaDelDia(hoy).stream()
                 .filter(c -> "CITA".equals(c.getTipo()))
                 .toList();
-        return new DatosDashboard(pacientes, odontologos, tratamientos, kpi, citas);
+        return new DatosDashboard(pacientes, dnis, odontologos, tratamientos, kpi, citas);
     }
 
     private void aplicarTodo(DatosDashboard datos) {
         nombresPacientes.clear();
         nombresPacientes.putAll(datos.pacientes());
+        dnisPacientes.clear();
+        dnisPacientes.putAll(datos.dnis());
         nombresOdontologos.clear();
         nombresOdontologos.putAll(datos.odontologos());
         nombresTratamientos.clear();
@@ -167,8 +203,44 @@ public class DashboardController {
         Navegador.ir(FXML_PACIENTES);
     }
 
-    private String hora(Cita cita) {
-        if (cita.getHoraInicio() == null) {
+    @FXML
+    private void onPacientesClick() {
+        Navegador.ir(FXML_PACIENTES);
+    }
+
+    @FXML
+    private void onAgendaClick() {
+        Navegador.ir(FXML_AGENDA);
+    }
+
+    @FXML
+    private void onSalaEsperaClick() {
+        Navegador.ir(FXML_SALA_ESPERA);
+    }
+
+    @FXML
+    private void onCajaClick() {
+        Navegador.ir(FXML_CAJA);
+    }
+
+    @FXML
+    private void onEjecucionClick() {
+        Navegador.ir(FXML_EJECUCION);
+    }
+
+    @FXML
+    private void onReportesClick() {
+        Navegador.ir(FXML_REPORTES);
+    }
+
+    private static String iniciales(String nombres, String apellidos) {
+        String inicialNombre = nombres == null || nombres.isBlank() ? "" : nombres.substring(0, 1);
+        String inicialApellido = apellidos == null || apellidos.isBlank() ? "" : apellidos.substring(0, 1);
+        String iniciales = (inicialNombre + inicialApellido).toUpperCase(Locale.ROOT);
+        return iniciales.isBlank() ? "--" : iniciales;
+    }
+
+    private String hora(Cita cita) {        if (cita.getHoraInicio() == null) {
             return "";
         }
         String inicio = cita.getHoraInicio().toString();

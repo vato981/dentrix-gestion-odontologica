@@ -8,152 +8,264 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pe.edu.utp.dentrix.controller.ReportesController">
     <top>
-        <VBox spacing="14.0" style="-fx-padding: 0 0 14 0;">
+        <VBox spacing="10.0" style="-fx-padding: 0 0 14 0;">
             <children>
                 <HBox alignment="CENTER_LEFT" spacing="12.0">
                     <children>
-                        <Label text="Reportes" styleClass="label-titulo" />
-                        <Label HBox.hgrow="ALWAYS" text=" " />
-                        <Label text="Fecha KPIs:" />
-                        <DatePicker fx:id="campoFecha" prefWidth="140.0" />
-                        <Label text="Periodo desde:" />
+                        <VBox spacing="1.0">
+                            <children>
+                                <Label styleClass="label-titulo" text="Reportes estadisticos" />
+                                <Label styleClass="dato-secundario" text="Produccion, cobranza y agenda del centro odontologico" />
+                            </children>
+                        </VBox>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button text="Exportar CSV" onAction="#onExportarClick" />
+                        <Button text="Refrescar" onAction="#onRefrescarClick" />
+                        <Button styleClass="button, boton-primario" text="Volver" onAction="#onVolverClick" />
+                    </children>
+                </HBox>
+
+                <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="tarjeta">
+                    <children>
+                        <Label styleClass="seccion-titulo" text="PERIODO" />
+                        <Label styleClass="fila-dato-label" text="Desde" />
                         <DatePicker fx:id="campoDesde" prefWidth="140.0" />
-                        <Label text="hasta:" />
+                        <Label styleClass="fila-dato-label" text="Hasta" />
                         <DatePicker fx:id="campoHasta" prefWidth="140.0" />
-                        <Button text="⬇ Exportar CSV" onAction="#onExportarClick" />
-                        <Button text="⟳ Refrescar" onAction="#onRefrescarClick" />
-                        <Button text="Volver" onAction="#onVolverClick" />
-                    </children>
-                </HBox>
-                <HBox alignment="CENTER_LEFT" spacing="14.0">
-                    <children>
-                        <VBox spacing="2.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
-                            <children>
-                                <Label styleClass="tarjeta-titulo" text="CITAS DEL DÍA" />
-                                <Label fx:id="kpiCitas" style="-fx-font-size: 22px; -fx-font-weight: bold;" text="0" />
-                            </children>
-                        </VBox>
-                        <VBox spacing="2.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
-                            <children>
-                                <Label styleClass="tarjeta-titulo" text="EN SALA" />
-                                <Label fx:id="kpiEnSala" style="-fx-font-size: 22px; -fx-font-weight: bold;" text="0" />
-                            </children>
-                        </VBox>
-                        <VBox spacing="2.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
-                            <children>
-                                <Label styleClass="tarjeta-titulo" text="RECAUDADO DEL DÍA" />
-                                <Label fx:id="kpiRecaudado" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-font-family: Consolas;" text="S/ 0.00" />
-                            </children>
-                        </VBox>
-                        <VBox spacing="2.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
-                            <children>
-                                <Label styleClass="tarjeta-titulo" text="PACIENTES CON DEUDA" />
-                                <Label fx:id="kpiDeudores" style="-fx-font-size: 22px; -fx-font-weight: bold;" text="0" />
-                            </children>
-                        </VBox>
-                    </children>
-                </HBox>
-                <Label styleClass="tarjeta-titulo" text="INDICADORES DEL PERIODO (M8)" />
-                <HBox alignment="CENTER_LEFT" spacing="14.0">
-                    <children>
-                        <VBox spacing="2.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
-                            <children>
-                                <Label styleClass="tarjeta-titulo" text="RECAUDACIÓN DEL PERIODO" />
-                                <Label fx:id="kpiMesRecaudado" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-font-family: Consolas;" text="S/ 0.00" />
-                            </children>
-                        </VBox>
-                        <VBox spacing="2.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
-                            <children>
-                                <Label styleClass="tarjeta-titulo" text="ATENDIDAS / CITADAS" />
-                                <Label fx:id="kpiMesAtendidas" style="-fx-font-size: 20px; -fx-font-weight: bold;" text="0 / 0" />
-                            </children>
-                        </VBox>
-                        <VBox spacing="2.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
-                            <children>
-                                <Label styleClass="tarjeta-titulo" text="TASA NO-SHOW" />
-                                <Label fx:id="kpiMesNoShow" style="-fx-font-size: 20px; -fx-font-weight: bold;" text="0 %" />
-                            </children>
-                        </VBox>
-                        <VBox spacing="2.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
-                            <children>
-                                <Label styleClass="tarjeta-titulo" text="YAPE / PLIN / TARJETA" />
-                                <Label fx:id="kpiMesModalidades" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-font-family: Consolas;" text="S/ 0 · S/ 0 · S/ 0" />
-                            </children>
-                        </VBox>
+                        <Region prefWidth="10.0" />
+                        <Label styleClass="seccion-titulo" text="KPIS DEL DIA" />
+                        <DatePicker fx:id="campoFecha" prefWidth="140.0" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label styleClass="dato-secundario" text="Al cambiar una fecha se recalculan sus indicadores" wrapText="true" />
                     </children>
                 </HBox>
             </children>
         </VBox>
     </top>
     <center>
-        <ScrollPane fitToWidth="true" focusTraversable="false" pannable="true" style="-fx-background-color: transparent; -fx-background-insets: 0;" BorderPane.alignment="CENTER">
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" pannable="true" focusTraversable="false" style="-fx-background-color: transparent; -fx-background-insets: 0;" BorderPane.alignment="CENTER">
             <content>
                 <VBox spacing="14.0">
                     <children>
-                        <HBox spacing="14.0">
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
                             <children>
-                                <VBox spacing="8.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
+                                <Label styleClass="seccion-titulo" text="INDICADORES DEL PERIODO" />
+                                <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="TOP_LEFT" spacing="12.0">
+                            <children>
+                                <VBox spacing="6.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                                     <children>
-                                        <Label styleClass="tarjeta-titulo" text="SALDOS POR PACIENTE" />
-                                        <TableView fx:id="tablaSaldos" prefHeight="260.0" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
-                                            <columns>
-                                                <TableColumn fx:id="colSaldoHc" prefWidth="110.0" text="HC" />
-                                                <TableColumn fx:id="colSaldoNombre" prefWidth="260.0" text="PACIENTE" />
-                                                <TableColumn fx:id="colSaldoMonto" prefWidth="140.0" text="SALDO PENDIENTE" />
-                                                <TableColumn fx:id="colSaldoDocs" prefWidth="110.0" text="DOCUMENTOS" />
-                                            </columns>
-                                        </TableView>
-                                        <Label fx:id="etiquetaSaldoTotal" style="-fx-font-weight: bold;" text="" />
+                                        <Label styleClass="seccion-titulo" text="RECAUDACION DEL PERIODO" />
+                                        <Label fx:id="kpiMesRecaudado" styleClass="kpi-valor, texto-mono" text="S/ 0.00" />
+                                        <Label styleClass="dato-secundario" text="Cobros registrados en el rango" />
                                     </children>
                                 </VBox>
+                                <VBox spacing="6.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="seccion-titulo" text="ATENDIDAS / CITADAS" />
+                                        <Label fx:id="kpiMesAtendidas" styleClass="kpi-valor, texto-mono" text="0 / 0" />
+                                        <Label styleClass="dato-secundario" text="Citas concluidas sobre citas del periodo" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="6.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="seccion-titulo" text="TASA NO-SHOW" />
+                                        <Label fx:id="kpiMesNoShow" styleClass="kpi-valor, texto-mono" text="0 %" />
+                                        <Label styleClass="dato-secundario" text="Inasistencias sobre citas del periodo" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="6.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="seccion-titulo" text="SALDOS POR COBRAR" />
+                                        <Label fx:id="kpiSaldoTotal" styleClass="kpi-valor, texto-mono" text="S/ 0.00" />
+                                        <Label fx:id="kpiSaldoPacientes" styleClass="dato-secundario" text="Pacientes con saldo pendiente" />
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                            <children>
+                                <Label styleClass="seccion-titulo" text="INDICADORES DEL DIA" />
+                                <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="TOP_LEFT" spacing="12.0">
+                            <children>
+                                <VBox spacing="6.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="seccion-titulo" text="CITAS DEL DIA" />
+                                        <Label fx:id="kpiCitas" styleClass="kpi-valor, texto-mono" text="0" />
+                                        <Label styleClass="dato-secundario" text="Citas programadas para la fecha KPIs" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="6.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="seccion-titulo" text="EN SALA" />
+                                        <Label fx:id="kpiEnSala" styleClass="kpi-valor, texto-mono" text="0" />
+                                        <Label styleClass="dato-secundario" text="Pacientes en espera o en atencion" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="6.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="seccion-titulo" text="RECAUDADO DEL DIA" />
+                                        <Label fx:id="kpiRecaudado" styleClass="kpi-valor, texto-mono" text="S/ 0.00" />
+                                        <Label styleClass="dato-secundario" text="Cobros de la fecha KPIs" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="6.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="seccion-titulo" text="PACIENTES CON DEUDA" />
+                                        <Label fx:id="kpiDeudores" styleClass="kpi-valor, texto-mono" text="0" />
+                                        <Label styleClass="dato-secundario" text="Pacientes con documentos pendientes" />
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <HBox alignment="TOP_LEFT" spacing="14.0">
+                            <children>
+                                <VBox spacing="4.0" styleClass="tarjeta" minWidth="330.0" prefWidth="360.0" maxWidth="420.0">
+                                    <children>
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <Label styleClass="tarjeta-titulo" text="COBRANZA POR MEDIO DE PAGO" />
+                                                <Label HBox.hgrow="ALWAYS" text=" " />
+                                                <Label styleClass="tarjeta-etiqueta" text="PERIODO" />
+                                            </children>
+                                        </HBox>
+                                        <VBox spacing="0.0" styleClass="card-paciente">
+                                            <children>
+                                                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="fila-dato">
+                                                    <children>
+                                                        <Label minWidth="120.0" styleClass="fila-dato-label" text="Efectivo" />
+                                                        <Label fx:id="kpiEfectivo" HBox.hgrow="ALWAYS" styleClass="fila-dato-valor, texto-mono" text="S/ 0.00" />
+                                                    </children>
+                                                </HBox>
+                                                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="fila-dato">
+                                                    <children>
+                                                        <Label minWidth="120.0" styleClass="fila-dato-label" text="Yape" />
+                                                        <Label fx:id="kpiYape" HBox.hgrow="ALWAYS" styleClass="fila-dato-valor, texto-mono" text="S/ 0.00" />
+                                                    </children>
+                                                </HBox>
+                                                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="fila-dato">
+                                                    <children>
+                                                        <Label minWidth="120.0" styleClass="fila-dato-label" text="Plin" />
+                                                        <Label fx:id="kpiPlin" HBox.hgrow="ALWAYS" styleClass="fila-dato-valor, texto-mono" text="S/ 0.00" />
+                                                    </children>
+                                                </HBox>
+                                                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="fila-dato">
+                                                    <children>
+                                                        <Label minWidth="120.0" styleClass="fila-dato-label" text="Tarjeta" />
+                                                        <Label fx:id="kpiTarjeta" HBox.hgrow="ALWAYS" styleClass="fila-dato-valor, texto-mono" text="S/ 0.00" />
+                                                    </children>
+                                                </HBox>
+                                                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="fila-dato">
+                                                    <children>
+                                                        <Label minWidth="110.0" styleClass="fila-dato-label" text="Yape/Plin/Tarjeta" />
+                                                        <Label fx:id="kpiMesModalidades" HBox.hgrow="ALWAYS" styleClass="fila-dato-valor, texto-mono" text="S/ 0 · S/ 0 · S/ 0" wrapText="true" />
+                                                    </children>
+                                                </HBox>
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </VBox>
+
                                 <VBox spacing="8.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                                     <children>
-                                        <Label styleClass="tarjeta-titulo" text="RANKING DE TRATAMIENTOS" />
-                                        <TableView fx:id="tablaRanking" prefHeight="260.0" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <Label styleClass="tarjeta-titulo" text="TRATAMIENTOS MAS DEMANDADOS" />
+                                                <Label HBox.hgrow="ALWAYS" text=" " />
+                                                <Label styleClass="tarjeta-etiqueta" text="CATALOGO" />
+                                            </children>
+                                        </HBox>
+                                        <TableView fx:id="tablaRanking" prefHeight="230.0" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
                                             <columns>
-                                                <TableColumn fx:id="colRankCodigo" prefWidth="100.0" text="CÓDIGO" />
+                                                <TableColumn fx:id="colRankCodigo" prefWidth="100.0" text="CODIGO" />
                                                 <TableColumn fx:id="colRankNombre" prefWidth="280.0" text="TRATAMIENTO" />
                                                 <TableColumn fx:id="colRankUnidades" prefWidth="100.0" text="UNIDADES" />
-                                                <TableColumn fx:id="colRankMonto" prefWidth="120.0" text="MONTO" />
+                                                <TableColumn fx:id="colRankMonto" prefWidth="130.0" text="FACTURACION" />
                                             </columns>
+                                            <placeholder>
+                                                <Label styleClass="etiqueta-estado" text="Sin tratamientos facturados en el periodo." />
+                                            </placeholder>
                                         </TableView>
                                     </children>
                                 </VBox>
                             </children>
                         </HBox>
+
                         <VBox spacing="8.0" styleClass="tarjeta">
                             <children>
-                                <Label styleClass="tarjeta-titulo" text="PRODUCTIVIDAD POR ODONTÓLOGO (PERIODO)" />
-                                <TableView fx:id="tablaProductividad" prefHeight="180.0" styleClass="table-view, tabla-datos">
+                                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                    <children>
+                                        <Label styleClass="tarjeta-titulo" text="PRODUCTIVIDAD POR ODONTOLOGO" />
+                                        <Label HBox.hgrow="ALWAYS" text=" " />
+                                        <Label styleClass="tarjeta-etiqueta" text="PERIODO" />
+                                    </children>
+                                </HBox>
+                                <TableView fx:id="tablaProductividad" prefHeight="190.0" styleClass="table-view, tabla-datos">
                                     <columns>
-                                        <TableColumn fx:id="colProdOdontologo" prefWidth="260.0" text="ODONTÓLOGO" />
+                                        <TableColumn fx:id="colProdOdontologo" prefWidth="280.0" text="PROFESIONAL" />
                                         <TableColumn fx:id="colProdAtendidas" prefWidth="120.0" text="ATENDIDAS" />
                                         <TableColumn fx:id="colProdFaltas" prefWidth="100.0" text="FALTAS" />
-                                        <TableColumn fx:id="colProdRecaudado" prefWidth="140.0" text="RECAUDADO" />
+                                        <TableColumn fx:id="colProdRecaudado" prefWidth="150.0" text="PRODUCCION" />
                                     </columns>
+                                    <placeholder>
+                                        <Label styleClass="etiqueta-estado" text="Sin atenciones en el periodo." />
+                                    </placeholder>
                                 </TableView>
                             </children>
                         </VBox>
-                        <VBox spacing="8.0" styleClass="tarjeta">
+
+                        <HBox alignment="TOP_LEFT" spacing="14.0">
                             <children>
-                                <Label styleClass="tarjeta-titulo" text="DOCUMENTOS CON SALDO" />
-                                <TableView fx:id="tablaDocumentos" prefHeight="260.0" styleClass="table-view, tabla-datos">
-                                    <columns>
-                                        <TableColumn fx:id="colDocNumero" prefWidth="130.0" text="NÚMERO" />
-                                        <TableColumn fx:id="colDocFecha" prefWidth="150.0" text="FECHA" />
-                                        <TableColumn fx:id="colDocPaciente" prefWidth="240.0" text="PACIENTE" />
-                                        <TableColumn fx:id="colDocMonto" prefWidth="100.0" text="MONTO" />
-                                        <TableColumn fx:id="colDocSaldo" prefWidth="100.0" text="SALDO" />
-                                        <TableColumn fx:id="colDocEstado" prefWidth="110.0" text="ESTADO PAGO" />
-                                    </columns>
-                                </TableView>
-                                <Label fx:id="etiquetaDocsTotal" style="-fx-font-weight: bold;" text="" />
+                                <VBox spacing="8.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="tarjeta-titulo" text="SALDOS POR PACIENTE" />
+                                        <TableView fx:id="tablaSaldos" prefHeight="250.0" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
+                                            <columns>
+                                                <TableColumn fx:id="colSaldoHc" prefWidth="110.0" text="HC" />
+                                                <TableColumn fx:id="colSaldoNombre" prefWidth="250.0" text="PACIENTE" />
+                                                <TableColumn fx:id="colSaldoMonto" prefWidth="140.0" text="SALDO PENDIENTE" />
+                                                <TableColumn fx:id="colSaldoDocs" prefWidth="110.0" text="DOCUMENTOS" />
+                                            </columns>
+                                            <placeholder>
+                                                <Label styleClass="etiqueta-estado" text="Ningun paciente tiene saldo pendiente." />
+                                            </placeholder>
+                                        </TableView>
+                                        <Label fx:id="etiquetaSaldoTotal" styleClass="fila-dato-valor" text="" wrapText="true" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="8.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="tarjeta-titulo" text="DOCUMENTOS CON SALDO" />
+                                        <TableView fx:id="tablaDocumentos" prefHeight="250.0" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
+                                            <columns>
+                                                <TableColumn fx:id="colDocNumero" prefWidth="130.0" text="NUMERO" />
+                                                <TableColumn fx:id="colDocFecha" prefWidth="150.0" text="FECHA" />
+                                                <TableColumn fx:id="colDocPaciente" prefWidth="230.0" text="PACIENTE" />
+                                                <TableColumn fx:id="colDocMonto" prefWidth="100.0" text="MONTO" />
+                                                <TableColumn fx:id="colDocSaldo" prefWidth="100.0" text="SALDO" />
+                                                <TableColumn fx:id="colDocEstado" prefWidth="110.0" text="ESTADO PAGO" />
+                                            </columns>
+                                            <placeholder>
+                                                <Label styleClass="etiqueta-estado" text="Ningun documento tiene saldo pendiente." />
+                                            </placeholder>
+                                        </TableView>
+                                        <Label fx:id="etiquetaDocsTotal" styleClass="fila-dato-valor" text="" wrapText="true" />
+                                    </children>
+                                </VBox>
                             </children>
-                        </VBox>
+                        </HBox>
                     </children>
                 </VBox>
             </content>

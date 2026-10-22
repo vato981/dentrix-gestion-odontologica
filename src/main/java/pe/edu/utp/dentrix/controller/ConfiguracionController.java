@@ -2,6 +2,8 @@ package pe.edu.utp.dentrix.controller;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -12,21 +14,29 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import pe.edu.utp.dentrix.config.AppContext;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.Configuracion;
 import pe.edu.utp.dentrix.model.DiagnosticoCie10;
+import pe.edu.utp.dentrix.model.Tarifario;
 import pe.edu.utp.dentrix.model.Tratamiento;
 import pe.edu.utp.dentrix.ui.Badges;
 import pe.edu.utp.dentrix.ui.Navegador;
 import pe.edu.utp.dentrix.ui.TareasFX;
+import pe.edu.utp.dentrix.ui.TarifarioDialog;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class ConfiguracionController {
 
@@ -50,10 +60,22 @@ public class ConfiguracionController {
     private TextField campoPrecio;
 
     @FXML
+    private Button btnNuevaVersionTarifario;
+
+    @FXML
     private Label etiquetaTratModo;
 
     @FXML
     private Label etiquetaTratError;
+
+    @FXML
+    private Label etiquetaVersionTarifario;
+
+    @FXML
+    private Label etiquetaVigenciaTarifario;
+
+    @FXML
+    private Label etiquetaIgvTarifario;
 
     @FXML
     private TableView<Tratamiento> tablaTratamientos;
@@ -84,6 +106,21 @@ public class ConfiguracionController {
 
     @FXML
     private TextField campoDescCie;
+
+    @FXML
+    private TextField campoBusquedaCie;
+
+    @FXML
+    private Label etiquetaCieCodigo;
+
+    @FXML
+    private Label etiquetaCieGrupo;
+
+    @FXML
+    private Label etiquetaCieDescripcion;
+
+    @FXML
+    private Label etiquetaCieFrecuente;
 
     @FXML
     private TextField campoCapCie;
@@ -166,6 +203,9 @@ public class ConfiguracionController {
     @FXML
     private Label etiquetaRespaldoResultado;
 
+    private final Map<Integer, BigDecimal> preciosVigentes = new HashMap<>();
+    private final ObservableList<DiagnosticoCie10> diagnosticos = FXCollections.observableArrayList();
+    private FilteredList<DiagnosticoCie10> diagnosticosFiltrados;
     private Tratamiento tratEnEdicion;
     private DiagnosticoCie10 cieEnEdicion;
 
@@ -181,7 +221,7 @@ public class ConfiguracionController {
         colTEspecialidad.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getEspecialidad()));
         colTCalculo.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getCalculo()));
         colTPrecio.setCellValueFactory(d -> new SimpleStringProperty(
-                d.getValue().getPrecio() == null ? "" : d.getValue().getPrecio().toPlainString()));
+                precioVigenteTexto(d.getValue().getId())));
         colTEstado.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getEstado()));
         Badges.aplicarEn(colTEstado);
         colTAcciones.setCellFactory(col -> new TableCell<>() {
@@ -228,6 +268,12 @@ public class ConfiguracionController {
             }
         });
         tablaCie.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        diagnosticosFiltrados = new FilteredList<>(diagnosticos, fila -> true);
+        tablaCie.setItems(diagnosticosFiltrados);
+        campoBusquedaCie.textProperty().addListener((obs, antes, ahora) -> filtrarDiagnosticos(ahora));
+        tablaCie.getSelectionModel().selectedItemProperty()
+                .addListener((obs, antes, ahora) -> mostrarDetalleCie(ahora));
+        mostrarDetalleCie(null);
 
         AppContext contexto = AppContext.get();
         if (!contexto.sesion().activa()) {
@@ -249,21 +295,114 @@ public class ConfiguracionController {
     }
 
     private void aplicarDatos(DatosConfiguracion datos) {
+        cargarPreciosVigentes();
         tablaTratamientos.setItems(FXCollections.observableArrayList(datos.tratamientos()));
-        tablaCie.setItems(FXCollections.observableArrayList(datos.cie()));
+        diagnosticos.setAll(datos.cie());
         aplicarConfiguracion(datos.configuracion());
+        actualizarVersionTarifario();
     }
 
     private void recargarTratamientos() {
         TareasFX.ejecutar(() -> AppContext.get().catalogo().listarTratamientos(),
-                lista -> tablaTratamientos.setItems(FXCollections.observableArrayList(lista)),
+                lista -> {
+                    cargarPreciosVigentes();
+                    actualizarVersionTarifario();
+                    tablaTratamientos.setItems(FXCollections.observableArrayList(lista));
+                },
                 error -> mostrarError(TareasFX.mensaje(error)));
+    }
+
+    private void cargarPreciosVigentes() {
+        preciosVigentes.clear();
+        try {
+            preciosVigentes.putAll(AppContext.get().tarifario().preciosVigentes());
+        } catch (DentrixException e) {
+            etiquetaTratError.setText("No se pudo leer el tarifario vigente: " + e.getMessage());
+        }
+    }
+
+    private String precioVigenteTexto(Integer tratamientoId) {
+        BigDecimal precio = preciosVigentes.get(tratamientoId);
+        return precio == null ? "—" : "S/ " + precio.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
 
     private void recargarCie() {
         TareasFX.ejecutar(() -> AppContext.get().catalogo().listarDiagnosticos(),
-                lista -> tablaCie.setItems(FXCollections.observableArrayList(lista)),
+                lista -> {
+                    diagnosticos.setAll(lista);
+                    mostrarDetalleCie(tablaCie.getSelectionModel().getSelectedItem());
+                },
                 error -> mostrarError(TareasFX.mensaje(error)));
+    }
+
+    private void filtrarDiagnosticos(String texto) {
+        String busqueda = texto == null ? "" : texto.trim().toLowerCase(Locale.ROOT);
+        diagnosticosFiltrados.setPredicate(d -> busqueda.isEmpty()
+                || contiene(d.getCodigo(), busqueda)
+                || contiene(d.getDescripcion(), busqueda)
+                || contiene(d.getCapitulo(), busqueda));
+    }
+
+    private boolean contiene(String valor, String busqueda) {
+        return valor != null && valor.toLowerCase(Locale.ROOT).contains(busqueda);
+    }
+
+    private void mostrarDetalleCie(DiagnosticoCie10 diagnostico) {
+        if (etiquetaCieCodigo == null) {
+            return;
+        }
+        if (diagnostico == null) {
+            etiquetaCieCodigo.setText("—");
+            etiquetaCieGrupo.setText("Selecciona un diagnóstico del nomenclátor");
+            etiquetaCieDescripcion.setText("El catálogo CIE-10 es de solo consulta desde la ficha clínica: "
+                    + "el código no impone un tratamiento.");
+            etiquetaCieFrecuente.setText("SIN SELECCION");
+            etiquetaCieFrecuente.getStyleClass().removeAll("badge-amarillo", "badge-gris");
+            etiquetaCieFrecuente.getStyleClass().add("badge-gris");
+            return;
+        }
+        etiquetaCieCodigo.setText(diagnostico.getCodigo());
+        etiquetaCieGrupo.setText(diagnostico.getCapitulo() == null ? "Sin capítulo" : diagnostico.getCapitulo());
+        etiquetaCieDescripcion.setText(diagnostico.getDescripcion());
+        etiquetaCieFrecuente.setText(diagnostico.isEsFrecuente() ? "FRECUENTE" : "ESTANDAR");
+        etiquetaCieFrecuente.getStyleClass().removeAll("badge-amarillo", "badge-gris");
+        etiquetaCieFrecuente.getStyleClass().add(diagnostico.isEsFrecuente() ? "badge-amarillo" : "badge-gris");
+    }
+
+    private void actualizarVersionTarifario() {
+        try {
+            var publicado = AppContext.get().tarifario().versionPublicada();
+            if (publicado.isEmpty()) {
+                etiquetaVersionTarifario.setText("Sin versión publicada");
+                etiquetaVigenciaTarifario.setText("—");
+                return;
+            }
+            Tarifario tarifario = publicado.get();
+            etiquetaVersionTarifario.setText("Versión v" + tarifario.getVersion()
+                    + (tarifario.getEstado() == null ? "" : " · " + tarifario.getEstado()));
+            LocalDate desdeFecha = tarifario.getVigenciaDesde();
+            LocalDate hastaFecha = tarifario.getVigenciaHasta();
+            etiquetaVigenciaTarifario.setText(hastaFecha == null
+                    ? "Desde " + formatearFecha(desdeFecha) + " (vigente)"
+                    : formatearFecha(desdeFecha) + " al " + formatearFecha(hastaFecha));
+        } catch (DentrixException e) {
+            etiquetaVersionTarifario.setText("—");
+            etiquetaVigenciaTarifario.setText("—");
+            etiquetaTratError.setText("No se pudo leer la versión del tarifario: " + e.getMessage());
+        }
+    }
+
+    private String formatearFecha(LocalDate fecha) {
+        return fecha == null ? "—" : fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
+    private void actualizarIgv(BigDecimal igv) {
+        if (etiquetaIgvTarifario == null) {
+            return;
+        }
+        etiquetaIgvTarifario.setText(igv == null
+                ? "IGV sin configurar"
+                : "IGV " + igv.stripTrailingZeros().toPlainString() + " %");
     }
 
     private void aplicarConfiguracion(Configuracion config) {
@@ -282,6 +421,7 @@ public class ConfiguracionController {
         campoAlmuerzoIni.setText(formatearHora(config.getAlmuerzoInicio()));
         campoAlmuerzoFin.setText(formatearHora(config.getAlmuerzoFin()));
         campoIgv.setText(config.getIgvPorcentaje() == null ? "" : config.getIgvPorcentaje().toPlainString());
+        actualizarIgv(config.getIgvPorcentaje());
     }
 
     private String formatearHora(LocalTime hora) {
@@ -297,6 +437,8 @@ public class ConfiguracionController {
         comboEspecialidad.setValue(null);
         comboCalculo.setValue("PIEZA");
         campoPrecio.clear();
+        campoPrecio.setDisable(false);
+        campoPrecio.setTooltip(null);
         etiquetaTratError.setText("");
         campoCodTrat.requestFocus();
     }
@@ -311,7 +453,9 @@ public class ConfiguracionController {
         campoNomTrat.setText(t.getNombre());
         comboEspecialidad.setValue(t.getEspecialidad());
         comboCalculo.setValue(t.getCalculo());
-        campoPrecio.setText(t.getPrecio() == null ? "" : t.getPrecio().toPlainString());
+        campoPrecio.setText(precioVigenteTexto(t.getId()));
+        campoPrecio.setDisable(true);
+        campoPrecio.setTooltip(new Tooltip("El precio se cambia abriendo una versión nueva del tarifario"));
         etiquetaTratError.setText("");
     }
 
@@ -332,10 +476,14 @@ public class ConfiguracionController {
                 tratamiento.setEspecialidad(especialidad.trim());
             }
             tratamiento.setCalculo(comboCalculo.getValue());
-            try {
-                tratamiento.setPrecio(new BigDecimal(texto(campoPrecio) == null ? "" : texto(campoPrecio)));
-            } catch (NumberFormatException e) {
-                throw new DentrixException("El precio debe ser un número (ej. 80.00)");
+            if (campoPrecio.isDisable() && tratEnEdicion != null) {
+                tratamiento.setPrecio(tratEnEdicion.getPrecio());
+            } else {
+                try {
+                    tratamiento.setPrecio(new BigDecimal(texto(campoPrecio) == null ? "" : texto(campoPrecio)));
+                } catch (NumberFormatException e) {
+                    throw new DentrixException("El precio debe ser un número (ej. 80.00)");
+                }
             }
             boolean nuevo = tratEnEdicion == null;
             TareasFX.ejecutar(() -> {
@@ -365,8 +513,25 @@ public class ConfiguracionController {
     }
 
     @FXML
-    private void onNuevoCieClick() {
-        cieEnEdicion = null;
+    private void onNuevaVersionTarifarioClick() {
+        etiquetaTratError.setText("");
+        try {
+            TarifarioDialog.mostrar(btnNuevaVersionTarifario.getScene().getWindow());
+            recargarTratamientos();
+        } catch (RuntimeException e) {
+            etiquetaTratError.setText("No se pudo abrir el tarifario: " + TareasFX.mensaje(e));
+        }
+    }
+
+    @FXML
+    private void onLimpiarBusquedaCieClick() {
+        campoBusquedaCie.clear();
+        tablaCie.getSelectionModel().clearSelection();
+        mostrarDetalleCie(null);
+    }
+
+    @FXML
+    private void onNuevoCieClick() {        cieEnEdicion = null;
         etiquetaCieModo.setText("NUEVO");
         campoCodCie.setDisable(false);
         campoCodCie.clear();
@@ -467,6 +632,7 @@ public class ConfiguracionController {
                 etiquetaConfigResultado.setText("Datos de la clínica guardados");
                 etiquetaConfigResultado.getStyleClass().removeAll("etiqueta-error");
                 etiquetaConfigResultado.getStyleClass().add("etiqueta-ok");
+                actualizarIgv(config.getIgvPorcentaje());
             }, error -> {
                 etiquetaConfigResultado.setText(TareasFX.mensaje(error));
                 etiquetaConfigResultado.getStyleClass().removeAll("etiqueta-ok");

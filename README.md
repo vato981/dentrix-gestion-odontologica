@@ -83,6 +83,15 @@ Sin esto falla con `release version 25 not supported`.
    Al final deben imprimirse los avisos `CASO 1 OK` … `CASO 6 OK` y
    `==== LOS 6 CASOS DUROS PASARON ===`.
 3. Crea tu usuario de BD y dale acceso al esquema `dentrix`.
+4. (Opcional, migración v3) Si vas a trabajar el flujo de plan y presupuesto:
+   ```
+   psql -U postgres -d dentrix -f sql/02_schema_v3_plan_presupuesto.sql
+   ```
+   Es **aditivo**: agrega `presupuesto`, `presupuesto_item`, `aceptacion`,
+   `consentimiento` e `imputacion`, más las vistas `v_saldo_item` y
+   `v_plan_tratamiento`. No modifica las 14 tablas aprobadas. Documentado en
+   `Anexo_v3_plan_presupuesto.docx` y en
+   `procesos/P3_plan_presupuesto_consentimiento.md`.
 
 ### Paso 8 — Configuración local (no se sube al repo)
 1. Copia `config.properties.example` a
@@ -107,6 +116,7 @@ dentrix-dental/
 ├── nbactions.xml                     # F6 → javafx:run
 ├── config.properties.example         # plantilla de conexión (sin secretos)
 ├── sql/                              # 01_schema_v2.sql (14 tablas) + 02_datos + 03_optimizacion_rendimiento.sql
+│                                     # + 02_schema_v3_plan_presupuesto.sql (aditivo, plan/consentimiento)
 ├── docs/modelo_er.md                 # modelo ER con trazabilidad módulo → RF
 ├── demos/agenda-swing/               # prototipo Swing de referencia (no se compila)
 └── src/

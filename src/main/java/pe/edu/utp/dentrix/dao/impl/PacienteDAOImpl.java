@@ -20,7 +20,9 @@ public class PacienteDAOImpl implements PacienteDAO {
 
     private static final String COLUMNAS =
             "id, codigo_hc, dni, apellidos, nombres, fecha_nac, celular, email, direccion, "
-                    + "alergias, antecedentes, fecha_apertura, estado, usuario_registro_id, fecha_registro";
+                    + "alergias, antecedentes, tutor_nombre, tutor_documento, tutor_vinculo, "
+                    + "pagador_nombre, pagador_documento, fecha_apertura, estado, usuario_registro_id, "
+                    + "fecha_registro";
 
     private Paciente leer(ResultSet rs) throws SQLException {
         Paciente paciente = new Paciente();
@@ -35,10 +37,15 @@ public class PacienteDAOImpl implements PacienteDAO {
         paciente.setDireccion(rs.getObject(9, String.class));
         paciente.setAlergias(rs.getObject(10, String.class));
         paciente.setAntecedentes(rs.getObject(11, String.class));
-        paciente.setFechaApertura(rs.getObject(12, LocalDate.class));
-        paciente.setEstado(rs.getString(13));
-        paciente.setUsuarioRegistroId(rs.getObject(14, Integer.class));
-        paciente.setFechaRegistro(rs.getObject(15, LocalDateTime.class));
+        paciente.setTutorNombre(rs.getObject(12, String.class));
+        paciente.setTutorDocumento(rs.getObject(13, String.class));
+        paciente.setTutorVinculo(rs.getObject(14, String.class));
+        paciente.setPagadorNombre(rs.getObject(15, String.class));
+        paciente.setPagadorDocumento(rs.getObject(16, String.class));
+        paciente.setFechaApertura(rs.getObject(17, LocalDate.class));
+        paciente.setEstado(rs.getString(18));
+        paciente.setUsuarioRegistroId(rs.getObject(19, Integer.class));
+        paciente.setFechaRegistro(rs.getObject(20, LocalDateTime.class));
         return paciente;
     }
 
@@ -119,8 +126,9 @@ public class PacienteDAOImpl implements PacienteDAO {
     @Override
     public int insertar(Paciente paciente) throws DentrixException {
         String sql = "INSERT INTO paciente (codigo_hc, dni, apellidos, nombres, fecha_nac, celular, email, "
-                + "direccion, alergias, antecedentes, fecha_apertura, estado, usuario_registro_id) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "direccion, alergias, antecedentes, tutor_nombre, tutor_documento, tutor_vinculo, "
+                + "pagador_nombre, pagador_documento, fecha_apertura, estado, usuario_registro_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection cn = ConexionBD.abrir();
              PreparedStatement ps = cn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setObject(1, paciente.getCodigoHc());
@@ -133,9 +141,14 @@ public class PacienteDAOImpl implements PacienteDAO {
             ps.setObject(8, paciente.getDireccion());
             ps.setObject(9, paciente.getAlergias());
             ps.setObject(10, paciente.getAntecedentes());
-            ps.setObject(11, paciente.getFechaApertura());
-            ps.setObject(12, paciente.getEstado());
-            ps.setObject(13, paciente.getUsuarioRegistroId());
+            ps.setObject(11, paciente.getTutorNombre());
+            ps.setObject(12, paciente.getTutorDocumento());
+            ps.setObject(13, paciente.getTutorVinculo());
+            ps.setObject(14, paciente.getPagadorNombre());
+            ps.setObject(15, paciente.getPagadorDocumento());
+            ps.setObject(16, paciente.getFechaApertura());
+            ps.setObject(17, paciente.getEstado());
+            ps.setObject(18, paciente.getUsuarioRegistroId());
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -151,8 +164,9 @@ public class PacienteDAOImpl implements PacienteDAO {
     @Override
     public boolean actualizar(Paciente paciente) throws DentrixException {
         String sql = "UPDATE paciente SET dni = ?, apellidos = ?, nombres = ?, fecha_nac = ?, celular = ?, "
-                + "email = ?, direccion = ?, alergias = ?, antecedentes = ?, fecha_apertura = ?, estado = ?, "
-                + "usuario_registro_id = ? WHERE id = ?";
+                + "email = ?, direccion = ?, alergias = ?, antecedentes = ?, tutor_nombre = ?, "
+                + "tutor_documento = ?, tutor_vinculo = ?, pagador_nombre = ?, pagador_documento = ?, "
+                + "fecha_apertura = ?, estado = ?, usuario_registro_id = ? WHERE id = ?";
         try (Connection cn = ConexionBD.abrir();
              PreparedStatement ps = cn.prepareStatement(sql)) {
             ps.setObject(1, paciente.getDni());
@@ -164,10 +178,15 @@ public class PacienteDAOImpl implements PacienteDAO {
             ps.setObject(7, paciente.getDireccion());
             ps.setObject(8, paciente.getAlergias());
             ps.setObject(9, paciente.getAntecedentes());
-            ps.setObject(10, paciente.getFechaApertura());
-            ps.setObject(11, paciente.getEstado());
-            ps.setObject(12, paciente.getUsuarioRegistroId());
-            ps.setObject(13, paciente.getId());
+            ps.setObject(10, paciente.getTutorNombre());
+            ps.setObject(11, paciente.getTutorDocumento());
+            ps.setObject(12, paciente.getTutorVinculo());
+            ps.setObject(13, paciente.getPagadorNombre());
+            ps.setObject(14, paciente.getPagadorDocumento());
+            ps.setObject(15, paciente.getFechaApertura());
+            ps.setObject(16, paciente.getEstado());
+            ps.setObject(17, paciente.getUsuarioRegistroId());
+            ps.setObject(18, paciente.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DentrixException("No se pudo actualizar el paciente.", e);

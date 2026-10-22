@@ -1,81 +1,122 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pe.edu.utp.dentrix.controller.DashboardController" spacing="16.0">
+<VBox xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pe.edu.utp.dentrix.controller.DashboardController" spacing="14.0">
     <children>
-        <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="tarjeta">
+        <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="card-paciente">
             <children>
-                <Label styleClass="tarjeta-titulo" text="BÚSQUEDA RÁPIDA" />
-                <TextField fx:id="campoDni" prefWidth="220.0" promptText="DNI del paciente (8 dígitos)..." styleClass="text-field, campo-formulario" />
-                <Button defaultButton="true" text="🔍 Buscar" onAction="#onBuscarClick" styleClass="button, boton-primario" />
-                <Button text="+ Registrar Nuevo Paciente" onAction="#onRegistrarPacienteClick" />
-                <Label fx:id="etiquetaBusqueda" HBox.hgrow="ALWAYS" text="" wrapText="true" />
+                <Label fx:id="etiquetaAvatar" styleClass="avatar" text="--" />
+                <VBox spacing="1.0">
+                    <children>
+                        <Label styleClass="seccion-titulo" text="PANEL DE CONTROL" />
+                        <Label fx:id="etiquetaSaludo" styleClass="nombre-paciente" text="Panel de control" />
+                        <Label fx:id="etiquetaFechaHoy" styleClass="dato-secundario" text="" />
+                    </children>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Label styleClass="tarjeta-etiqueta" text="DENTRIX · CENTRO ODONTOLOGICO" />
             </children>
         </HBox>
-        <GridPane hgap="14.0" vgap="14.0">
-            <columnConstraints>
-                <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
-                <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
-                <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
-                <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
-            </columnConstraints>
+
+        <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="tarjeta">
             <children>
-                <VBox styleClass="tarjeta" GridPane.columnIndex="0">
+                <Label styleClass="seccion-titulo" text="BUSQUEDA RAPIDA POR DNI" />
+                <TextField fx:id="campoDni" prefWidth="230.0" promptText="DNI del paciente (8 digitos)..." styleClass="text-field, campo-formulario" />
+                <Button defaultButton="true" text="Buscar" onAction="#onBuscarClick" styleClass="button, boton-primario" />
+                <Button text="+ Registrar nuevo paciente" onAction="#onRegistrarPacienteClick" />
+                <Label fx:id="etiquetaBusqueda" HBox.hgrow="ALWAYS" styleClass="dato-secundario" text="" wrapText="true" />
+            </children>
+        </HBox>
+
+        <HBox alignment="TOP_LEFT" spacing="12.0">
+            <children>
+                <VBox spacing="6.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                     <children>
-                        <Label styleClass="kpi-titulo" text="CITAS HOY" />
-                        <Label fx:id="kpiCitas" styleClass="kpi-valor" text="—" />
+                        <Label styleClass="seccion-titulo" text="CITADOS HOY" />
+                        <Label fx:id="kpiCitas" styleClass="kpi-valor, texto-mono" text="—" />
+                        <Label styleClass="dato-secundario" text="Citas programadas para hoy" />
                     </children>
                 </VBox>
-                <VBox styleClass="tarjeta" GridPane.columnIndex="1">
+                <VBox spacing="6.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                     <children>
-                        <Label styleClass="kpi-titulo" text="EN SALA DE ESPERA" />
-                        <Label fx:id="kpiSala" styleClass="kpi-valor" text="—" />
+                        <Label styleClass="seccion-titulo" text="EN SALA" />
+                        <Label fx:id="kpiSala" styleClass="kpi-valor, texto-mono" text="—" />
+                        <Label styleClass="dato-secundario" text="Pacientes en espera o en atencion" />
                     </children>
                 </VBox>
-                <VBox styleClass="tarjeta" GridPane.columnIndex="2">
+                <VBox spacing="6.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                     <children>
-                        <Label styleClass="kpi-titulo" text="RECAUDACIÓN HOY" />
-                        <Label fx:id="kpiRecaudado" styleClass="kpi-valor" text="—" />
+                        <Label styleClass="seccion-titulo" text="RECAUDACION HOY" />
+                        <Label fx:id="kpiRecaudado" styleClass="kpi-valor, texto-mono" text="—" />
+                        <Label styleClass="dato-secundario" text="Cobros registrados en el dia" />
                     </children>
                 </VBox>
-                <VBox styleClass="tarjeta" GridPane.columnIndex="3">
+                <VBox spacing="6.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                     <children>
-                        <Label styleClass="kpi-titulo" text="SALDOS POR COBRAR" />
-                        <Label fx:id="kpiDeudores" styleClass="kpi-valor" text="—" />
+                        <Label styleClass="seccion-titulo" text="SALDOS POR COBRAR" />
+                        <Label fx:id="kpiDeudores" styleClass="kpi-valor, texto-mono" text="—" />
+                        <Label styleClass="dato-secundario" text="Pacientes con deuda pendiente" />
                     </children>
                 </VBox>
             </children>
-        </GridPane>
-        <VBox styleClass="tarjeta" VBox.vgrow="ALWAYS">
+        </HBox>
+
+        <HBox alignment="TOP_LEFT" spacing="14.0" VBox.vgrow="ALWAYS">
             <children>
-                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                <VBox spacing="8.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                     <children>
-                        <Label styleClass="tarjeta-titulo" text="AGENDA ODONTOLÓGICA DEL DÍA" />
-                        <Label fx:id="etiquetaFechaAgenda" styleClass="tarjeta-etiqueta" text="" />
-                        <Label HBox.hgrow="ALWAYS" text=" " />
-                        <Label styleClass="tarjeta-etiqueta" text="Consultorios 1 y 2" />
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                            <children>
+                                <Label styleClass="tarjeta-titulo" text="AGENDA DEL DIA" />
+                                <Label fx:id="etiquetaFechaAgenda" styleClass="tarjeta-etiqueta" text="" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label styleClass="tarjeta-etiqueta" text="ORDENADO POR HORA" />
+                            </children>
+                        </HBox>
+                        <TableView fx:id="tablaAgenda" prefHeight="360.0" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colHora" prefWidth="110.0" text="HORA" />
+                                <TableColumn fx:id="colPaciente" prefWidth="210.0" text="PACIENTE" />
+                                <TableColumn fx:id="colDni" prefWidth="100.0" text="DNI" />
+                                <TableColumn fx:id="colTratamiento" prefWidth="220.0" text="TRATAMIENTO" />
+                                <TableColumn fx:id="colOdontologo" prefWidth="170.0" text="ODONTOLOGO" />
+                                <TableColumn fx:id="colEstado" prefWidth="120.0" text="ESTADO" />
+                            </columns>
+                            <placeholder>
+                                <Label styleClass="etiqueta-estado" text="Sin citas programadas para hoy." />
+                            </placeholder>
+                        </TableView>
                     </children>
-                </HBox>
-                <TableView fx:id="tablaAgenda" prefHeight="360.0" styleClass="table-view, tabla-datos">
-                    <columns>
-                        <TableColumn fx:id="colHora" prefWidth="120.0" text="HORA" />
-                        <TableColumn fx:id="colPaciente" prefWidth="220.0" text="PACIENTE" />
-                        <TableColumn fx:id="colTratamiento" prefWidth="240.0" text="TRATAMIENTO" />
-                        <TableColumn fx:id="colOdontologo" prefWidth="180.0" text="ODONTÓLOGO" />
-                        <TableColumn fx:id="colEstado" prefWidth="130.0" text="ESTADO" />
-                    </columns>
-                </TableView>
+                </VBox>
+                <VBox spacing="4.0" styleClass="tarjeta" prefWidth="250.0" minWidth="230.0" maxWidth="280.0">
+                    <children>
+                        <Label styleClass="tarjeta-titulo" text="ACCESOS RAPIDOS" />
+                        <Label styleClass="seccion-titulo" text="GESTION" />
+                        <Button maxWidth="Infinity" onAction="#onPacientesClick" styleClass="button, nav-boton" text="Pacientes" />
+                        <Button maxWidth="Infinity" onAction="#onAgendaClick" styleClass="button, nav-boton" text="Agenda" />
+                        <Button maxWidth="Infinity" onAction="#onSalaEsperaClick" styleClass="button, nav-boton" text="Sala de espera" />
+                        <Label styleClass="seccion-titulo" text="OPERACION" />
+                        <Button maxWidth="Infinity" onAction="#onCajaClick" styleClass="button, nav-boton" text="Caja y cobros" />
+                        <Button maxWidth="Infinity" onAction="#onEjecucionClick" styleClass="button, nav-boton" text="Ejecucion" />
+                        <Button maxWidth="Infinity" onAction="#onReportesClick" styleClass="button, nav-boton" text="Reportes" />
+                        <Region VBox.vgrow="ALWAYS" />
+                        <VBox styleClass="panel-observacion" spacing="3.0">
+                            <children>
+                                <Label styleClass="seccion-titulo" text="ATAJOS" />
+                                <Label styleClass="dato-secundario" text="Enter en el DNI lanza la busqueda rapida." wrapText="true" />
+                            </children>
+                        </VBox>
+                    </children>
+                </VBox>
             </children>
-        </VBox>
+        </HBox>
     </children>
 </VBox>

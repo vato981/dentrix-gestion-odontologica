@@ -11,6 +11,7 @@ public class Tratamiento {
     private String calculo;
     private BigDecimal precio;
     private String estado;
+    private Integer duracionMinutos;
 
     public Tratamiento() {
     }
@@ -77,5 +78,13 @@ public class Tratamiento {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public Integer getDuracionMinutos() {
+        return duracionMinutos;
+    }
+
+    public void setDuracionMinutos(Integer duracionMinutos) {
+        this.duracionMinutos = duracionMinutos;
     }
 }

@@ -12,6 +12,7 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pe.edu.utp.dentrix.controller.ConfiguracionController">
@@ -19,6 +20,7 @@
         <HBox alignment="CENTER_LEFT" spacing="12.0" style="-fx-padding: 0 0 14 0;">
             <children>
                 <Label text="Configuración" styleClass="label-titulo" />
+                <Label styleClass="tarjeta-etiqueta" text="Tarifario · CIE-10 · Datos de la clínica" />
                 <Label HBox.hgrow="ALWAYS" text=" " />
                 <Button text="⟳ Recargar todo" onAction="#onRefrescarClick" />
                 <Button text="Volver" onAction="#onVolverClick" />
@@ -28,138 +30,307 @@
     <center>
         <ScrollPane fitToWidth="true" focusTraversable="false" pannable="true" style="-fx-background-color: transparent; -fx-background-insets: 0;" BorderPane.alignment="CENTER">
             <content>
-                <VBox spacing="14.0">
+                <VBox fx:id="contenidoConfiguracion" spacing="14.0">
                     <children>
-                        <VBox spacing="8.0" styleClass="tarjeta">
+                        <VBox fx:id="cardTarifario" spacing="9.0" styleClass="tarjeta">
                             <children>
                                 <HBox alignment="CENTER_LEFT" spacing="8.0">
                                     <children>
                                         <Label styleClass="tarjeta-titulo" text="TARIFARIO · PROCEDIMIENTOS Y TARIFAS (M9.2.1)" />
                                         <Label HBox.hgrow="ALWAYS" text=" " />
-                                        <Label fx:id="etiquetaTratModo" styleClass="tarjeta-etiqueta" text="NUEVO" />
+                                        <Label fx:id="etiquetaIgvTarifario" styleClass="badge, badge-azul" text="IGV 18 %" />
+                                        <Label fx:id="etiquetaTratModo" styleClass="badge, badge-gris" text="NUEVO" />
+                                        <Button fx:id="btnNuevaVersionTarifario" onAction="#onNuevaVersionTarifarioClick" styleClass="button, boton-primario" text="＋ Abrir versión nueva" />
+                                    </children>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT" spacing="18.0" styleClass="card-paciente">
+                                    <children>
+                                        <VBox spacing="2.0">
+                                            <children>
+                                                <Label styleClass="seccion-titulo" text="VERSIÓN PUBLICADA" />
+                                                <Label fx:id="etiquetaVersionTarifario" styleClass="fila-dato-valor" text="—" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="2.0">
+                                            <children>
+                                                <Label styleClass="seccion-titulo" text="VIGENCIA" />
+                                                <Label fx:id="etiquetaVigenciaTarifario" styleClass="fila-dato-valor" text="—" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="2.0">
+                                            <children>
+                                                <Label styleClass="seccion-titulo" text="MONEDA" />
+                                                <Label styleClass="fila-dato-valor" text="Soles (PEN)" />
+                                            </children>
+                                        </VBox>
+                                        <Label HBox.hgrow="ALWAYS" text=" " />
+                                        <Label maxWidth="430.0" styleClass="panel-observacion" text="El precio vigente se congela al aceptar un presupuesto. Cambiar un precio abre una versión nueva: no se edita la vigente ni se alteran los ítems ya aceptados." wrapText="true" />
                                     </children>
                                 </HBox>
                                 <HBox alignment="CENTER_LEFT" spacing="8.0">
                                     <children>
-                                        <TextField fx:id="campoCodTrat" prefWidth="100.0" promptText="Código" styleClass="text-field, campo-formulario" />
-                                        <TextField fx:id="campoNomTrat" prefWidth="240.0" promptText="Nombre del procedimiento" styleClass="text-field, campo-formulario" />
-                                        <ComboBox fx:id="comboEspecialidad" prefWidth="160.0" promptText="Especialidad" />
-                                        <ComboBox fx:id="comboCalculo" prefWidth="110.0" />
-                                        <TextField fx:id="campoPrecio" prefWidth="90.0" promptText="Precio S/" styleClass="text-field, campo-formulario" />
-                                        <Button styleClass="button, boton-primario" text="💾 Guardar" onAction="#onGuardarTratamientoClick" />
-                                        <Button text="Nuevo" onAction="#onNuevoTratamientoClick" />
+                                        <Label styleClass="seccion-titulo" text="DATOS DEL PROCEDIMIENTO" />
+                                        <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
                                     </children>
                                 </HBox>
+                                <GridPane hgap="8.0" vgap="7.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints percentWidth="10.0" />
+                                        <ColumnConstraints percentWidth="24.0" hgrow="ALWAYS" />
+                                        <ColumnConstraints percentWidth="12.0" />
+                                        <ColumnConstraints percentWidth="28.0" hgrow="ALWAYS" />
+                                        <ColumnConstraints percentWidth="12.0" />
+                                        <ColumnConstraints percentWidth="14.0" />
+                                    </columnConstraints>
+                                    <children>
+                                        <Label styleClass="fila-dato-label" text="Código *" GridPane.rowIndex="0" />
+                                        <TextField fx:id="campoCodTrat" promptText="TRAT-06" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                        <Label styleClass="fila-dato-label" text="Nombre *" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                                        <TextField fx:id="campoNomTrat" promptText="Nombre del procedimiento" styleClass="text-field, campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                                        <Label styleClass="fila-dato-label" text="Precio S/ *" GridPane.columnIndex="4" GridPane.rowIndex="0" />
+                                        <TextField fx:id="campoPrecio" promptText="0.00" styleClass="text-field, campo-formulario" GridPane.columnIndex="5" GridPane.rowIndex="0" />
+                                        <Label styleClass="fila-dato-label" text="Especialidad" GridPane.rowIndex="1" />
+                                        <ComboBox fx:id="comboEspecialidad" maxWidth="Infinity" promptText="Especialidad" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <Label styleClass="fila-dato-label" text="Cálculo" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                        <ComboBox fx:id="comboCalculo" maxWidth="Infinity" styleClass="combo-box, combo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                                        <HBox alignment="CENTER_RIGHT" spacing="8.0" GridPane.columnIndex="4" GridPane.columnSpan="2" GridPane.rowIndex="1">
+                                            <children>
+                                                <Button text="Nuevo" onAction="#onNuevoTratamientoClick" />
+                                                <Button styleClass="button, boton-primario" text="💾 Guardar" onAction="#onGuardarTratamientoClick" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </GridPane>
                                 <Label fx:id="etiquetaTratError" styleClass="etiqueta-error" text="" wrapText="true" />
-                                <TableView fx:id="tablaTratamientos" prefHeight="220.0" styleClass="table-view, tabla-datos">
+                                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                    <children>
+                                        <Label styleClass="seccion-titulo" text="PROCEDIMIENTOS DEL TARIFARIO" />
+                                        <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
+                                        <Label styleClass="dato-secundario" text="El precio mostrado es el vigente del tarifario" />
+                                    </children>
+                                </HBox>
+                                <TableView fx:id="tablaTratamientos" prefHeight="230.0" minHeight="200.0" styleClass="table-view, tabla-datos">
                                     <columns>
-                                        <TableColumn fx:id="colTCodigo" prefWidth="100.0" text="CÓDIGO" />
-                                        <TableColumn fx:id="colTNombre" prefWidth="260.0" text="NOMBRE" />
-                                        <TableColumn fx:id="colTEspecialidad" prefWidth="140.0" text="ESPECIALIDAD" />
-                                        <TableColumn fx:id="colTCalculo" prefWidth="110.0" text="CÁLCULO" />
-                                        <TableColumn fx:id="colTPrecio" prefWidth="100.0" text="PRECIO" />
-                                        <TableColumn fx:id="colTEstado" prefWidth="100.0" text="ESTADO" />
-                                        <TableColumn fx:id="colTAcciones" prefWidth="150.0" text="ACCIONES" />
+                                        <TableColumn fx:id="colTCodigo" minWidth="90.0" prefWidth="100.0" text="CÓDIGO" />
+                                        <TableColumn fx:id="colTNombre" minWidth="190.0" prefWidth="250.0" text="PROCEDIMIENTO" />
+                                        <TableColumn fx:id="colTEspecialidad" minWidth="100.0" prefWidth="120.0" text="ESPECIALIDAD" />
+                                        <TableColumn fx:id="colTCalculo" minWidth="78.0" prefWidth="90.0" text="CÁLCULO" />
+                                        <TableColumn fx:id="colTPrecio" minWidth="104.0" prefWidth="118.0" text="PRECIO VIGENTE" />
+                                        <TableColumn fx:id="colTEstado" minWidth="82.0" prefWidth="92.0" text="ESTADO" />
+                                        <TableColumn fx:id="colTAcciones" minWidth="132.0" prefWidth="150.0" text="ACCIONES" />
                                     </columns>
                                 </TableView>
                             </children>
                         </VBox>
-                        <VBox spacing="8.0" styleClass="tarjeta">
+                        <VBox fx:id="cardCie10" spacing="9.0" styleClass="tarjeta">
                             <children>
                                 <HBox alignment="CENTER_LEFT" spacing="8.0">
                                     <children>
                                         <Label styleClass="tarjeta-titulo" text="CIE-10 · CONSULTA DE DIAGNÓSTICOS (M9.2.2)" />
+                                        <Label styleClass="badge, badge-azul" text="CAPÍTULO XI · K00-K14" />
                                         <Label HBox.hgrow="ALWAYS" text=" " />
-                                        <Label fx:id="etiquetaCieModo" styleClass="tarjeta-etiqueta" text="NUEVO" />
+                                        <Label fx:id="etiquetaCieModo" styleClass="badge, badge-gris" text="NUEVO" />
                                     </children>
                                 </HBox>
-                                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                <HBox alignment="TOP_LEFT" spacing="14.0">
                                     <children>
-                                        <TextField fx:id="campoCodCie" prefWidth="100.0" promptText="K02.1" styleClass="text-field, campo-formulario" />
-                                        <TextField fx:id="campoDescCie" prefWidth="300.0" promptText="Descripción del diagnóstico" styleClass="text-field, campo-formulario" />
-                                        <TextField fx:id="campoCapCie" prefWidth="200.0" promptText="Capítulo" styleClass="text-field, campo-formulario" />
-                                        <CheckBox fx:id="checkFrecuente" text="Frecuente" />
-                                        <Button styleClass="button, boton-primario" text="💾 Guardar" onAction="#onGuardarCieClick" />
-                                        <Button text="Nuevo" onAction="#onNuevoCieClick" />
+                                        <VBox prefWidth="290.0" minWidth="270.0" spacing="7.0" styleClass="card-paciente" HBox.hgrow="NEVER">
+                                            <children>
+                                                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                                    <children>
+                                                        <Label fx:id="etiquetaCieCodigo" styleClass="nombre-paciente" text="K02.1" />
+                                                        <Label HBox.hgrow="ALWAYS" text=" " />
+                                                        <Label fx:id="etiquetaCieFrecuente" styleClass="badge, badge-amarillo" text="FRECUENTE" />
+                                                    </children>
+                                                </HBox>
+                                                <Label fx:id="etiquetaCieGrupo" styleClass="dato-secundario" text="K02 Caries dental" wrapText="true" />
+                                                <Region styleClass="linea-seccion" />
+                                                <Label styleClass="seccion-titulo" text="DESCRIPCIÓN OFICIAL (CIE-10 MINSA)" />
+                                                <Label fx:id="etiquetaCieDescripcion" styleClass="dato-secundario" text="Selecciona un código del nomenclátor para ver su detalle." wrapText="true" />
+                                                <Region styleClass="linea-seccion" />
+                                                <Label styleClass="dato-secundario" text="Este código no impone un tratamiento predeterminado. La prioridad marca las sugerencias rápidas de la ficha clínica." wrapText="true" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="7.0" HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                                    <children>
+                                                        <Label style="-fx-font-size: 13px; -fx-text-fill: #94A3B8;" text="🔍" />
+                                                        <TextField fx:id="campoBusquedaCie" promptText="Buscar por código o patología" styleClass="text-field, campo-formulario" HBox.hgrow="ALWAYS" />
+                                                        <Button text="Limpiar" onAction="#onLimpiarBusquedaCieClick" />
+                                                    </children>
+                                                </HBox>
+                                                <GridPane hgap="8.0" vgap="7.0">
+                                                    <columnConstraints>
+                                                        <ColumnConstraints percentWidth="10.0" />
+                                                        <ColumnConstraints percentWidth="20.0" />
+                                                        <ColumnConstraints percentWidth="12.0" />
+                                                        <ColumnConstraints percentWidth="32.0" hgrow="ALWAYS" />
+                                                        <ColumnConstraints percentWidth="26.0" />
+                                                    </columnConstraints>
+                                                    <children>
+                                                        <Label styleClass="fila-dato-label" text="Código *" GridPane.rowIndex="0" />
+                                                        <TextField fx:id="campoCodCie" promptText="K02.1" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                                        <Label styleClass="fila-dato-label" text="Diagnóstico *" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                                                        <TextField fx:id="campoDescCie" promptText="Descripción del diagnóstico" styleClass="text-field, campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                                                        <HBox alignment="CENTER_RIGHT" spacing="8.0" GridPane.columnIndex="4" GridPane.rowIndex="0">
+                                                            <children>
+                                                                <Button styleClass="button, boton-primario" text="💾 Guardar" onAction="#onGuardarCieClick" />
+                                                                <Button text="Nuevo" onAction="#onNuevoCieClick" />
+                                                            </children>
+                                                        </HBox>
+                                                        <Label styleClass="fila-dato-label" text="Capítulo" GridPane.rowIndex="1" />
+                                                        <TextField fx:id="campoCapCie" promptText="K02 Caries dental" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+                                                        <CheckBox fx:id="checkFrecuente" text="Frecuente (sugerencia rápida)" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                                                    </children>
+                                                </GridPane>
+                                                <Label fx:id="etiquetaCieError" styleClass="etiqueta-error" text="" wrapText="true" />
+                                                <TableView fx:id="tablaCie" prefHeight="230.0" minHeight="200.0" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
+                                                    <columns>
+                                                        <TableColumn fx:id="colCCodigo" minWidth="84.0" prefWidth="96.0" text="CÓDIGO" />
+                                                        <TableColumn fx:id="colCDesc" minWidth="190.0" prefWidth="250.0" text="DESCRIPCIÓN" />
+                                                        <TableColumn fx:id="colCCap" minWidth="140.0" prefWidth="180.0" text="CAPÍTULO" />
+                                                        <TableColumn fx:id="colCFrec" minWidth="80.0" prefWidth="92.0" text="FRECUENTE" />
+                                                        <TableColumn fx:id="colCAcciones" minWidth="132.0" prefWidth="150.0" text="ACCIONES" />
+                                                    </columns>
+                                                </TableView>
+                                            </children>
+                                        </VBox>
                                     </children>
                                 </HBox>
-                                <Label fx:id="etiquetaCieError" styleClass="etiqueta-error" text="" wrapText="true" />
-                                <TableView fx:id="tablaCie" prefHeight="200.0" styleClass="table-view, tabla-datos">
-                                    <columns>
-                                        <TableColumn fx:id="colCCodigo" prefWidth="100.0" text="CÓDIGO" />
-                                        <TableColumn fx:id="colCDesc" prefWidth="320.0" text="DESCRIPCIÓN" />
-                                        <TableColumn fx:id="colCCap" prefWidth="200.0" text="CAPÍTULO" />
-                                        <TableColumn fx:id="colCFrec" prefWidth="100.0" text="FRECUENTE" />
-                                        <TableColumn fx:id="colCAcciones" prefWidth="150.0" text="ACCIONES" />
-                                    </columns>
-                                </TableView>
                             </children>
                         </VBox>
-                        <VBox spacing="8.0" styleClass="tarjeta">
+                        <HBox spacing="14.0">
                             <children>
-                                <Label styleClass="tarjeta-titulo" text="DATOS DE LA CLÍNICA (M9.3)" />
-                                <GridPane hgap="10.0" vgap="8.0">
-                                    <columnConstraints>
-                                        <ColumnConstraints percentWidth="25.0" />
-                                        <ColumnConstraints percentWidth="25.0" />
-                                        <ColumnConstraints percentWidth="25.0" />
-                                        <ColumnConstraints percentWidth="25.0" />
-                                    </columnConstraints>
+                                <VBox fx:id="cardDatosFiscales" spacing="9.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                                     <children>
-                                        <Label style="-fx-font-size: 11px;" text="Razón social:" GridPane.rowIndex="0" />
-                                        <TextField fx:id="campoRazonSocial" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                                        <Label style="-fx-font-size: 11px;" text="RUC:" GridPane.rowIndex="0" GridPane.columnIndex="2" />
-                                        <TextField fx:id="campoRuc" styleClass="text-field, campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="0" />
-                                        <Label style="-fx-font-size: 11px;" text="Dirección:" GridPane.rowIndex="1" />
-                                        <TextField fx:id="campoDireccion" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                        <Label style="-fx-font-size: 11px;" text="Teléfono:" GridPane.rowIndex="1" GridPane.columnIndex="2" />
-                                        <TextField fx:id="campoTelefono" styleClass="text-field, campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                                        <Label style="-fx-font-size: 11px;" text="Email:" GridPane.rowIndex="2" />
-                                        <TextField fx:id="campoEmail" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                        <Label style="-fx-font-size: 11px;" text="Representante legal:" GridPane.rowIndex="2" GridPane.columnIndex="2" />
-                                        <TextField fx:id="campoRepresentante" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-                                        <Label style="-fx-font-size: 11px;" text="Médico director:" GridPane.rowIndex="3" />
-                                        <TextField fx:id="campoMedicoDirector" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                        <Label style="-fx-font-size: 11px;" text="Licencia sanitaria:" GridPane.rowIndex="3" GridPane.columnIndex="2" />
-                                        <TextField fx:id="campoLicSanitaria" GridPane.columnIndex="3" GridPane.rowIndex="3" />
-                                        <Label style="-fx-font-size: 11px;" text="Licencia municipal:" GridPane.rowIndex="4" />
-                                        <TextField fx:id="campoLicMunicipal" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                        <Label style="-fx-font-size: 11px;" text="Serie boleta:" GridPane.rowIndex="4" GridPane.columnIndex="2" />
-                                        <TextField fx:id="campoSerieBoleta" styleClass="text-field, campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="4" />
-                                        <Label style="-fx-font-size: 11px;" text="Apertura:" GridPane.rowIndex="5" />
-                                        <TextField fx:id="campoHoraApertura" prefWidth="90.0" promptText="08:00" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                                        <Label style="-fx-font-size: 11px;" text="Cierre:" GridPane.rowIndex="5" GridPane.columnIndex="2" />
-                                        <TextField fx:id="campoHoraCierre" prefWidth="90.0" promptText="20:00" styleClass="text-field, campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="5" />
-                                        <Label style="-fx-font-size: 11px;" text="Almuerzo:" GridPane.rowIndex="6" />
-                                        <HBox alignment="CENTER_LEFT" spacing="6.0" GridPane.columnIndex="1" GridPane.rowIndex="6">
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
                                             <children>
-                                                <TextField fx:id="campoAlmuerzoIni" prefWidth="80.0" promptText="12:00" styleClass="text-field, campo-formulario" />
-                                                <Label text="—" />
-                                                <TextField fx:id="campoAlmuerzoFin" prefWidth="80.0" promptText="13:00" styleClass="text-field, campo-formulario" />
+                                                <Label styleClass="tarjeta-titulo" text="DATOS FISCALES DE LA CLÍNICA (M9.3)" />
+                                                <Label HBox.hgrow="ALWAYS" text=" " />
+                                                <Label styleClass="badge, badge-gris" text="SUNAT" />
                                             </children>
                                         </HBox>
-                                        <Label style="-fx-font-size: 11px;" text="IGV %:" GridPane.rowIndex="6" GridPane.columnIndex="2" />
-                                        <TextField fx:id="campoIgv" prefWidth="70.0" promptText="18" styleClass="text-field, campo-formulario" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <Label styleClass="seccion-titulo" text="COMPROBANTES Y FACTURACIÓN" />
+                                                <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
+                                            </children>
+                                        </HBox>
+                                        <GridPane hgap="8.0" vgap="7.0">
+                                            <columnConstraints>
+                                                <ColumnConstraints percentWidth="34.0" />
+                                                <ColumnConstraints percentWidth="66.0" hgrow="ALWAYS" />
+                                            </columnConstraints>
+                                            <children>
+                                                <Label styleClass="fila-dato-label" text="RUC *" GridPane.rowIndex="0" />
+                                                <TextField fx:id="campoRuc" promptText="11 dígitos" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                                <Label styleClass="fila-dato-label" text="Serie boleta *" GridPane.rowIndex="1" />
+                                                <TextField fx:id="campoSerieBoleta" promptText="B001" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                <Label styleClass="fila-dato-label" text="Razón social *" GridPane.rowIndex="2" />
+                                                <TextField fx:id="campoRazonSocial" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                <Label styleClass="fila-dato-label" text="Dirección fiscal *" GridPane.rowIndex="3" />
+                                                <TextField fx:id="campoDireccion" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                                <Label styleClass="fila-dato-label" text="Teléfono" GridPane.rowIndex="4" />
+                                                <TextField fx:id="campoTelefono" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                                <Label styleClass="fila-dato-label" text="Email" GridPane.rowIndex="5" />
+                                                <TextField fx:id="campoEmail" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                                <Label styleClass="fila-dato-label" text="Representante legal" GridPane.rowIndex="6" />
+                                                <TextField fx:id="campoRepresentante" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                                <Label styleClass="fila-dato-label" text="IGV % *" GridPane.rowIndex="7" />
+                                                <TextField fx:id="campoIgv" promptText="18" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                                            </children>
+                                        </GridPane>
+                                        <Label styleClass="panel-observacion" text="Los servicios de salud no están en el Apéndice II del IGV: con persona jurídica la clínica emite boleta o factura gravada al 18 %." wrapText="true" />
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <children>
+                                                <Button styleClass="button, boton-primario" text="💾 Guardar datos de la clínica" onAction="#onGuardarConfigClick" />
+                                                <Label fx:id="etiquetaConfigResultado" styleClass="etiqueta-estado" text="" wrapText="true" HBox.hgrow="ALWAYS" />
+                                            </children>
+                                        </HBox>
                                     </children>
-                                </GridPane>
-                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                </VBox>
+                                <VBox fx:id="cardAcreditacion" spacing="9.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                                     <children>
-                                        <Button styleClass="button, boton-primario" text="💾 Guardar datos de la clínica" onAction="#onGuardarConfigClick" />
-                                        <Label fx:id="etiquetaConfigResultado" styleClass="etiqueta-estado" text="" />
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <Label styleClass="tarjeta-titulo" text="ACREDITACIÓN Y HORARIO" />
+                                                <Label HBox.hgrow="ALWAYS" text=" " />
+                                                <Label styleClass="badge, badge-gris" text="COP / RNE" />
+                                            </children>
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <Label styleClass="seccion-titulo" text="ACREDITACIÓN PROFESIONAL" />
+                                                <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
+                                            </children>
+                                        </HBox>
+                                        <GridPane hgap="8.0" vgap="7.0">
+                                            <columnConstraints>
+                                                <ColumnConstraints percentWidth="38.0" />
+                                                <ColumnConstraints percentWidth="62.0" hgrow="ALWAYS" />
+                                            </columnConstraints>
+                                            <children>
+                                                <Label styleClass="fila-dato-label" text="Médico director" GridPane.rowIndex="0" />
+                                                <TextField fx:id="campoMedicoDirector" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                                <Label styleClass="fila-dato-label" text="Licencia sanitaria" GridPane.rowIndex="1" />
+                                                <TextField fx:id="campoLicSanitaria" promptText="RNE" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                <Label styleClass="fila-dato-label" text="Licencia municipal" GridPane.rowIndex="2" />
+                                                <TextField fx:id="campoLicMunicipal" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                            </children>
+                                        </GridPane>
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <Label styleClass="seccion-titulo" text="HORARIO DE ATENCIÓN" />
+                                                <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
+                                            </children>
+                                        </HBox>
+                                        <GridPane hgap="8.0" vgap="7.0">
+                                            <columnConstraints>
+                                                <ColumnConstraints percentWidth="38.0" />
+                                                <ColumnConstraints percentWidth="62.0" hgrow="ALWAYS" />
+                                            </columnConstraints>
+                                            <children>
+                                                <Label styleClass="fila-dato-label" text="Apertura" GridPane.rowIndex="0" />
+                                                <TextField fx:id="campoHoraApertura" promptText="08:00" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                                <Label styleClass="fila-dato-label" text="Cierre" GridPane.rowIndex="1" />
+                                                <TextField fx:id="campoHoraCierre" promptText="20:00" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                <Label styleClass="fila-dato-label" text="Almuerzo" GridPane.rowIndex="2" />
+                                                <HBox alignment="CENTER_LEFT" spacing="6.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                                    <children>
+                                                        <TextField fx:id="campoAlmuerzoIni" promptText="12:00" styleClass="text-field, campo-formulario" HBox.hgrow="ALWAYS" />
+                                                        <Label text="—" />
+                                                        <TextField fx:id="campoAlmuerzoFin" promptText="13:00" styleClass="text-field, campo-formulario" HBox.hgrow="ALWAYS" />
+                                                    </children>
+                                                </HBox>
+                                            </children>
+                                        </GridPane>
+                                        <Label styleClass="dato-secundario" text="El horario alimenta la agenda de citas y los bloques de atención." wrapText="true" />
                                     </children>
-                                </HBox>
+                                </VBox>
                             </children>
-                        </VBox>
-                        <VBox spacing="8.0" styleClass="tarjeta">
+                        </HBox>
+                        <VBox fx:id="cardRespaldo" spacing="8.0" styleClass="tarjeta">
                             <children>
-                                <Label styleClass="tarjeta-titulo" text="RESPALDO DE LA BASE DE DATOS (RF-15 · RNF-05)" />
-                                <Label style="-fx-font-size: 11px;" text="Genera un archivo .sql del esquema dentrix con pg_dump. Recomendado antes de cada cierre de turno." wrapText="true" />
-                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                <HBox alignment="CENTER_LEFT" spacing="8.0">
                                     <children>
-                                        <Button styleClass="button, boton-primario" text="📦 Generar respaldo .sql" onAction="#onRespaldarClick" />
-                                        <Label fx:id="etiquetaRespaldoResultado" styleClass="etiqueta-estado" text="" wrapText="true" HBox.hgrow="ALWAYS" />
+                                        <Label styleClass="tarjeta-titulo" text="RESPALDO DE LA BASE DE DATOS (RF-15 · RNF-05)" />
+                                        <Label HBox.hgrow="ALWAYS" text=" " />
+                                        <Label styleClass="badge, badge-gris" text="PostgreSQL" />
                                     </children>
                                 </HBox>
+                                <HBox alignment="CENTER_LEFT" spacing="14.0" styleClass="card-paciente">
+                                    <children>
+                                        <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <Label styleClass="fila-dato-valor" text="Respaldo de BD (PostgreSQL)" />
+                                                <Label styleClass="dato-secundario" text="Genera un archivo .sql del esquema dentrix con pg_dump. Recomendado antes de cada cierre de turno." wrapText="true" />
+                                            </children>
+                                        </VBox>
+                                        <Button styleClass="button, boton-primario" text="📦 Generar respaldo .sql" onAction="#onRespaldarClick" />
+                                    </children>
+                                </HBox>
+                                <Label fx:id="etiquetaRespaldoResultado" styleClass="etiqueta-estado" text="" wrapText="true" />
                             </children>
                         </VBox>
                     </children>

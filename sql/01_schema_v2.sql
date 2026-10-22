@@ -19,7 +19,7 @@ CREATE TYPE estado_derivacion  AS ENUM ('PENDIENTE','ACEPTADA','RECHAZADA');    
 CREATE TYPE estado_linea       AS ENUM ('PLANIFICADO','EJECUTADO','COBRADO');      -- plan vs ejecutado vs cobrado
 CREATE TYPE estado_pago        AS ENUM ('PENDIENTE','PARCIAL','PAGADO');           -- RF-08
 CREATE TYPE modalidad_pago     AS ENUM ('EFECTIVO','YAPE','PLIN','TARJETA');       -- RF-08
-CREATE TYPE tipo_documento     AS ENUM ('BOLETA','NOTA_CREDITO');
+CREATE TYPE tipo_documento     AS ENUM ('BOLETA','NOTA_CREDITO');  -- NOTA_CREDITO: reservado, fuera de alcance v3
 CREATE TYPE estado_documento   AS ENUM ('EMITIDO','ANULADO');
 CREATE TYPE estado_cierre      AS ENUM ('ABIERTO','CONSOLIDADO');                  -- M7.1
 CREATE TYPE estado_pieza       AS ENUM ('SANO','CARIES','OBTURADO','AUSENTE','CORONA','IMPLANTE','ENDODONCIA','PROTESIS');

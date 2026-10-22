@@ -16,6 +16,7 @@ public class Cita {
     private Integer tratamientoId;
     private String estado;
     private String motivo;
+    private Long citaOrigenId;
 
     public Cita() {
     }
@@ -106,6 +107,14 @@ public class Cita {
 
     public void setMotivo(String motivo) {
         this.motivo = motivo;
+    }
+
+    public Long getCitaOrigenId() {
+        return citaOrigenId;
+    }
+
+    public void setCitaOrigenId(Long citaOrigenId) {
+        this.citaOrigenId = citaOrigenId;
     }
 
     public boolean esBloque() {

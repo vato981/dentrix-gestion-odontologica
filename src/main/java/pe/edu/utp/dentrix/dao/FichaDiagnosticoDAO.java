@@ -1,5 +1,6 @@
 package pe.edu.utp.dentrix.dao;
 
+import pe.edu.utp.dentrix.dto.CambioPrincipal;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.FichaDiagnostico;
 
@@ -12,6 +13,12 @@ public interface FichaDiagnosticoDAO {
     int insertar(FichaDiagnostico diagnostico) throws DentrixException;
 
     int desmarcarPrincipales(Long fichaId) throws DentrixException;
+
+    /** Reemplaza el principal y deja constancia del cambio en una sola sentencia (RF-06). */
+    int reemplazarPrincipal(Long fichaId, String cie10Nuevo, String motivo, Integer usuarioId)
+            throws DentrixException;
+
+    List<CambioPrincipal> historialPrincipal(Long fichaId) throws DentrixException;
 
     boolean actualizar(FichaDiagnostico diagnostico) throws DentrixException;
 

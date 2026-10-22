@@ -10,6 +10,7 @@ public class PlanTratamiento {
     private Integer tratamientoId;
     private Long fichaId;
     private Long pagoId;
+    private Long presupuestoItemId;
     private Integer piezaFdi;
     private Integer cantidad;
     private BigDecimal precioUnitario;
@@ -68,6 +69,14 @@ public class PlanTratamiento {
 
     public void setPagoId(Long pagoId) {
         this.pagoId = pagoId;
+    }
+
+    public Long getPresupuestoItemId() {
+        return presupuestoItemId;
+    }
+
+    public void setPresupuestoItemId(Long presupuestoItemId) {
+        this.presupuestoItemId = presupuestoItemId;
     }
 
     public Integer getPiezaFdi() {

@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -66,6 +67,24 @@ public class ReportesController {
 
     @FXML
     private Label kpiMesModalidades;
+
+    @FXML
+    private Label kpiEfectivo;
+
+    @FXML
+    private Label kpiYape;
+
+    @FXML
+    private Label kpiPlin;
+
+    @FXML
+    private Label kpiTarjeta;
+
+    @FXML
+    private Label kpiSaldoTotal;
+
+    @FXML
+    private Label kpiSaldoPacientes;
 
     @FXML
     private TableView<ProductividadOdontologo> tablaProductividad;
@@ -150,18 +169,18 @@ public class ReportesController {
         colProdAtendidas.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().atendidas())));
         colProdFaltas.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().faltas())));
         colProdRecaudado.setCellValueFactory(d -> new SimpleStringProperty(
-                "S/ " + d.getValue().recaudado().toPlainString()));
+                soles(d.getValue().recaudado())));
 
         colSaldoHc.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().codigoHc()));
         colSaldoNombre.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().nombre()));
         colSaldoMonto.setCellValueFactory(d -> new SimpleStringProperty(
-                d.getValue().saldo().toPlainString()));
+                soles(d.getValue().saldo())));
         colSaldoDocs.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().documentos())));
 
         colRankCodigo.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().codigo()));
         colRankNombre.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().nombre()));
         colRankUnidades.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().unidades())));
-        colRankMonto.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().monto().toPlainString()));
+        colRankMonto.setCellValueFactory(d -> new SimpleStringProperty(soles(d.getValue().monto())));
 
         colDocNumero.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getNumero()));
         colDocFecha.setCellValueFactory(d -> new SimpleStringProperty(
@@ -170,11 +189,16 @@ public class ReportesController {
                 nombresPacientes.getOrDefault(d.getValue().getPacienteId(), "#"
                         + d.getValue().getPacienteId())));
         colDocMonto.setCellValueFactory(d -> new SimpleStringProperty(
-                d.getValue().getMonto().toPlainString()));
+                soles(d.getValue().getMonto())));
         colDocSaldo.setCellValueFactory(d -> new SimpleStringProperty(
-                d.getValue().getSaldoDeudor().toPlainString()));
+                soles(d.getValue().getSaldoDeudor())));
         colDocEstado.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getEstadoPago()));
         pe.edu.utp.dentrix.ui.Badges.aplicarEn(colDocEstado);
+
+        tablaRanking.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        tablaProductividad.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        tablaSaldos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        tablaDocumentos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         AppContext contexto = AppContext.get();
         if (!contexto.sesion().activa()) {
@@ -202,7 +226,7 @@ public class ReportesController {
                     }
                     kpiCitas.setText(String.valueOf(kpi.citas()));
                     kpiEnSala.setText(String.valueOf(kpi.enSala()));
-                    kpiRecaudado.setText("S/ " + kpi.recaudado().toPlainString());
+                    kpiRecaudado.setText(soles(kpi.recaudado()));
                     kpiDeudores.setText(String.valueOf(kpi.deudores()));
                 },
                 error -> mostrarError(TareasFX.mensaje(error)));
@@ -229,12 +253,15 @@ public class ReportesController {
 
     private void aplicarPeriodo(DatosPeriodo datos) {
         KpiMes mes = datos.mes();
-        kpiMesRecaudado.setText("S/ " + mes.recaudado().toPlainString());
+        kpiMesRecaudado.setText(soles(mes.recaudado()));
         kpiMesAtendidas.setText(mes.atendidas() + " / " + mes.citas());
         kpiMesNoShow.setText(mes.noShowPct().toPlainString() + " % (" + mes.faltas() + " faltas)");
-        kpiMesModalidades.setText("S/ " + mes.yape().toPlainString()
-                + " · S/ " + mes.plin().toPlainString()
-                + " · S/ " + mes.tarjeta().toPlainString());
+        kpiMesModalidades.setText(soles(mes.yape()) + " · " + soles(mes.plin())
+                + " · " + soles(mes.tarjeta()));
+        kpiEfectivo.setText(soles(mes.efectivo()));
+        kpiYape.setText(soles(mes.yape()));
+        kpiPlin.setText(soles(mes.plin()));
+        kpiTarjeta.setText(soles(mes.tarjeta()));
         tablaProductividad.setItems(FXCollections.observableArrayList(datos.productividad()));
     }
 
@@ -302,6 +329,13 @@ public class ReportesController {
         }, error -> mostrarError("No se pudo exportar: " + TareasFX.mensaje(error)));
     }
 
+    private static String soles(BigDecimal valor) {
+        if (valor == null) {
+            return "S/ 0.00";
+        }
+        return "S/ " + String.format(Locale.US, "%,.2f", valor);
+    }
+
     private String escaparCsv(String texto) {
         if (texto == null) {
             return "";
@@ -343,7 +377,7 @@ public class ReportesController {
             if (generacionKpi == generacionKpis.get()) {
                 kpiCitas.setText(String.valueOf(datos.kpi().citas()));
                 kpiEnSala.setText(String.valueOf(datos.kpi().enSala()));
-                kpiRecaudado.setText("S/ " + datos.kpi().recaudado().toPlainString());
+                kpiRecaudado.setText(soles(datos.kpi().recaudado()));
                 kpiDeudores.setText(String.valueOf(datos.kpi().deudores()));
             }
             if (generacionRango == generacionPeriodo.get()) {
@@ -354,8 +388,10 @@ public class ReportesController {
             for (SaldoPaciente s : datos.saldos()) {
                 totalSaldos = totalSaldos.add(s.saldo());
             }
-            etiquetaSaldoTotal.setText("Total por cobrar: S/ " + totalSaldos.toPlainString()
+            etiquetaSaldoTotal.setText("Total por cobrar: " + soles(totalSaldos)
                     + "  |  " + datos.saldos().size() + " paciente(s) con deuda");
+            kpiSaldoTotal.setText(soles(totalSaldos));
+            kpiSaldoPacientes.setText(datos.saldos().size() + " paciente(s) con saldo pendiente");
 
             tablaRanking.setItems(FXCollections.observableArrayList(datos.ranking()));
 
@@ -364,7 +400,7 @@ public class ReportesController {
             for (Pago p : datos.documentos()) {
                 totalDocumentos = totalDocumentos.add(p.getSaldoDeudor());
             }
-            etiquetaDocsTotal.setText("Saldo total en documentos: S/ " + totalDocumentos.toPlainString()
+            etiquetaDocsTotal.setText("Saldo total en documentos: " + soles(totalDocumentos)
                     + "  |  " + datos.documentos().size() + " documento(s) con saldo");
         },
         error -> mostrarError(TareasFX.mensaje(error)));

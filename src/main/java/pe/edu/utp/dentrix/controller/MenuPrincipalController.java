@@ -58,6 +58,12 @@ public class MenuPrincipalController {
     private Button btnFicha;
 
     @FXML
+    private Button btnPresupuestos;
+
+    @FXML
+    private Button btnEjecucion;
+
+    @FXML
     private Button btnCaja;
 
     @FXML
@@ -77,8 +83,8 @@ public class MenuPrincipalController {
         if (!sesion.activa()) {
             return;
         }
-        botonesNav = List.of(btnInicio, btnSalaEspera, btnPacientes, btnAgenda, btnFicha, btnCaja,
-                btnReportes, btnUsuarios, btnConfiguracion);
+        botonesNav = List.of(btnInicio, btnSalaEspera, btnPacientes, btnAgenda, btnFicha, btnPresupuestos,
+                btnEjecucion, btnCaja, btnReportes, btnUsuarios, btnConfiguracion);
         String nombre = sesion.getNombreCompleto() == null ? "" : sesion.getNombreCompleto().trim();
         etiquetaUsuario.setText(nombre);
         etiquetaAvatar.setText(nombre.isEmpty() ? "" : nombre.substring(0, 1).toUpperCase());
@@ -91,6 +97,8 @@ public class MenuPrincipalController {
         mostrar(btnPacientes, esAdmin || esRecepcion);
         mostrar(btnAgenda, esAdmin || esOdontologo || esRecepcion);
         mostrar(btnFicha, esAdmin || esOdontologo);
+        mostrar(btnPresupuestos, esAdmin || esOdontologo || esRecepcion);
+        mostrar(btnEjecucion, esAdmin || esOdontologo);
         mostrar(btnCaja, esAdmin || esRecepcion);
         mostrar(btnReportes, esAdmin);
         mostrar(btnUsuarios, esAdmin);
@@ -142,6 +150,12 @@ public class MenuPrincipalController {
         } else if (boton == btnFicha) {
             etiquetaPantalla.setText("— Ficha clínica");
             cargar(FXML_FICHA);
+        } else if (boton == btnPresupuestos) {
+            etiquetaPantalla.setText("— Presupuestos");
+            cargar(Navegador.PRESUPUESTOS);
+        } else if (boton == btnEjecucion) {
+            etiquetaPantalla.setText("— Ejecución de sesiones");
+            cargar(Navegador.EJECUCION);
         } else if (boton == btnCaja) {
             etiquetaPantalla.setText("— Caja / Cobros");
             cargar(FXML_CAJA);

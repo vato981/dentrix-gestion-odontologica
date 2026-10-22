@@ -7,6 +7,7 @@ import pe.edu.utp.dentrix.dao.FichaDiagnosticoDAO;
 import pe.edu.utp.dentrix.dao.HallazgoDentalDAO;
 import pe.edu.utp.dentrix.dao.PlanTratamientoDAO;
 import pe.edu.utp.dentrix.dao.TratamientoDAO;
+import pe.edu.utp.dentrix.dto.CambioPrincipal;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.Cita;
 import pe.edu.utp.dentrix.model.FichaClinica;
@@ -14,10 +15,12 @@ import pe.edu.utp.dentrix.model.FichaDiagnostico;
 import pe.edu.utp.dentrix.model.HallazgoDental;
 import pe.edu.utp.dentrix.model.PlanTratamiento;
 import pe.edu.utp.dentrix.model.Tratamiento;
+import pe.edu.utp.dentrix.util.PiezaFdi;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public class FichaClinicaService {
 
@@ -100,8 +103,9 @@ public class FichaClinicaService {
     }
 
     public FichaDiagnostico registrarDiagnostico(Long fichaId, String codigoCie10, Integer piezaFdi,
-                                                 boolean principal, String observacion) throws DentrixException {
-        buscarPorId(fichaId);
+                                                 boolean principal, String observacion, String motivoCambio)
+            throws DentrixException {
+        FichaClinica ficha = buscarPorId(fichaId);
         if (codigoCie10 == null || codigoCie10.isBlank()) {
             throw new DentrixException("El codigo CIE-10 es obligatorio.");
         }
@@ -111,16 +115,32 @@ public class FichaClinicaService {
         if (piezaFdi != null) {
             validarPiezaFdi(piezaFdi);
         }
-        FichaDiagnostico diagnostico = new FichaDiagnostico(fichaId, codigoCie10, piezaFdi, principal, observacion);
         if (principal) {
-            diagnosticoDAO.desmarcarPrincipales(fichaId);
+            Optional<FichaDiagnostico> vigente = diagnosticoDAO.listarPorFicha(fichaId).stream()
+                    .filter(FichaDiagnostico::isEsPrincipal)
+                    .findFirst();
+            if (vigente.isPresent() && !vigente.get().getCie10Codigo().equals(codigoCie10)) {
+                if (motivoCambio == null || motivoCambio.isBlank()) {
+                    throw new DentrixException("El diagnostico principal cambia de "
+                            + vigente.get().getCie10Codigo() + " a " + codigoCie10
+                            + "; indica el motivo del cambio (RF-06)");
+                }
+                diagnosticoDAO.reemplazarPrincipal(fichaId, codigoCie10, motivoCambio.trim(),
+                        ficha.getOdontologoId());
+            }
         }
+        FichaDiagnostico diagnostico = new FichaDiagnostico(fichaId, codigoCie10, piezaFdi, principal, observacion);
         try {
             diagnosticoDAO.insertar(diagnostico);
         } catch (DentrixException e) {
             throw traducirDiagnostico(e, codigoCie10);
         }
         return diagnostico;
+    }
+
+    public List<CambioPrincipal> historialPrincipal(Long fichaId) throws DentrixException {
+        buscarPorId(fichaId);
+        return diagnosticoDAO.historialPrincipal(fichaId);
     }
 
     public List<FichaDiagnostico> listarDiagnosticos(Long fichaId) throws DentrixException {
@@ -295,9 +315,9 @@ public class FichaClinicaService {
         if (pieza == null) {
             throw new DentrixException("La pieza dental es obligatoria.");
         }
-        if (pieza < 11 || pieza > 48 || pieza % 10 < 1 || pieza % 10 > 8) {
+        if (!PiezaFdi.esValida(pieza)) {
             throw new DentrixException("La pieza FDI " + pieza + " es invalida; debe estar entre 11 y 48 "
-                    + "con un diente de 1 a 8.");
+                    + "con un diente de 1 a 8 o entre 51 y 85 con un diente de 1 a 5.");
         }
     }
 

@@ -33,19 +33,20 @@ class ConexionBDTest {
     }
 
     @Test
-    void lasEntidadesMapeanLas14TablasAprobadas() throws Exception {
+    void lasEntidadesCubrenElModeloAprobado() throws Exception {
         ClassPath cp = ClassPath.from(getClass().getClassLoader());
         List<String> entidades = cp.getTopLevelClasses("pe.edu.utp.dentrix.model").stream()
                 .map(ClassPath.ClassInfo::getSimpleName)
                 .filter(nombre -> !"PackageInfo".equals(nombre))
                 .sorted()
                 .toList();
-        assertEquals(14, entidades.size(),
-                () -> "Debe haber 14 entidades (modelo aprobado): " + entidades);
+        assertEquals(36, entidades.size(),
+                () -> "Debe haber 36 clases de modelo (31 previas + ListaEspera + Recordatorio "
+                        + "+ ConsentimientoDatos + CitaHistorial + ComprobanteItem): " + entidades);
     }
 
     @Test
-    void elEsquemaV2Tiene14TablasY6Vistas() throws Exception {
+    void elEsquemaV3TieneLasTablasVistasYTriggersEsperados() throws Exception {
         try (Connection cn = conectar()) {
             assumeTrue(cn != null, "config.properties o BD no disponibles: se omite esta prueba");
 
@@ -59,9 +60,12 @@ class ConexionBDTest {
                     "SELECT count(DISTINCT trigger_name) FROM information_schema.triggers "
                             + "WHERE trigger_schema = 'dentrix'");
 
-            assertEquals(14, tablas, "El esquema debe tener 14 tablas");
-            assertEquals(6, vistas, "El esquema debe tener 6 vistas del M8");
-            assertEquals(6, triggers, "El esquema debe tener 6 triggers de reglas de negocio");
+            assertEquals(39, tablas,
+                    "39 tablas = 37 de agenda + comprobante_item y auditoria");
+            assertEquals(14, vistas,
+                    "14 vistas (se reemplazo v_ranking_tratamientos, no se agrego ninguna)");
+            assertEquals(72, triggers,
+                    "72 triggers = 60 de agenda + comprobante, borrador, emision, anulacion y 7 de auditoria");
         }
     }
 

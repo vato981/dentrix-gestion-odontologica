@@ -16,6 +16,11 @@ public class Paciente {
     private String direccion;
     private String alergias;
     private String antecedentes;
+    private String tutorNombre;
+    private String tutorDocumento;
+    private String tutorVinculo;
+    private String pagadorNombre;
+    private String pagadorDocumento;
     private LocalDate fechaApertura;
     private String estado;
     private Integer usuarioRegistroId;
@@ -110,6 +115,46 @@ public class Paciente {
 
     public void setAntecedentes(String antecedentes) {
         this.antecedentes = antecedentes;
+    }
+
+    public String getTutorNombre() {
+        return tutorNombre;
+    }
+
+    public void setTutorNombre(String tutorNombre) {
+        this.tutorNombre = tutorNombre;
+    }
+
+    public String getTutorDocumento() {
+        return tutorDocumento;
+    }
+
+    public void setTutorDocumento(String tutorDocumento) {
+        this.tutorDocumento = tutorDocumento;
+    }
+
+    public String getTutorVinculo() {
+        return tutorVinculo;
+    }
+
+    public void setTutorVinculo(String tutorVinculo) {
+        this.tutorVinculo = tutorVinculo;
+    }
+
+    public String getPagadorNombre() {
+        return pagadorNombre;
+    }
+
+    public void setPagadorNombre(String pagadorNombre) {
+        this.pagadorNombre = pagadorNombre;
+    }
+
+    public String getPagadorDocumento() {
+        return pagadorDocumento;
+    }
+
+    public void setPagadorDocumento(String pagadorDocumento) {
+        this.pagadorDocumento = pagadorDocumento;
     }
 
     public LocalDate getFechaApertura() {

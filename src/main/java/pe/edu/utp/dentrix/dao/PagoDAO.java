@@ -1,5 +1,7 @@
 package pe.edu.utp.dentrix.dao;
 
+import pe.edu.utp.dentrix.dto.Imputacion;
+import pe.edu.utp.dentrix.dto.ItemFacturado;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.Pago;
 
@@ -25,9 +27,12 @@ public interface PagoDAO {
 
     List<Pago> listarBoletasPorFecha(LocalDate fecha) throws DentrixException;
 
-    long maximoCorrelativo(String prefijo) throws DentrixException;
-
     int insertar(Pago pago) throws DentrixException;
+
+    Long insertarConImputaciones(Pago pago, List<Imputacion> imputaciones, Integer usuarioId)
+            throws DentrixException;
+
+    List<ItemFacturado> listarItemsFacturados(Long pagoId) throws DentrixException;
 
     boolean actualizar(Pago pago) throws DentrixException;
 }

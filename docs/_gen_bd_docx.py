@@ -137,7 +137,7 @@ table([
     ["estado_linea", "PLANIFICADO, EJECUTADO, COBRADO", "plan_tratamiento.estado"],
     ["estado_pago", "PENDIENTE, PARCIAL, PAGADO", "pago.estado_pago (RF-08)"],
     ["modalidad_pago", "EFECTIVO, YAPE, PLIN, TARJETA", "pago.modalidad (RF-08)"],
-    ["tipo_documento", "BOLETA, NOTA_CREDITO", "pago.tipo"],
+    ["tipo_documento", "BOLETA, NOTA_CREDITO (reservado, fuera de alcance v3)", "pago.tipo"],
     ["estado_documento", "EMITIDO, ANULADO", "pago.estado"],
     ["estado_cierre", "ABIERTO, CONSOLIDADO", "cierre_caja.estado (M7.1)"],
     ["estado_pieza", "SANO, CARIES, OBTURADO, AUSENTE, CORONA, IMPLANTE, ENDODONCIA, PROTESIS", "hallazgo_dental.estado"],
@@ -498,7 +498,7 @@ TABLES_DATA = [
         "cols": [
             ["id", "BIGSERIAL", "No", "PK", "Identificador interno del documento o abono."],
             ["numero", "VARCHAR(20)", "Sí", "UNIQUE", "Número de boleta (B001-000458); NULL cuando la fila es un abono."],
-            ["tipo", "tipo_documento", "No", "DEFAULT 'BOLETA'", "BOLETA o NOTA_CREDITO."],
+            ["tipo", "tipo_documento", "No", "DEFAULT 'BOLETA'", "BOLETA o NOTA_CREDITO (reservado, fuera de alcance v3)."],
             ["estado", "estado_documento", "No", "DEFAULT 'EMITIDO'", "EMITIDO o ANULADO."],
             ["pago_origen_id", "BIGINT", "Sí", "FK → pago(id)", "Boleta a la que abona esta fila; NULL si es documento."],
             ["fecha", "TIMESTAMP", "No", "DEFAULT CURRENT_TIMESTAMP", "Fecha y hora de emisión del documento o del abono."],

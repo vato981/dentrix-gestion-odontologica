@@ -23,7 +23,7 @@ CREATE TYPE estado_derivacion  AS ENUM ('PENDIENTE','ACEPTADA','RECHAZADA');   -
 CREATE TYPE estado_comprobante AS ENUM ('EMITIDO','ANULADO');
 CREATE TYPE estado_pago        AS ENUM ('PENDIENTE','PARCIAL','PAGADO');
 CREATE TYPE modalidad_pago     AS ENUM ('EFECTIVO','YAPE','PLIN','TARJETA');  -- RF-08
-CREATE TYPE tipo_comprobante   AS ENUM ('BOLETA','NOTA_CREDITO','VOUCHER');
+CREATE TYPE tipo_comprobante   AS ENUM ('BOLETA','NOTA_CREDITO','VOUCHER');  -- NOTA_CREDITO: reservado, fuera de alcance v3
 CREATE TYPE estado_arqueo      AS ENUM ('ABIERTO','CONSOLIDADO');             -- M7.1 / Turno Cerrado
 CREATE TYPE estado_backup      AS ENUM ('EXITOSO','FALLIDO','VERIFICADO');    -- RNF-05 / M9.3
 CREATE TYPE tipo_bloque        AS ENUM ('ALMUERZO','CIERRE','BLOQUEADO');

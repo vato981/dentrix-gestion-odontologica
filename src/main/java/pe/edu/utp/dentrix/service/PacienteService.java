@@ -107,6 +107,18 @@ public class PacienteService {
         }
     }
 
+    public void reactivar(Integer id) throws DentrixException {
+        try {
+            Paciente paciente = buscarPorId(id);
+            paciente.setEstado("ACTIVO");
+            if (!pacienteDAO.actualizar(paciente)) {
+                throw new DentrixException("Paciente no encontrado");
+            }
+        } catch (DentrixException e) {
+            throw traducir(e);
+        }
+    }
+
     private void validarDni(Paciente paciente) throws DentrixException {
         if (paciente == null) {
             throw new DentrixException("Los datos del paciente son obligatorios");

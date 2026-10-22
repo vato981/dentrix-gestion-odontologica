@@ -4,10 +4,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -15,29 +13,36 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
 import pe.edu.utp.dentrix.config.AppContext;
+import pe.edu.utp.dentrix.dto.CambioPrincipal;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.DiagnosticoCie10;
+import pe.edu.utp.dentrix.model.Evolucion;
 import pe.edu.utp.dentrix.model.FichaClinica;
 import pe.edu.utp.dentrix.model.FichaDiagnostico;
 import pe.edu.utp.dentrix.model.HallazgoDental;
 import pe.edu.utp.dentrix.model.Paciente;
 import pe.edu.utp.dentrix.model.PlanTratamiento;
 import pe.edu.utp.dentrix.model.Tratamiento;
+import pe.edu.utp.dentrix.ui.OdontogramaView;
 import pe.edu.utp.dentrix.ui.TareasFX;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class FichaClinicaController {
 
@@ -54,6 +59,27 @@ public class FichaClinicaController {
 
     @FXML
     private Label etiquetaFicha;
+
+    @FXML
+    private Label avatarPaciente;
+
+    @FXML
+    private Label nombrePaciente;
+
+    @FXML
+    private Label etiquetaHc;
+
+    @FXML
+    private Label etiquetaDni;
+
+    @FXML
+    private Label etiquetaEdad;
+
+    @FXML
+    private Label etiquetaEstadoFicha;
+
+    @FXML
+    private Label etiquetaAlergias;
 
     @FXML
     private TextArea areaMotivo;
@@ -99,6 +125,21 @@ public class FichaClinicaController {
 
     @FXML
     private TableColumn<FichaDiagnostico, String> colDiagObs;
+
+    @FXML
+    private TableView<CambioPrincipal> tablaHistorialPrincipal;
+
+    @FXML
+    private TableColumn<CambioPrincipal, String> colHistFecha;
+
+    @FXML
+    private TableColumn<CambioPrincipal, String> colHistAnterior;
+
+    @FXML
+    private TableColumn<CambioPrincipal, String> colHistNuevo;
+
+    @FXML
+    private TableColumn<CambioPrincipal, String> colHistMotivo;
 
     @FXML
     private ComboBox<Integer> comboPiezaOdonto;
@@ -161,10 +202,31 @@ public class FichaClinicaController {
     private TableColumn<PlanTratamiento, String> colPlanEstado;
 
     @FXML
+    private Label etiquetaEstadoPlan;
+
+    @FXML
+    private Label etiquetaTotalPlan;
+
+    @FXML
     private Label etiquetaDerivacion;
 
     @FXML
     private Label etiquetaDerivResultado;
+
+    @FXML
+    private TableView<Evolucion> tablaEvoluciones;
+
+    @FXML
+    private TableColumn<Evolucion, String> colEvoFecha;
+
+    @FXML
+    private TableColumn<Evolucion, String> colEvoEstado;
+
+    @FXML
+    private TableColumn<Evolucion, String> colEvoTexto;
+
+    @FXML
+    private TableColumn<Evolucion, String> colEvoEnmienda;
 
     @FXML
     private ToggleButton herrSano;
@@ -179,14 +241,14 @@ public class FichaClinicaController {
     private ToggleButton herrAusente;
 
     @FXML
-    private FlowPane panelOdontograma;
+    private Pane panelOdontograma;
 
     @FXML
     private Label etiquetaOdontograma;
 
     private final Map<String, String> descripcionesCie10 = new HashMap<>();
     private final Map<Integer, String> nombresTratamientos = new HashMap<>();
-    private final Map<Integer, Button> botonesPieza = new HashMap<>();
+    private OdontogramaView odontograma;
     private FichaClinica fichaActual;
     private Integer odontologoSesion;
 
@@ -256,7 +318,10 @@ public class FichaClinicaController {
         herrCaries.setToggleGroup(herramientas);
         herrObturado.setToggleGroup(herramientas);
         herrAusente.setToggleGroup(herramientas);
-        construirOdontograma();
+        odontograma = new OdontogramaView();
+        panelOdontograma.getChildren().add(odontograma);
+        odontograma.setOnPiezaSeleccionada(this::aplicarHerramientaPieza);
+        odontograma.reiniciar();
 
         colDiagCodigo.setCellValueFactory(new PropertyValueFactory<>("cie10Codigo"));
         colDiagDescripcion.setCellValueFactory(d -> new SimpleStringProperty(
@@ -286,6 +351,23 @@ public class FichaClinicaController {
                 d.getValue().getPrecioUnitario() == null ? "" : d.getValue().getPrecioUnitario().toPlainString()));
         colPlanSubtotal.setCellValueFactory(d -> new SimpleStringProperty(subtotal(d.getValue())));
         colPlanEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
+
+        colHistFecha.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().fecha() == null ? "" : FECHA_CORTA.format(d.getValue().fecha())));
+        colHistAnterior.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().cie10Anterior() == null ? "" : d.getValue().cie10Anterior()));
+        colHistNuevo.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().cie10Nuevo() == null ? "" : d.getValue().cie10Nuevo()));
+        colHistMotivo.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().motivo() == null ? "" : d.getValue().motivo()));
+
+        colEvoFecha.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().getFecha() == null ? "" : FECHA_CORTA.format(d.getValue().getFecha())));
+        colEvoEstado.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().getEstado() == null ? "" : d.getValue().getEstado()));
+        colEvoTexto.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().getTexto() == null ? "" : d.getValue().getTexto()));
+        colEvoEnmienda.setCellValueFactory(d -> new SimpleStringProperty(enmiendaEvolucion(d.getValue())));
 
         comboPaciente.valueProperty().addListener((obs, antes, ahora) -> pacienteCambiado());
         comboFichas.valueProperty().addListener((obs, antes, ahora) -> fichaCambiada(ahora));
@@ -378,15 +460,19 @@ public class FichaClinicaController {
         comboFichas.setValue(null);
         comboFichas.getItems().clear();
         limpiarFormularios();
+        odontograma.reiniciar();
         Paciente paciente = comboPaciente.getValue();
+        actualizarPaciente(paciente);
         if (paciente == null) {
+            etiquetaFicha.setText("Selecciona un paciente para ver sus fichas.");
             return;
         }
         try {
             List<FichaClinica> fichas = AppContext.get().fichas().listarPorPaciente(paciente.getId());
             comboFichas.setItems(FXCollections.observableArrayList(fichas));
-            tablaOdontograma.setItems(FXCollections.observableArrayList(
-                    AppContext.get().fichas().odontograma(paciente.getId())));
+            List<HallazgoDental> hallazgos = AppContext.get().fichas().odontograma(paciente.getId());
+            tablaOdontograma.setItems(FXCollections.observableArrayList(hallazgos));
+            refrescarColoresOdontograma(hallazgos);
             etiquetaFicha.setText(fichas.size() + " ficha(s) para " + paciente.getNombres() + " "
                     + paciente.getApellidos());
         } catch (DentrixException e) {
@@ -400,6 +486,7 @@ public class FichaClinicaController {
         if (ficha == null) {
             return;
         }
+        pintarEstadoFicha(ficha.getEstadoDerivacion());
         areaMotivo.setText(ficha.getMotivoConsulta());
         areaExamen.setText(ficha.getExamenClinico());
         areaPrescripcion.setText(ficha.getPrescripcion());
@@ -412,6 +499,7 @@ public class FichaClinicaController {
                         + FECHA_CORTA.format(ficha.getFechaDerivacion())));
         recargarDiagnosticos();
         recargarPlan();
+        cargarEvoluciones();
     }
 
     private void limpiarFormularios() {
@@ -423,13 +511,21 @@ public class FichaClinicaController {
         etiquetaDerivResultado.setText("");
         etiquetaDerivacion.setText("Sin ficha seleccionada.");
         tablaDiagnosticos.setItems(FXCollections.observableArrayList());
+        tablaHistorialPrincipal.setItems(FXCollections.observableArrayList());
         tablaPlan.setItems(FXCollections.observableArrayList());
+        tablaEvoluciones.setItems(FXCollections.observableArrayList());
+        etiquetaTotalPlan.setText("Total plan: S/ 0");
+        pintarBadge(etiquetaTotalPlan, "badge-estado-gris");
+        pintarBadge(etiquetaEstadoPlan, "badge-estado-gris");
+        etiquetaEstadoPlan.setText("Sin plan");
+        pintarEstadoFicha(null);
     }
 
     private void recargarDiagnosticos() {
         try {
             tablaDiagnosticos.setItems(FXCollections.observableArrayList(
                     AppContext.get().fichas().listarDiagnosticos(fichaActual.getId())));
+            cargarHistorialPrincipal();
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -439,6 +535,7 @@ public class FichaClinicaController {
         try {
             tablaPlan.setItems(FXCollections.observableArrayList(
                     AppContext.get().fichas().planPorFicha(fichaActual.getId())));
+            actualizarResumenPlan();
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
@@ -455,33 +552,153 @@ public class FichaClinicaController {
         }
     }
 
-    private void construirOdontograma() {
-        panelOdontograma.getChildren().clear();
-        botonesPieza.clear();
-        int[] filaSuperior = {18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28};
-        int[] filaInferior = {48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38};
-        for (int pieza : filaSuperior) {
-            panelOdontograma.getChildren().add(crearBotonPieza(pieza));
+    private void cargarHistorialPrincipal() {
+        if (fichaActual == null) {
+            tablaHistorialPrincipal.setItems(FXCollections.observableArrayList());
+            return;
         }
-        Label separador = new Label("────  superiores  ──── inferiores ────");
-        separador.setStyle("-fx-font-size: 10px; -fx-text-fill: #94A3B8; -fx-padding: 0 200;");
-        panelOdontograma.getChildren().add(separador);
-        for (int pieza : filaInferior) {
-            panelOdontograma.getChildren().add(crearBotonPieza(pieza));
+        Long fichaId = fichaActual.getId();
+        TareasFX.ejecutar(() -> AppContext.get().fichas().historialPrincipal(fichaId),
+                cambios -> {
+                    if (fichaActual != null && fichaId.equals(fichaActual.getId())) {
+                        tablaHistorialPrincipal.setItems(FXCollections.observableArrayList(cambios));
+                    }
+                },
+                error -> mostrarError(TareasFX.mensaje(error)));
+    }
+
+    private void cargarEvoluciones() {
+        if (fichaActual == null) {
+            tablaEvoluciones.setItems(FXCollections.observableArrayList());
+            return;
+        }
+        Long fichaId = fichaActual.getId();
+        TareasFX.ejecutar(() -> AppContext.get().ejecucion().evolucionesDeFicha(fichaId),
+                evoluciones -> {
+                    if (fichaActual != null && fichaId.equals(fichaActual.getId())) {
+                        tablaEvoluciones.setItems(FXCollections.observableArrayList(evoluciones));
+                    }
+                },
+                error -> mostrarError(TareasFX.mensaje(error)));
+    }
+
+    private void actualizarPaciente(Paciente paciente) {
+        if (paciente == null) {
+            avatarPaciente.setText("--");
+            nombrePaciente.setText("Paciente sin seleccionar");
+            etiquetaHc.setText("HC --");
+            etiquetaDni.setText("--");
+            etiquetaEdad.setText("--");
+            etiquetaAlergias.setText("Sin datos clinicos del paciente.");
+            return;
+        }
+        avatarPaciente.setText(iniciales(paciente));
+        nombrePaciente.setText(paciente.getApellidos() + ", " + paciente.getNombres());
+        etiquetaHc.setText("HC " + (paciente.getCodigoHc() == null ? "--" : paciente.getCodigoHc()));
+        etiquetaDni.setText(paciente.getDni() == null ? "--" : paciente.getDni());
+        etiquetaEdad.setText(paciente.getFechaNac() == null ? "--"
+                : Period.between(paciente.getFechaNac(), LocalDate.now()).getYears() + " años");
+        StringBuilder alerta = new StringBuilder();
+        if (paciente.getAlergias() != null && !paciente.getAlergias().isBlank()) {
+            alerta.append("Alergias: ").append(paciente.getAlergias().trim());
+        }
+        if (paciente.getAntecedentes() != null && !paciente.getAntecedentes().isBlank()) {
+            if (!alerta.isEmpty()) {
+                alerta.append(" · ");
+            }
+            alerta.append("Antecedentes: ").append(paciente.getAntecedentes().trim());
+        }
+        etiquetaAlergias.setText(alerta.isEmpty()
+                ? "Sin alergias ni antecedentes registrados." : alerta.toString());
+    }
+
+    private String iniciales(Paciente paciente) {
+        StringBuilder iniciales = new StringBuilder();
+        if (paciente.getNombres() != null && !paciente.getNombres().isBlank()) {
+            iniciales.append(Character.toUpperCase(paciente.getNombres().trim().charAt(0)));
+        }
+        if (paciente.getApellidos() != null && !paciente.getApellidos().isBlank()) {
+            iniciales.append(Character.toUpperCase(paciente.getApellidos().trim().charAt(0)));
+        }
+        return iniciales.isEmpty() ? "--" : iniciales.toString();
+    }
+
+    private void pintarEstadoFicha(String estado) {
+        if ("ACEPTADA".equals(estado)) {
+            etiquetaEstadoFicha.setText("Derivacion aceptada");
+            pintarBadge(etiquetaEstadoFicha, "badge-estado-atendido");
+        } else if ("RECHAZADA".equals(estado)) {
+            etiquetaEstadoFicha.setText("Derivacion rechazada");
+            pintarBadge(etiquetaEstadoFicha, "badge-estado-falto");
+        } else if ("PENDIENTE".equals(estado)) {
+            etiquetaEstadoFicha.setText("Derivacion pendiente");
+            pintarBadge(etiquetaEstadoFicha, "badge-estado-sala");
+        } else {
+            etiquetaEstadoFicha.setText("Sin ficha");
+            pintarBadge(etiquetaEstadoFicha, "badge-estado-gris");
         }
     }
 
-    private Button crearBotonPieza(int pieza) {
-        Button boton = new Button(String.valueOf(pieza));
-        boton.setPrefSize(42, 42);
-        boton.setMinSize(42, 42);
-        boton.setMaxSize(42, 42);
-        boton.setAlignment(Pos.CENTER);
-        boton.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-background-radius: 6; -fx-border-radius: 6;"
-                + " -fx-border-color: #CBD5E1; -fx-background-color: #FFFFFF;");
-        boton.setOnAction(e -> aplicarHerramientaPieza(pieza));
-        botonesPieza.put(pieza, boton);
-        return boton;
+    private void pintarBadge(Label etiqueta, String clase) {
+        etiqueta.getStyleClass().removeAll("badge-estado-gris", "badge-estado-sala",
+                "badge-estado-atendido", "badge-estado-falto", "badge-estado-info");
+        etiqueta.getStyleClass().add(clase);
+    }
+
+    private void actualizarResumenPlan() {
+        List<PlanTratamiento> lineas = tablaPlan.getItems();
+        BigDecimal total = BigDecimal.ZERO;
+        boolean hayLineas = false;
+        boolean todasEjecutadas = true;
+        boolean algunaEjecutada = false;
+        if (lineas != null) {
+            for (PlanTratamiento linea : lineas) {
+                if (linea.getPrecioUnitario() != null && linea.getCantidad() != null) {
+                    total = total.add(linea.getPrecioUnitario()
+                            .multiply(BigDecimal.valueOf(linea.getCantidad())));
+                }
+                boolean ejecutada = "EJECUTADO".equals(linea.getEstado());
+                hayLineas = true;
+                algunaEjecutada = algunaEjecutada || ejecutada;
+                todasEjecutadas = todasEjecutadas && ejecutada;
+            }
+        }
+        etiquetaTotalPlan.setText("Total plan: S/ " + total.toPlainString());
+        if (!hayLineas) {
+            etiquetaEstadoPlan.setText("Sin plan");
+            pintarBadge(etiquetaEstadoPlan, "badge-estado-gris");
+        } else if (todasEjecutadas) {
+            etiquetaEstadoPlan.setText("Plan ejecutado");
+            pintarBadge(etiquetaEstadoPlan, "badge-estado-atendido");
+        } else if (algunaEjecutada) {
+            etiquetaEstadoPlan.setText("En ejecucion");
+            pintarBadge(etiquetaEstadoPlan, "badge-estado-info");
+        } else {
+            etiquetaEstadoPlan.setText("Plan sin ejecutar");
+            pintarBadge(etiquetaEstadoPlan, "badge-estado-sala");
+        }
+    }
+
+    private String enmiendaEvolucion(Evolucion evolucion) {
+        if (evolucion.getEnmiendaDe() == null) {
+            return "";
+        }
+        String base = "Enmienda de #" + evolucion.getEnmiendaDe();
+        if (evolucion.getMotivoEnmienda() != null && !evolucion.getMotivoEnmienda().isBlank()) {
+            base += ": " + evolucion.getMotivoEnmienda().trim();
+        }
+        return base;
+    }
+
+    private void refrescarColoresOdontograma(List<HallazgoDental> hallazgos) {
+        Map<Integer, String> ultimoEstado = new HashMap<>();
+        for (HallazgoDental h : hallazgos) {
+            ultimoEstado.put(h.getPiezaFdi(), h.getEstado());
+        }
+        odontograma.limpiarEstados();
+        for (Map.Entry<Integer, String> entrada : ultimoEstado.entrySet()) {
+            odontograma.setEstado(entrada.getKey(), entrada.getValue());
+        }
     }
 
     private void aplicarHerramientaPieza(int pieza) {
@@ -496,7 +713,9 @@ public class FichaClinicaController {
             AppContext.get().fichas().actualizarEstadoPieza(pacienteId, pieza, estado, null, null);
             return null;
         }, ok -> {
-            etiquetaOdontograma.setText("Pieza " + pieza + " → " + estado + " (RF-06 registrado)");
+            comboPiezaOdonto.setValue(pieza);
+            etiquetaOdontograma.setText("Pieza " + pieza + " · " + OdontogramaView.tipoPieza(pieza)
+                    + " → " + estado + " (RF-06 registrado)");
             etiquetaOdontograma.getStyleClass().removeAll("etiqueta-error");
             etiquetaOdontograma.getStyleClass().add("etiqueta-ok");
             recargarOdontograma();
@@ -514,31 +733,6 @@ public class FichaClinicaController {
             return "AUSENTE";
         }
         return "SANO";
-    }
-
-    private void refrescarColoresOdontograma(List<HallazgoDental> hallazgos) {
-        Map<Integer, String> ultimoEstado = new HashMap<>();
-        for (HallazgoDental h : hallazgos) {
-            ultimoEstado.put(h.getPiezaFdi(), h.getEstado());
-        }
-        for (Map.Entry<Integer, Button> entrada : botonesPieza.entrySet()) {
-            String estado = ultimoEstado.getOrDefault(entrada.getKey(), "SANO");
-            entrada.getValue().setStyle(estiloPieza(estado));
-        }
-    }
-
-    private String estiloPieza(String estado) {
-        String base = "-fx-font-size: 11px; -fx-font-weight: bold; -fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #CBD5E1;";
-        return switch (estado) {
-            case "CARIES" -> base + " -fx-background-color: #FEE2E2; -fx-text-fill: #991B1B;";
-            case "OBTURADO" -> base + " -fx-background-color: #DBEAFE; -fx-text-fill: #1E40AF;";
-            case "AUSENTE" -> base + " -fx-background-color: #E5E7EB; -fx-text-fill: #6B7280; -fx-opacity: 0.7;";
-            case "CORONA" -> base + " -fx-background-color: #FEF3C7; -fx-text-fill: #92400E;";
-            case "IMPLANTE" -> base + " -fx-background-color: #D1FAE5; -fx-text-fill: #065F46;";
-            case "ENDODONCIA" -> base + " -fx-background-color: #FFEDD5; -fx-text-fill: #9A3412;";
-            case "PROTESIS" -> base + " -fx-background-color: #EDE9FE; -fx-text-fill: #5B21B6;";
-            default -> base + " -fx-background-color: #FFFFFF; -fx-text-fill: #0F172A;";
-        };
     }
 
     @FXML
@@ -594,8 +788,16 @@ public class FichaClinicaController {
             Integer pieza = comboPiezaDiag.getValue();
             boolean principal = checkPrincipal.isSelected();
             String observacion = texto(campoObsDiag);
+            String motivoCambio = null;
+            if (principal && hayOtroPrincipal(cie10)) {
+                motivoCambio = pedirMotivoCambioPrincipal(cie10);
+                if (motivoCambio == null) {
+                    return;
+                }
+            }
+            String motivoFinal = motivoCambio;
             TareasFX.ejecutar(() -> AppContext.get().fichas().registrarDiagnostico(fichaId, cie10, pieza,
-                            principal, observacion),
+                            principal, observacion, motivoFinal),
                     diag -> {
                         campoObsDiag.clear();
                         comboCie10.setValue(null);
@@ -608,6 +810,29 @@ public class FichaClinicaController {
         } catch (DentrixException e) {
             mostrarError(e.getMessage());
         }
+    }
+
+    private boolean hayOtroPrincipal(String cie10) {
+        return tablaDiagnosticos.getItems().stream()
+                .anyMatch(d -> d.isEsPrincipal() && !d.getCie10Codigo().equals(cie10));
+    }
+
+    private String pedirMotivoCambioPrincipal(String cie10) {
+        String anterior = tablaDiagnosticos.getItems().stream()
+                .filter(FichaDiagnostico::isEsPrincipal)
+                .map(FichaDiagnostico::getCie10Codigo)
+                .findFirst()
+                .orElse("");
+        TextInputDialog dialogo = new TextInputDialog();
+        dialogo.setTitle("Cambio de diagnóstico principal");
+        dialogo.setHeaderText("El diagnóstico principal pasa de " + anterior + " a " + cie10);
+        dialogo.setContentText("Motivo del cambio (queda registrado):");
+        Optional<String> respuesta = dialogo.showAndWait();
+        if (respuesta.isEmpty() || respuesta.get().isBlank()) {
+            mostrarError("El cambio de diagnóstico principal necesita un motivo (RF-06).");
+            return null;
+        }
+        return respuesta.get().trim();
     }
 
     @FXML
@@ -747,6 +972,23 @@ public class FichaClinicaController {
     }
 
     @FXML
+    private void onGenerarPlanClick() {
+        Paciente paciente = comboPaciente.getValue();
+        if (fichaActual == null && paciente == null) {
+            mostrarInfo("Selecciona o crea una ficha clinica antes de generar el plan.");
+            return;
+        }
+        try {
+            Integer pacienteId = fichaActual == null ? paciente.getId() : fichaActual.getPacienteId();
+            Paciente deLaFicha = AppContext.get().pacientes().buscarPorId(pacienteId);
+            AppContext.get().sesion().setPacienteEnAtencion(deLaFicha);
+            pe.edu.utp.dentrix.ui.Navegador.ir(pe.edu.utp.dentrix.ui.Navegador.PRESUPUESTOS);
+        } catch (DentrixException e) {
+            mostrarError(e.getMessage());
+        }
+    }
+
+    @FXML
     private void onDerivarClick() {
         try {
             exigirFicha();
@@ -801,6 +1043,7 @@ public class FichaClinicaController {
             comboFichas.setItems(FXCollections.observableArrayList(
                     AppContext.get().fichas().listarPorPaciente(paciente.getId())));
             comboFichas.setValue(recargada);
+            pintarEstadoFicha(recargada.getEstadoDerivacion());
             etiquetaDerivacion.setText("Estado de derivación: " + recargada.getEstadoDerivacion()
                     + (recargada.getFechaDerivacion() == null ? "" : " — derivada el "
                             + FECHA_CORTA.format(recargada.getFechaDerivacion())));

@@ -5,6 +5,7 @@ import pe.edu.utp.dentrix.config.ConexionBD;
 import pe.edu.utp.dentrix.dao.CitaDAO;
 import pe.edu.utp.dentrix.dao.PacienteDAO;
 import pe.edu.utp.dentrix.dao.impl.CitaDAOImpl;
+import pe.edu.utp.dentrix.dao.impl.AgendaExtraDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.ConsultorioDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.PacienteDAOImpl;
 import pe.edu.utp.dentrix.dao.impl.TratamientoDAOImpl;
@@ -35,7 +36,7 @@ class AgendaServiceTest {
     private final CitaDAO citaDAO = new CitaDAOImpl();
     private final PacienteService pacientes = new PacienteService(pacienteDAO);
     private final AgendaService agenda = new AgendaService(citaDAO, pacienteDAO,
-            new ConsultorioDAOImpl(), new TratamientoDAOImpl());
+            new ConsultorioDAOImpl(), new TratamientoDAOImpl(), new AgendaExtraDAOImpl());
 
     private boolean hayBaseDeDatos() {
         try (Connection cn = ConexionBD.abrir();
@@ -82,16 +83,22 @@ class AgendaServiceTest {
         return cita;
     }
 
-    private void limpiar(String dni) throws DentrixException {
-        Optional<Paciente> existente = pacienteDAO.buscarPorDni(dni);
-        if (existente.isEmpty()) {
-            return;
-        }
-        Integer pacienteId = existente.get().getId();
+    private void cancelarCitasTemporales(Integer pacienteId) throws DentrixException {
         for (Cita cita : citaDAO.listarPorPaciente(pacienteId)) {
-            citaDAO.eliminar(cita.getId());
+            if (FECHA_TEMPORAL.equals(cita.getFechaCita()) && !"CANCELADA".equals(cita.getEstado())) {
+                cita.setEstado("CANCELADA");
+                citaDAO.actualizar(cita);
+            }
         }
-        pacienteDAO.eliminar(pacienteId);
+    }
+
+    private Paciente pacienteDePrueba() throws DentrixException {
+        Optional<Paciente> existente = pacienteDAO.buscarPorDni(DNI_TEMPORAL);
+        if (existente.isPresent()) {
+            cancelarCitasTemporales(existente.get().getId());
+            return existente.get();
+        }
+        return pacientes.registrar(pacienteTemporal());
     }
 
     @Test
@@ -102,41 +109,32 @@ class AgendaServiceTest {
         assumeTrue(consultorioId != null, "Sin consultorio C01 en la semilla: se omite esta prueba");
         assumeTrue(usuarioId != null, "Sin usuarios en la semilla: se omite esta prueba");
 
-        limpiar(DNI_TEMPORAL);
-        Paciente paciente = null;
-        try {
-            paciente = pacientes.registrar(pacienteTemporal());
+        Paciente paciente = pacienteDePrueba();
 
-            Cita agendada = agenda.agendar(construirCita(paciente.getId(), usuarioId, consultorioId));
+        Cita agendada = agenda.agendar(construirCita(paciente.getId(), usuarioId, consultorioId));
 
-            assertNotNull(agendada.getId(), "La cita debe quedar registrada con id");
-            assertEquals("CITA", agendada.getTipo(), "El tipo por defecto debe ser CITA");
-            assertEquals("PENDIENTE", agendada.getEstado(), "El estado inicial debe ser PENDIENTE");
+        assertNotNull(agendada.getId(), "La cita debe quedar registrada con id");
+        assertEquals("CITA", agendada.getTipo(), "El tipo por defecto debe ser CITA");
+        assertEquals("PENDIENTE", agendada.getEstado(), "El estado inicial debe ser PENDIENTE");
 
-            List<Cita> delDia = agenda.agendaDelDia(FECHA_TEMPORAL);
-            assertTrue(delDia.stream().anyMatch(c -> agendada.getId().equals(c.getId())),
-                    "La agenda del día debe incluir la cita recién agendada");
+        List<Cita> delDia = agenda.agendaDelDia(FECHA_TEMPORAL);
+        assertTrue(delDia.stream().anyMatch(c -> agendada.getId().equals(c.getId())),
+                "La agenda del día debe incluir la cita recién agendada");
 
-            Cita repetida = construirCita(paciente.getId(), usuarioId, consultorioId);
-            DentrixException solapamiento = assertThrows(DentrixException.class,
-                    () -> agenda.agendar(repetida));
-            assertTrue(solapamiento.getMessage().contains("consultorio"),
-                    "Debe avisar el solapamiento del consultorio: " + solapamiento.getMessage());
+        Cita repetida = construirCita(paciente.getId(), usuarioId, consultorioId);
+        DentrixException solapamiento = assertThrows(DentrixException.class,
+                () -> agenda.agendar(repetida));
+        assertTrue(solapamiento.getMessage().contains("consultorio"),
+                "Debe avisar el solapamiento del consultorio: " + solapamiento.getMessage());
 
-            agenda.marcarLlegada(agendada.getId());
-            assertEquals("EN_SALA",
-                    citaDAO.buscarPorId(agendada.getId()).orElseThrow().getEstado(),
-                    "marcarLlegada debe llevar la cita a EN_SALA");
+        agenda.marcarLlegada(agendada.getId());
+        assertEquals("EN_SALA",
+                citaDAO.buscarPorId(agendada.getId()).orElseThrow().getEstado(),
+                "marcarLlegada debe llevar la cita a EN_SALA");
 
-            agenda.cancelar(agendada.getId());
-            assertEquals("CANCELADA",
-                    citaDAO.buscarPorId(agendada.getId()).orElseThrow().getEstado(),
-                    "cancelar debe llevar la cita a CANCELADA");
-        } finally {
-            try {
-                limpiar(DNI_TEMPORAL);
-            } catch (DentrixException ignorada) {
-            }
-        }
+        agenda.cancelar(agendada.getId());
+        assertEquals("CANCELADA",
+                citaDAO.buscarPorId(agendada.getId()).orElseThrow().getEstado(),
+                "cancelar debe llevar la cita a CANCELADA");
     }
 }

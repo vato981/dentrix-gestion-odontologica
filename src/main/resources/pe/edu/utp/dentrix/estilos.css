@@ -73,6 +73,14 @@
     -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.06), 12, 0, 0, 2);
 }
 
+.odontograma {
+    -fx-background-color: #F8FAFC;
+    -fx-background-radius: 12;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+}
+
 .tarjeta-titulo {
     -fx-font-size: 12px;
     -fx-font-weight: bold;
@@ -482,4 +490,112 @@
 
 .boton-salir:pressed {
     -fx-background-color: #FECDD3;
+}
+
+/* ============================================================
+   Sistema de diseno de las pantallas alineadas con los HTML
+   (M3 como referencia). Paleta slate + indigo del prototipo.
+   ============================================================ */
+
+.card-paciente {
+    -fx-background-color: #F8FAFC;
+    -fx-background-radius: 12;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 12;
+    -fx-padding: 14;
+}
+
+.avatar {
+    -fx-background-color: #E0E7FF;
+    -fx-background-radius: 24;
+    -fx-min-width: 48;
+    -fx-min-height: 48;
+    -fx-max-width: 48;
+    -fx-max-height: 48;
+    -fx-alignment: center;
+    -fx-text-fill: #4F46E5;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.nombre-paciente {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0F172A;
+}
+
+.dato-secundario {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #64748B;
+}
+
+.seccion-titulo {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #64748B;
+}
+
+.linea-seccion {
+    -fx-background-color: #E2E8F0;
+    -fx-min-height: 1;
+    -fx-max-height: 1;
+    -fx-pref-height: 1;
+}
+
+.fila-dato {
+    -fx-padding: 7 0 7 0;
+    -fx-border-color: transparent transparent #E2E8F0 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-alignment: center-left;
+}
+
+.fila-dato-label {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #64748B;
+}
+
+.fila-dato-valor {
+    -fx-font-size: 11.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E293B;
+}
+
+.panel-observacion {
+    -fx-background-color: #FFFBEB;
+    -fx-background-radius: 10;
+    -fx-border-color: #FDE68A;
+    -fx-border-radius: 10;
+    -fx-padding: 10;
+}
+
+.badge-estado {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 9 3 9;
+    -fx-background-radius: 10;
+}
+
+.badge-estado-info {
+    -fx-background-color: #E0E7FF;
+    -fx-text-fill: #3730A3;
+}
+
+.badge-estado-sala {
+    -fx-background-color: #FEF3C7;
+    -fx-text-fill: #92400E;
+}
+
+.badge-estado-atendido {
+    -fx-background-color: #DCFCE7;
+    -fx-text-fill: #166534;
+}
+
+.badge-estado-falto {
+    -fx-background-color: #FEE2E2;
+    -fx-text-fill: #991B1B;
+}
+
+.badge-estado-gris {
+    -fx-background-color: #E2E8F0;
+    -fx-text-fill: #475569;
 }

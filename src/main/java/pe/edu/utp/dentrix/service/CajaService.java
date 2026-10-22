@@ -1,55 +1,223 @@
 package pe.edu.utp.dentrix.service;
 
 import pe.edu.utp.dentrix.dao.CierreCajaDAO;
-import pe.edu.utp.dentrix.dao.ConfiguracionDAO;
+import pe.edu.utp.dentrix.dao.ComprobanteDAO;
 import pe.edu.utp.dentrix.dao.FichaClinicaDAO;
 import pe.edu.utp.dentrix.dao.PacienteDAO;
 import pe.edu.utp.dentrix.dao.PagoDAO;
-import pe.edu.utp.dentrix.dao.PlanTratamientoDAO;
+import pe.edu.utp.dentrix.dao.PresupuestoDAO;
 import pe.edu.utp.dentrix.dao.TratamientoDAO;
+import pe.edu.utp.dentrix.dto.Imputacion;
+import pe.edu.utp.dentrix.dto.ItemFacturado;
 import pe.edu.utp.dentrix.dto.LineaBoleta;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.CierreCaja;
-import pe.edu.utp.dentrix.model.Configuracion;
+import pe.edu.utp.dentrix.model.ComprobanteItem;
 import pe.edu.utp.dentrix.model.FichaClinica;
 import pe.edu.utp.dentrix.model.Pago;
-import pe.edu.utp.dentrix.model.PlanTratamiento;
+import pe.edu.utp.dentrix.model.Presupuesto;
+import pe.edu.utp.dentrix.model.PresupuestoItem;
 import pe.edu.utp.dentrix.model.Tratamiento;
+import pe.edu.utp.dentrix.util.PiezaFdi;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
 public class CajaService {
 
     private static final Set<String> MODALIDADES = Set.of("EFECTIVO", "YAPE", "PLIN", "TARJETA");
+    private static final Set<String> ESTADOS_COBRABLES =
+            Set.of("ACEPTADO", "EN_EJECUCION", "EJECUTADO", "CONTROLADO");
 
     private final PagoDAO pagoDAO;
     private final CierreCajaDAO cierreCajaDAO;
     private final PacienteDAO pacienteDAO;
     private final TratamientoDAO tratamientoDAO;
     private final FichaClinicaDAO fichaClinicaDAO;
-    private final PlanTratamientoDAO planTratamientoDAO;
-    private final ConfiguracionDAO configuracionDAO;
+    private final PresupuestoDAO presupuestoDAO;
+    private final ComprobanteDAO comprobanteDAO;
+    private final TarifarioService tarifario;
 
     public CajaService(PagoDAO pagoDAO, CierreCajaDAO cierreCajaDAO, PacienteDAO pacienteDAO,
                        TratamientoDAO tratamientoDAO, FichaClinicaDAO fichaClinicaDAO,
-                       PlanTratamientoDAO planTratamientoDAO, ConfiguracionDAO configuracionDAO) {
+                       PresupuestoDAO presupuestoDAO, TarifarioService tarifario,
+                       ComprobanteDAO comprobanteDAO) {
         this.pagoDAO = pagoDAO;
         this.cierreCajaDAO = cierreCajaDAO;
         this.pacienteDAO = pacienteDAO;
         this.tratamientoDAO = tratamientoDAO;
         this.fichaClinicaDAO = fichaClinicaDAO;
-        this.planTratamientoDAO = planTratamientoDAO;
-        this.configuracionDAO = configuracionDAO;
+        this.presupuestoDAO = presupuestoDAO;
+        this.comprobanteDAO = comprobanteDAO;
+        this.tarifario = tarifario;
+    }
+
+    public Pago crearBorrador(Integer pacienteId, Long fichaId, Integer usuarioCajaId, Long cierreId)
+            throws DentrixException {
+        if (pacienteId == null) {
+            throw new DentrixException("El paciente es obligatorio para crear el comprobante");
+        }
+        pacienteDAO.buscarPorId(pacienteId)
+                .orElseThrow(() -> new DentrixException("Paciente no encontrado"));
+        if (usuarioCajaId == null) {
+            throw new DentrixException("El usuario de caja es obligatorio para crear el comprobante");
+        }
+        Pago pago = new Pago();
+        pago.setNumero(null);
+        pago.setTipo("BOLETA");
+        pago.setEstado("BORRADOR");
+        pago.setFecha(LocalDateTime.now());
+        pago.setPacienteId(pacienteId);
+        pago.setFichaId(fichaId);
+        pago.setUsuarioCajaId(usuarioCajaId);
+        pago.setCierreId(cierreId);
+        pago.setModalidad("EFECTIVO");
+        pago.setSubtotal(BigDecimal.ZERO);
+        pago.setIgv(BigDecimal.ZERO);
+        pago.setMonto(BigDecimal.ZERO);
+        pago.setSaldoDeudor(BigDecimal.ZERO);
+        pago.setEstadoPago("PENDIENTE");
+        try {
+            pago.setId(comprobanteDAO.crearBorrador(pago));
+        } catch (DentrixException e) {
+            throw traducir(e);
+        }
+        return pagoDAO.buscarPorId(pago.getId())
+                .orElseThrow(() -> new DentrixException("No se pudo releer el borrador creado"));
+    }
+
+    public ComprobanteItem agregarItem(Long borradorId, Long presupuestoItemId, String descripcion,
+                                       BigDecimal cantidad, BigDecimal precioUnitario)
+            throws DentrixException {
+        if (borradorId == null) {
+            throw new DentrixException("El comprobante en borrador es obligatorio");
+        }
+        Pago documento = pagoDAO.buscarPorId(borradorId)
+                .orElseThrow(() -> new DentrixException("Comprobante no encontrado: " + borradorId));
+        if (!"BORRADOR".equals(documento.getEstado())) {
+            throw new DentrixException("El comprobante " + borradorId + " esta " + documento.getEstado()
+                    + "; solo se edita el detalle de un BORRADOR");
+        }
+        if (cantidad == null || cantidad.signum() <= 0) {
+            throw new DentrixException("La cantidad del item debe ser mayor a 0");
+        }
+        if (precioUnitario != null && precioUnitario.signum() < 0) {
+            throw new DentrixException("El precio unitario del item no puede ser negativo");
+        }
+        String texto = descripcion == null ? "" : descripcion.trim();
+        BigDecimal precio = precioUnitario;
+        if (presupuestoItemId != null) {
+            PresupuestoItem item = presupuestoDAO.buscarItem(presupuestoItemId)
+                    .orElseThrow(() -> new DentrixException(
+                            "Item del presupuesto no encontrado: " + presupuestoItemId));
+            Presupuesto presupuesto = presupuestoDAO.buscarPorId(item.getPresupuestoId())
+                    .orElseThrow(() -> new DentrixException(
+                            "Presupuesto no encontrado: " + item.getPresupuestoId()));
+            if (!"ACEPTADO".equals(presupuesto.getEstado())) {
+                throw new DentrixException("El presupuesto " + presupuesto.getId() + " esta en "
+                        + presupuesto.getEstado() + "; solo se cobran items de un presupuesto ACEPTADO");
+            }
+            if (presupuestoDAO.estaFacturado(item.getId())) {
+                throw new DentrixException("El item " + item.getId() + " ya fue facturado");
+            }
+            if (texto.isEmpty()) {
+                texto = item.getTratamientoNombre() == null || item.getTratamientoNombre().isBlank()
+                        ? "Item " + item.getId() : item.getTratamientoNombre();
+            }
+            if (precio == null) {
+                precio = item.getMontoNeto() == null ? item.getSubtotal() : item.getMontoNeto();
+            }
+        }
+        if (texto.isEmpty()) {
+            throw new DentrixException("La descripcion del item es obligatoria");
+        }
+        if (precio == null) {
+            precio = BigDecimal.ZERO;
+        }
+        ComprobanteItem item = new ComprobanteItem();
+        item.setPagoId(borradorId);
+        item.setPresupuestoItemId(presupuestoItemId);
+        item.setDescripcion(texto);
+        item.setCantidad(cantidad);
+        item.setPrecioUnitario(precio);
+        item.setAfectacionIgv("10");
+        try {
+            Long id = comprobanteDAO.insertarItem(item);
+            for (ComprobanteItem guardado : comprobanteDAO.listarItems(borradorId)) {
+                if (id.equals(guardado.getId())) {
+                    return guardado;
+                }
+            }
+            throw new DentrixException("No se pudo releer el item del comprobante");
+        } catch (DentrixException e) {
+            throw traducir(e);
+        }
+    }
+
+    public Pago confirmar(Long borradorId, String modalidad, String operacionRef) throws DentrixException {
+        if (borradorId == null) {
+            throw new DentrixException("El comprobante en borrador es obligatorio");
+        }
+        Pago documento = pagoDAO.buscarPorId(borradorId)
+                .orElseThrow(() -> new DentrixException("Comprobante no encontrado: " + borradorId));
+        if (!"BORRADOR".equals(documento.getEstado())) {
+            throw new DentrixException("El comprobante " + borradorId + " esta " + documento.getEstado()
+                    + "; solo se confirma un BORRADOR");
+        }
+        if (comprobanteDAO.listarItems(borradorId).isEmpty()) {
+            throw new DentrixException("El comprobante " + borradorId
+                    + " no tiene items; no se puede confirmar");
+        }
+        String mod = validarModalidad(modalidad, operacionRef);
+        documento.setNumero(comprobanteDAO.siguienteNumero("B001"));
+        documento.setModalidad(mod);
+        documento.setOperacionRef(operacionRef);
+        documento.setEstado("EMITIDO");
+        try {
+            pagoDAO.actualizar(documento);
+        } catch (DentrixException e) {
+            throw traducir(e);
+        }
+        return pagoDAO.buscarPorId(borradorId)
+                .orElseThrow(() -> new DentrixException("No se pudo releer el comprobante emitido"));
+    }
+
+    public void anular(Long pagoId, String motivo, Integer usuarioId) throws DentrixException {
+        if (pagoId == null) {
+            throw new DentrixException("El comprobante a anular es obligatorio");
+        }
+        if (motivo == null || motivo.isBlank()) {
+            throw new DentrixException("El motivo de anulacion es obligatorio");
+        }
+        Pago documento = pagoDAO.buscarPorId(pagoId)
+                .orElseThrow(() -> new DentrixException("Comprobante no encontrado: " + pagoId));
+        if (documento.esAbono()) {
+            throw new DentrixException("El id " + pagoId
+                    + " corresponde a un abono; solo se anulan documentos");
+        }
+        if ("ANULADO".equals(documento.getEstado())) {
+            throw new DentrixException("El comprobante " + pagoId + " ya esta ANULADO");
+        }
+        try {
+            comprobanteDAO.anular(pagoId, motivo.trim(), usuarioId);
+        } catch (DentrixException e) {
+            throw traducir(e);
+        }
+    }
+
+    public List<ComprobanteItem> itemsComprobante(Long pagoId) throws DentrixException {
+        if (pagoId == null) {
+            throw new DentrixException("El comprobante es obligatorio");
+        }
+        return comprobanteDAO.listarItems(pagoId);
     }
 
     public Pago emitirBoleta(Integer pacienteId, String modalidad, String operacionRef, Long fichaId,
@@ -67,74 +235,119 @@ public class CajaService {
             throw new DentrixException("La boleta debe incluir al menos un tratamiento");
         }
         String mod = validarModalidad(modalidad, operacionRef);
-        if (fichaId != null) {
-            FichaClinica ficha = fichaClinicaDAO.buscarPorId(fichaId)
-                    .orElseThrow(() -> new DentrixException("Ficha clinica no encontrada"));
-            if (!"ACEPTADA".equals(ficha.getEstadoDerivacion())) {
-                throw new DentrixException("La ficha está en derivación " + ficha.getEstadoDerivacion()
-                        + "; solo se factura con derivación ACEPTADA (RF-07)");
-            }
-        }
-        Map<Integer, Tratamiento> tarifarioPorId = new HashMap<>();
-        for (Tratamiento tratamiento : tratamientoDAO.listarTodos()) {
-            tarifarioPorId.put(tratamiento.getId(), tratamiento);
-        }
-        List<Tratamiento> tarifario = new ArrayList<>();
+        List<LineaBoleta> lineasItem = new ArrayList<>();
+        List<LineaBoleta> lineasDirectas = new ArrayList<>();
         for (LineaBoleta linea : lineas) {
-            if (linea.tratamientoId() == null) {
-                throw new DentrixException("Cada linea de la boleta debe indicar el tratamiento");
+            if (linea == null) {
+                throw new DentrixException("Cada linea de la boleta es obligatoria");
             }
-            if (linea.cantidad() == null || linea.cantidad() < 1) {
-                throw new DentrixException("La cantidad de cada linea debe ser al menos 1");
+            if (linea.esItem()) {
+                lineasItem.add(linea);
+            } else {
+                lineasDirectas.add(linea);
             }
-            if (linea.piezaFdi() != null && !esPiezaFdiValida(linea.piezaFdi())) {
-                throw new DentrixException("La pieza FDI " + linea.piezaFdi()
-                        + " no es valida: debe estar entre 11 y 48 y su segundo digito entre 1 y 8");
-            }
-            Tratamiento encontrado = tarifarioPorId.get(linea.tratamientoId());
-            if (encontrado == null) {
-                throw new DentrixException(
-                        "Tratamiento no encontrado en el tarifario: " + linea.tratamientoId());
-            }
-            tarifario.add(encontrado);
         }
-        Pago pago = new Pago();
-        pago.setNumero(siguienteNumeroBoleta());
-        pago.setTipo("BOLETA");
-        pago.setEstado("EMITIDO");
-        pago.setFecha(LocalDateTime.now());
-        pago.setPacienteId(pacienteId);
-        pago.setFichaId(fichaId);
-        pago.setOdontologoId(odontologoId);
-        pago.setUsuarioCajaId(usuarioCajaId);
-        pago.setCierreId(cierreId);
-        pago.setModalidad(mod);
-        pago.setOperacionRef(operacionRef);
-        pago.setSubtotal(BigDecimal.ZERO);
-        pago.setIgv(BigDecimal.ZERO);
-        pago.setMonto(BigDecimal.ZERO);
-        pago.setSaldoDeudor(BigDecimal.ZERO);
-        pago.setEstadoPago("PENDIENTE");
-        try {
-            pago.setId((long) pagoDAO.insertar(pago));
-        } catch (DentrixException e) {
-            throw traducir(e);
+        if (!lineasItem.isEmpty() && !lineasDirectas.isEmpty()) {
+            throw new DentrixException(
+                    "No se puede mezclar items del presupuesto con venta directa en la misma boleta");
         }
-        for (int i = 0; i < lineas.size(); i++) {
-            LineaBoleta linea = lineas.get(i);
-            Tratamiento tratamiento = tarifario.get(i);
-            PlanTratamiento detalle = new PlanTratamiento(pacienteId, linea.tratamientoId(),
-                    linea.piezaFdi(), linea.cantidad(), tratamiento.getPrecio(), "COBRADO");
-            detalle.setFichaId(fichaId);
-            detalle.setPagoId(pago.getId());
+        Long fichaFinal = fichaId;
+        List<ComprobanteItem> detalles = new ArrayList<>();
+        if (!lineasItem.isEmpty()) {
+            Long presupuestoId = null;
+            Presupuesto presupuesto = null;
+            for (LineaBoleta linea : lineasItem) {
+                PresupuestoItem item = presupuestoDAO.buscarItem(linea.presupuestoItemId())
+                        .orElseThrow(() -> new DentrixException(
+                                "Item del presupuesto no encontrado: " + linea.presupuestoItemId()));
+                if (presupuestoId == null) {
+                    presupuestoId = item.getPresupuestoId();
+                    Long presupuestoIdLeido = presupuestoId;
+                    presupuesto = presupuestoDAO.buscarPorId(presupuestoIdLeido)
+                            .orElseThrow(() -> new DentrixException(
+                                    "Presupuesto no encontrado: " + presupuestoIdLeido));
+                    if (!presupuesto.estaAceptado()) {
+                        throw new DentrixException("El presupuesto " + presupuestoId + " esta en "
+                                + presupuesto.getEstado()
+                                + "; solo se cobran items de un presupuesto ACEPTADO");
+                    }
+                    if (!pacienteId.equals(presupuesto.getPacienteId())) {
+                        throw new DentrixException("El presupuesto " + presupuestoId + " pertenece al paciente "
+                                + presupuesto.getPacienteId() + " y no al paciente " + pacienteId);
+                    }
+                    if (fichaFinal == null) {
+                        fichaFinal = presupuesto.getFichaId();
+                    }
+                } else if (!presupuestoId.equals(item.getPresupuestoId())) {
+                    throw new DentrixException("Todos los items de la boleta deben ser del mismo presupuesto; "
+                            + "el item " + item.getId() + " es del presupuesto " + item.getPresupuestoId());
+                }
+                if (!ESTADOS_COBRABLES.contains(item.getEstado())) {
+                    throw new DentrixException("El item " + item.getId() + " esta en estado " + item.getEstado()
+                            + "; solo se cobra un item ACEPTADO, EN_EJECUCION, EJECUTADO o CONTROLADO");
+                }
+                if (presupuestoDAO.estaFacturado(item.getId())) {
+                    throw new DentrixException("El item " + item.getId() + " ya fue facturado");
+                }
+                BigDecimal monto = item.getMontoNeto() == null ? item.getSubtotal() : item.getMontoNeto();
+                if (monto == null) {
+                    monto = BigDecimal.ZERO;
+                }
+                ComprobanteItem detalle = new ComprobanteItem();
+                detalle.setPresupuestoItemId(item.getId());
+                detalle.setDescripcion(item.getTratamientoNombre() == null
+                        || item.getTratamientoNombre().isBlank()
+                        ? "Item " + item.getId() : item.getTratamientoNombre());
+                detalle.setCantidad(BigDecimal.ONE);
+                detalle.setPrecioUnitario(monto.setScale(2, RoundingMode.HALF_UP));
+                detalles.add(detalle);
+            }
+        } else {
+            if (fichaFinal != null) {
+                FichaClinica ficha = fichaClinicaDAO.buscarPorId(fichaFinal)
+                        .orElseThrow(() -> new DentrixException("Ficha clinica no encontrada"));
+                if (!"ACEPTADA".equals(ficha.getEstadoDerivacion())) {
+                    throw new DentrixException("La ficha está en derivación " + ficha.getEstadoDerivacion()
+                            + "; solo se factura con derivación ACEPTADA (RF-07)");
+                }
+            }
+            for (LineaBoleta linea : lineasDirectas) {
+                if (linea.tratamientoId() == null) {
+                    throw new DentrixException("Cada linea de la boleta debe indicar el tratamiento");
+                }
+                if (linea.cantidad() == null || linea.cantidad() < 1) {
+                    throw new DentrixException("La cantidad de cada linea debe ser al menos 1");
+                }
+                if (!PiezaFdi.esValida(linea.piezaFdi())) {
+                    throw new DentrixException("La pieza FDI " + linea.piezaFdi()
+                            + " no es valida: debe estar entre 11 y 48 (diente 1-8) "
+                            + "o entre 51 y 85 (diente 1-5)");
+                }
+                BigDecimal precio = tarifario.precioVigente(linea.tratamientoId());
+                ComprobanteItem detalle = new ComprobanteItem();
+                detalle.setDescripcion(tratamientoDAO.buscarPorId(linea.tratamientoId())
+                        .map(Tratamiento::getNombre)
+                        .orElse("Tratamiento " + linea.tratamientoId()));
+                detalle.setCantidad(BigDecimal.valueOf(linea.cantidad()));
+                detalle.setPrecioUnitario(precio);
+                detalles.add(detalle);
+            }
+        }
+        Pago borrador = crearBorrador(pacienteId, fichaFinal, usuarioCajaId, cierreId);
+        if (odontologoId != null) {
+            Pago guardado = pagoDAO.buscarPorId(borrador.getId()).orElse(borrador);
+            guardado.setOdontologoId(odontologoId);
             try {
-                planTratamientoDAO.insertar(detalle);
+                pagoDAO.actualizar(guardado);
             } catch (DentrixException e) {
                 throw traducir(e);
             }
         }
-        return pagoDAO.buscarPorId(pago.getId())
-                .orElseThrow(() -> new DentrixException("No se pudo releer la boleta emitida"));
+        for (ComprobanteItem detalle : detalles) {
+            agregarItem(borrador.getId(), detalle.getPresupuestoItemId(), detalle.getDescripcion(),
+                    detalle.getCantidad(), detalle.getPrecioUnitario());
+        }
+        return confirmar(borrador.getId(), mod, operacionRef);
     }
 
     public Pago registrarAbono(Long documentoId, BigDecimal monto, String modalidad, String operacionRef,
@@ -144,6 +357,10 @@ public class CajaService {
         if (documento.getPagoOrigenId() != null) {
             throw new DentrixException("El id " + documentoId
                     + " corresponde a un abono; el abono debe apuntar a la boleta (RF-08)");
+        }
+        if ("BORRADOR".equals(documento.getEstado()) || "ANULADO".equals(documento.getEstado())) {
+            throw new DentrixException("El documento " + documentoId + " esta " + documento.getEstado()
+                    + "; solo se abona sobre un comprobante EMITIDO");
         }
         if (usuarioCajaId == null) {
             throw new DentrixException("El usuario de caja es obligatorio para registrar el abono");
@@ -176,8 +393,28 @@ public class CajaService {
         abono.setMonto(monto);
         abono.setSaldoDeudor(BigDecimal.ZERO);
         abono.setEstadoPago("PENDIENTE");
+        List<ItemFacturado> facturados = pagoDAO.listarItemsFacturados(documentoId);
+        List<Imputacion> imputaciones = new ArrayList<>();
+        BigDecimal restante = monto;
+        for (ItemFacturado item : facturados) {
+            if (restante.signum() <= 0) {
+                break;
+            }
+            BigDecimal ya = presupuestoDAO.imputadoDeItem(item.presupuestoItemId());
+            BigDecimal saldo = item.monto().subtract(ya == null ? BigDecimal.ZERO : ya);
+            if (saldo.signum() <= 0) {
+                continue;
+            }
+            BigDecimal asignado = restante.min(saldo);
+            imputaciones.add(new Imputacion(item.presupuestoItemId(), asignado));
+            restante = restante.subtract(asignado);
+        }
         try {
-            abono.setId((long) pagoDAO.insertar(abono));
+            if (imputaciones.isEmpty()) {
+                abono.setId((long) pagoDAO.insertar(abono));
+            } else {
+                abono.setId(pagoDAO.insertarConImputaciones(abono, imputaciones, usuarioCajaId));
+            }
         } catch (DentrixException e) {
             throw traducir(e);
         }
@@ -204,10 +441,6 @@ public class CajaService {
 
     public List<Pago> abonosDe(Long documentoId) throws DentrixException {
         return pagoDAO.listarAbonos(documentoId);
-    }
-
-    public List<Pago> documentosConSaldo() throws DentrixException {
-        return pagoDAO.listarDocumentosConSaldo();
     }
 
     public CierreCaja abrirCierre(LocalDate fecha, String turno, Integer cajeroId,
@@ -263,6 +496,10 @@ public class CajaService {
 
     public CierreCaja cambiarFondo(Long cierreId, BigDecimal nuevoFondo) throws DentrixException {
         CierreCaja cierre = cierrePorId(cierreId);
+        if (!"ABIERTO".equals(cierre.getEstado())) {
+            throw new DentrixException("Solo se cambia el fondo de un cierre en estado ABIERTO; el estado actual es "
+                    + cierre.getEstado());
+        }
         if (nuevoFondo == null || nuevoFondo.signum() < 0) {
             throw new DentrixException("El fondo inicial no puede ser negativo");
         }
@@ -288,6 +525,10 @@ public class CajaService {
         if (usuarioId == null) {
             throw new DentrixException("El usuario que consolida el cierre es obligatorio");
         }
+        TotalesCierre totales = calcularTotales(pagoDAO.listarPorCierre(cierreId));
+        cierre.setEfectivoSistema(totales.efectivo());
+        cierre.setBilleterasSistema(totales.billeteras());
+        cierre.setTotalSistema(totales.total());
         cierre.setEstado("CONSOLIDADO");
         cierre.setEfectivoContado(efectivoContado);
         cierre.setConsolidadoPor(usuarioId);
@@ -326,15 +567,29 @@ public class CajaService {
         return mod;
     }
 
-    private String siguienteNumeroBoleta() throws DentrixException {
-        String serie = configuracionDAO.obtener()
-                .map(Configuracion::getSerieBoleta)
-                .filter(s -> s != null && !s.isBlank())
-                .orElse("B001")
-                .trim();
-        String prefijo = serie + "-";
-        long maximo = pagoDAO.maximoCorrelativo(prefijo);
-        return serie + "-" + String.format(Locale.ROOT, "%06d", maximo + 1);
+    static TotalesCierre calcularTotales(List<Pago> pagos) {
+        BigDecimal efectivo = BigDecimal.ZERO;
+        BigDecimal billeteras = BigDecimal.ZERO;
+        BigDecimal total = BigDecimal.ZERO;
+        if (pagos == null) {
+            return new TotalesCierre(efectivo, billeteras, total);
+        }
+        for (Pago pago : pagos) {
+            if (pago == null || pago.getPagoOrigenId() == null) {
+                continue;
+            }
+            BigDecimal monto = pago.getMonto() == null ? BigDecimal.ZERO : pago.getMonto();
+            total = total.add(monto);
+            if ("EFECTIVO".equals(pago.getModalidad())) {
+                efectivo = efectivo.add(monto);
+            } else if ("YAPE".equals(pago.getModalidad()) || "PLIN".equals(pago.getModalidad())) {
+                billeteras = billeteras.add(monto);
+            }
+        }
+        return new TotalesCierre(efectivo, billeteras, total);
+    }
+
+    record TotalesCierre(BigDecimal efectivo, BigDecimal billeteras, BigDecimal total) {
     }
 
     private CierreCaja cierrePorId(Long cierreId) throws DentrixException {
@@ -343,10 +598,6 @@ public class CajaService {
         }
         return cierreCajaDAO.buscarPorId(cierreId)
                 .orElseThrow(() -> new DentrixException("Cierre de caja no encontrado: " + cierreId));
-    }
-
-    private boolean esPiezaFdiValida(Integer piezaFdi) {
-        return piezaFdi >= 11 && piezaFdi <= 48 && piezaFdi % 10 >= 1 && piezaFdi % 10 <= 8;
     }
 
     private DentrixException traducir(DentrixException e) {
@@ -359,6 +610,13 @@ public class CajaService {
             }
             if (mensaje.contains("RF-08")) {
                 return new DentrixException("Regla de caja infringida (RF-08): " + mensaje, e);
+            }
+            if (mensaje.contains("pagos registrados")) {
+                return new DentrixException("R5: el documento tiene pagos registrados; "
+                        + "requiere nota de credito (fuera de alcance v3).", e);
+            }
+            if (mensaje.contains("P5:")) {
+                return new DentrixException("Regla del comprobante (P5): " + mensaje, e);
             }
             if ("23505".equals(estado)) {
                 return new DentrixException("Ya existe un comprobante con los mismos datos (duplicado).", e);

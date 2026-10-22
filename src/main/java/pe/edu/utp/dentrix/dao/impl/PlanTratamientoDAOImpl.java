@@ -19,7 +19,7 @@ import java.util.Optional;
 public class PlanTratamientoDAOImpl implements PlanTratamientoDAO {
 
     private static final String COLUMNAS =
-            "id, paciente_id, tratamiento_id, ficha_id, pago_id, pieza_fdi, cantidad, "
+            "id, paciente_id, tratamiento_id, ficha_id, pago_id, presupuesto_item_id, pieza_fdi, cantidad, "
                     + "precio_unitario, subtotal, estado, fecha";
 
     @Override
@@ -59,19 +59,21 @@ public class PlanTratamientoDAOImpl implements PlanTratamientoDAO {
 
     @Override
     public int insertar(PlanTratamiento linea) throws DentrixException {
-        String sql = "INSERT INTO plan_tratamiento (paciente_id, tratamiento_id, ficha_id, pago_id, pieza_fdi, "
-                + "cantidad, precio_unitario, estado, fecha) VALUES (?, ?, ?, ?, ?, ?, ?, ?::estado_linea, ?)";
+        String sql = "INSERT INTO plan_tratamiento (paciente_id, tratamiento_id, ficha_id, pago_id, "
+                + "presupuesto_item_id, pieza_fdi, cantidad, precio_unitario, estado, fecha) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?::estado_linea, ?)";
         try (Connection cn = ConexionBD.abrir();
              PreparedStatement ps = cn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setObject(1, linea.getPacienteId());
             ps.setObject(2, linea.getTratamientoId());
             ps.setObject(3, linea.getFichaId());
             ps.setObject(4, linea.getPagoId());
-            ps.setObject(5, linea.getPiezaFdi());
-            ps.setObject(6, linea.getCantidad() == null ? 1 : linea.getCantidad());
-            ps.setObject(7, linea.getPrecioUnitario() == null ? BigDecimal.ZERO : linea.getPrecioUnitario());
-            ps.setString(8, linea.getEstado() == null ? "PLANIFICADO" : linea.getEstado());
-            ps.setObject(9, linea.getFecha() == null ? LocalDateTime.now() : linea.getFecha());
+            ps.setObject(5, linea.getPresupuestoItemId());
+            ps.setObject(6, linea.getPiezaFdi());
+            ps.setObject(7, linea.getCantidad() == null ? 1 : linea.getCantidad());
+            ps.setObject(8, linea.getPrecioUnitario() == null ? BigDecimal.ZERO : linea.getPrecioUnitario());
+            ps.setString(9, linea.getEstado() == null ? "PLANIFICADO" : linea.getEstado());
+            ps.setObject(10, linea.getFecha() == null ? LocalDateTime.now() : linea.getFecha());
             int filas = ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -87,19 +89,21 @@ public class PlanTratamientoDAOImpl implements PlanTratamientoDAO {
     @Override
     public boolean actualizar(PlanTratamiento linea) throws DentrixException {
         String sql = "UPDATE plan_tratamiento SET paciente_id = ?, tratamiento_id = ?, ficha_id = ?, pago_id = ?, "
-                    + "pieza_fdi = ?, cantidad = ?, precio_unitario = ?, estado = ?::estado_linea, fecha = ? WHERE id = ?";
+                    + "presupuesto_item_id = ?, pieza_fdi = ?, cantidad = ?, precio_unitario = ?, "
+                    + "estado = ?::estado_linea, fecha = ? WHERE id = ?";
         try (Connection cn = ConexionBD.abrir();
              PreparedStatement ps = cn.prepareStatement(sql)) {
             ps.setObject(1, linea.getPacienteId());
             ps.setObject(2, linea.getTratamientoId());
             ps.setObject(3, linea.getFichaId());
             ps.setObject(4, linea.getPagoId());
-            ps.setObject(5, linea.getPiezaFdi());
-            ps.setObject(6, linea.getCantidad() == null ? 1 : linea.getCantidad());
-            ps.setObject(7, linea.getPrecioUnitario() == null ? BigDecimal.ZERO : linea.getPrecioUnitario());
-            ps.setString(8, linea.getEstado() == null ? "PLANIFICADO" : linea.getEstado());
-            ps.setObject(9, linea.getFecha() == null ? LocalDateTime.now() : linea.getFecha());
-            ps.setObject(10, linea.getId());
+            ps.setObject(5, linea.getPresupuestoItemId());
+            ps.setObject(6, linea.getPiezaFdi());
+            ps.setObject(7, linea.getCantidad() == null ? 1 : linea.getCantidad());
+            ps.setObject(8, linea.getPrecioUnitario() == null ? BigDecimal.ZERO : linea.getPrecioUnitario());
+            ps.setString(9, linea.getEstado() == null ? "PLANIFICADO" : linea.getEstado());
+            ps.setObject(10, linea.getFecha() == null ? LocalDateTime.now() : linea.getFecha());
+            ps.setObject(11, linea.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DentrixException("No se pudo actualizar la linea del plan: " + e.getMessage(), e);
@@ -143,6 +147,8 @@ public class PlanTratamientoDAOImpl implements PlanTratamientoDAO {
         linea.setFichaId(rs.wasNull() ? null : fichaId);
         long pagoId = rs.getLong("pago_id");
         linea.setPagoId(rs.wasNull() ? null : pagoId);
+        long presupuestoItemId = rs.getLong("presupuesto_item_id");
+        linea.setPresupuestoItemId(rs.wasNull() ? null : presupuestoItemId);
         int pieza = rs.getInt("pieza_fdi");
         linea.setPiezaFdi(rs.wasNull() ? null : pieza);
         linea.setCantidad(rs.getInt("cantidad"));

@@ -1,101 +1,296 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pe.edu.utp.dentrix.controller.AgendaController">
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 0 0 14 0;">
+        <VBox spacing="10.0" style="-fx-padding: 0 0 14 0;">
             <children>
-                <Label text="📅 Fecha:" />
-                <DatePicker fx:id="campoFecha" prefWidth="150.0" />
-                <Label fx:id="etiquetaConteo" styleClass="etiqueta-estado" text="" />
-                <Label HBox.hgrow="ALWAYS" text=" " />
-                <Button text="Volver" onAction="#onVolverClick" />
-                <Button text="⟳ Refrescar" onAction="#onRefrescarClick" />
-                <Button styleClass="button, boton-primario" text="🗓 Nueva Cita" onAction="#onNuevaCitaClick" />
-                <Button text="⬛ Bloquear Hora" onAction="#onBloquearClick" />
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <children>
+                        <Label styleClass="label-titulo" text="Agenda y programacion de citas" />
+                        <Label HBox.hgrow="ALWAYS" text=" " />
+                        <Button text="Volver" onAction="#onVolverClick" />
+                        <Button text="Refrescar" onAction="#onRefrescarClick" />
+                        <Button styleClass="button, boton-primario" text="Nueva cita" onAction="#onNuevaCitaClick" />
+                        <Button text="Bloquear hora" onAction="#onBloquearClick" />
+                    </children>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="tarjeta">
+                    <children>
+                        <Label style="-fx-font-size: 13px;" text="Fecha" />
+                        <DatePicker fx:id="campoFecha" prefWidth="140.0" />
+                        <Label fx:id="etiquetaHoy" styleClass="badge, badge-verde" text="HOY" />
+                        <Label fx:id="etiquetaConteo" styleClass="tarjeta-etiqueta" text="" />
+                        <Label HBox.hgrow="ALWAYS" text=" " />
+                        <Label styleClass="fila-dato-label" text="Odont.:" />
+                        <ComboBox fx:id="filtroOdontologo" prefWidth="160.0" styleClass="combo-box, combo-formulario" />
+                        <Label styleClass="fila-dato-label" text="Cons.:" />
+                        <ComboBox fx:id="filtroConsultorio" prefWidth="100.0" styleClass="combo-box, combo-formulario" />
+                        <Label styleClass="fila-dato-label" text="Estado:" />
+                        <ComboBox fx:id="filtroEstado" prefWidth="120.0" styleClass="combo-box, combo-formulario" />
+                    </children>
+                </HBox>
             </children>
-        </HBox>
+        </VBox>
     </top>
     <center>
-        <HBox spacing="16.0" BorderPane.alignment="CENTER">
+        <HBox spacing="14.0" BorderPane.alignment="CENTER">
             <children>
-                <VBox spacing="10.0" styleClass="tarjeta" prefWidth="380.0" HBox.hgrow="NEVER">
-                    <children>
-                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefWidth="350.0" minWidth="340.0" style="-fx-background-color: transparent; -fx-background-insets: 0;" HBox.hgrow="NEVER">
+                    <content>
+                        <VBox spacing="12.0">
                             <children>
-                                <Label styleClass="tarjeta-titulo" text="FORMULARIO DE CITA" />
-                                <Label HBox.hgrow="ALWAYS" text=" " />
-                                <Label fx:id="etiquetaModo" styleClass="tarjeta-etiqueta" text="NUEVA" />
+                                <VBox spacing="8.0" styleClass="tarjeta">
+                                    <children>
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <Label styleClass="tarjeta-titulo" text="NUEVA CITA" />
+                                                <Label HBox.hgrow="ALWAYS" text=" " />
+                                                <Label fx:id="etiquetaModo" styleClass="badge, badge-azul" text="NUEVA" />
+                                            </children>
+                                        </HBox>
+                                        <Label fx:id="etiquetaTipo" styleClass="fila-dato-label" text="Tipo de registro:" />
+                                        <ComboBox fx:id="comboTipo" maxWidth="Infinity" styleClass="combo-box, combo-formulario" />
+                                        <HBox fx:id="cajaBusquedaPaciente" alignment="CENTER_LEFT" spacing="6.0">
+                                            <children>
+                                                <TextField fx:id="campoDniPaciente" promptText="DNI del paciente" styleClass="text-field, campo-formulario" HBox.hgrow="ALWAYS" />
+                                                <Button text="Buscar" onAction="#onBuscarPacienteClick" />
+                                            </children>
+                                        </HBox>
+                                        <VBox fx:id="cajaPaciente" styleClass="card-paciente" spacing="8.0">
+                                            <children>
+                                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                                    <children>
+                                                        <Label fx:id="etiquetaAvatarPaciente" styleClass="avatar" text="--" />
+                                                        <VBox spacing="2.0">
+                                                            <children>
+                                                                <Label fx:id="etiquetaPacienteTarjeta" styleClass="nombre-paciente" text="Sin paciente" wrapText="true" />
+                                                                <Label fx:id="etiquetaDatosPaciente" styleClass="dato-secundario" text="Busca por DNI o elige en la lista" wrapText="true" />
+                                                            </children>
+                                                        </VBox>
+                                                    </children>
+                                                </HBox>
+                                            </children>
+                                        </VBox>
+                                        <Label fx:id="etiquetaPaciente" styleClass="fila-dato-label" text="Paciente:" />
+                                        <ComboBox fx:id="comboPaciente" maxWidth="Infinity" styleClass="combo-box, combo-formulario" />
+                                        <CheckBox fx:id="checkPrimeraVez" text="Primera vez (solo consulta / evaluacion)" wrapText="true" />
+                                        <Label fx:id="etiquetaTratamiento" styleClass="fila-dato-label" text="Tratamiento:" />
+                                        <ComboBox fx:id="comboTratamiento" maxWidth="Infinity" styleClass="combo-box, combo-formulario" />
+                                        <Label fx:id="etiquetaDuracion" styleClass="dato-secundario" text="Duracion: 30 min" wrapText="true" />
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                                                    <children>
+                                                        <Label styleClass="fila-dato-label" text="Inicio *" />
+                                                        <TextField fx:id="campoInicio" promptText="09:00" styleClass="text-field, campo-formulario, texto-mono" />
+                                                    </children>
+                                                </VBox>
+                                                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                                                    <children>
+                                                        <Label styleClass="fila-dato-label" text="Fin calculado" />
+                                                        <TextField fx:id="campoFin" editable="false" focusTraversable="false" promptText="--:--" styleClass="text-field, campo-formulario, texto-mono" />
+                                                    </children>
+                                                </VBox>
+                                            </children>
+                                        </HBox>
+                                        <Label fx:id="etiquetaFinCalculo" styleClass="dato-secundario" text="Fin calculado: --:-- · 30 min" wrapText="true" />
+                                        <Label fx:id="etiquetaMotivo" styleClass="fila-dato-label" text="Motivo:" />
+                                        <TextField fx:id="campoMotivo" promptText="Motivo de la cita o del bloque" styleClass="text-field, campo-formulario" />
+                                        <Label styleClass="fila-dato-label" text="Odontologo:" />
+                                        <ComboBox fx:id="comboOdontologo" maxWidth="Infinity" styleClass="combo-box, combo-formulario" />
+                                        <Label styleClass="fila-dato-label" text="Consultorio:" />
+                                        <ComboBox fx:id="comboConsultorio" maxWidth="Infinity" styleClass="combo-box, combo-formulario" />
+                                        <VBox styleClass="panel-observacion">
+                                            <children>
+                                                <Label fx:id="etiquetaDisponibilidad" styleClass="dato-secundario" text="El fin se calcula con la duracion del catalogo." wrapText="true" />
+                                            </children>
+                                        </VBox>
+                                        <Label fx:id="etiquetaError" styleClass="etiqueta-error" text="" wrapText="true" />
+                                        <HBox alignment="CENTER_RIGHT" spacing="8.0">
+                                            <children>
+                                                <Button text="Cancelar" onAction="#onCancelarClick" />
+                                                <Button defaultButton="true" styleClass="button, boton-primario" text="Agendar cita" onAction="#onGuardarClick" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
+                                <VBox spacing="10.0" styleClass="tarjeta">
+                                    <children>
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <Label styleClass="tarjeta-titulo" text="DETALLE DE LA CITA" />
+                                                <Label HBox.hgrow="ALWAYS" text=" " />
+                                                <Label fx:id="etiquetaEstadoBadge" styleClass="badge-estado, badge-estado-gris" text="-" />
+                                            </children>
+                                        </HBox>
+                                        <VBox styleClass="card-paciente" spacing="8.0">
+                                            <children>
+                                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                                    <children>
+                                                        <Label fx:id="etiquetaDetalleAvatar" styleClass="avatar" text="--" />
+                                                        <VBox spacing="2.0">
+                                                            <children>
+                                                                <Label fx:id="etiquetaDetallePaciente" styleClass="nombre-paciente" text="Selecciona una cita" wrapText="true" />
+                                                                <Label fx:id="etiquetaDetalleDocumento" styleClass="dato-secundario" text="" wrapText="true" />
+                                                            </children>
+                                                        </VBox>
+                                                    </children>
+                                                </HBox>
+                                            </children>
+                                        </VBox>
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <Label styleClass="seccion-titulo" text="DATOS DE LA CITA" />
+                                                <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
+                                            </children>
+                                        </HBox>
+                                        <VBox spacing="0.0">
+                                            <children>
+                                                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="fila-dato">
+                                                    <children>
+                                                        <Label minWidth="88.0" styleClass="fila-dato-label" text="Horario" />
+                                                        <Label fx:id="etiquetaDetalleHorario" HBox.hgrow="ALWAYS" styleClass="fila-dato-valor" wrapText="true" />
+                                                    </children>
+                                                </HBox>
+                                                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="fila-dato">
+                                                    <children>
+                                                        <Label minWidth="88.0" styleClass="fila-dato-label" text="Tratamiento" />
+                                                        <Label fx:id="etiquetaDetalleTratamiento" HBox.hgrow="ALWAYS" styleClass="fila-dato-valor" wrapText="true" />
+                                                    </children>
+                                                </HBox>
+                                                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="fila-dato">
+                                                    <children>
+                                                        <Label minWidth="88.0" styleClass="fila-dato-label" text="Odontologo" />
+                                                        <Label fx:id="etiquetaDetalleOdontologo" HBox.hgrow="ALWAYS" styleClass="fila-dato-valor" wrapText="true" />
+                                                    </children>
+                                                </HBox>
+                                                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="fila-dato">
+                                                    <children>
+                                                        <Label minWidth="88.0" styleClass="fila-dato-label" text="Consultorio" />
+                                                        <Label fx:id="etiquetaDetalleConsultorio" HBox.hgrow="ALWAYS" styleClass="fila-dato-valor" wrapText="true" />
+                                                    </children>
+                                                </HBox>
+                                            </children>
+                                        </VBox>
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <Label styleClass="seccion-titulo" text="OBSERVACION" />
+                                                <Region HBox.hgrow="ALWAYS" styleClass="linea-seccion" />
+                                            </children>
+                                        </HBox>
+                                        <VBox styleClass="panel-observacion">
+                                            <children>
+                                                <Label fx:id="etiquetaDetalleObservacion" styleClass="dato-secundario" text="-" wrapText="true" />
+                                            </children>
+                                        </VBox>
+                                        <Label fx:id="etiquetaOperacion" styleClass="etiqueta-estado" text="" wrapText="true" />
+                                    </children>
+                                </VBox>
                             </children>
-                        </HBox>
-                        <GridPane hgap="8.0" vgap="8.0">
-                            <columnConstraints>
-                                <ColumnConstraints percentWidth="36.0" />
-                                <ColumnConstraints percentWidth="64.0" hgrow="ALWAYS" />
-                            </columnConstraints>
-                            <children>
-                                <Label fx:id="etiquetaTipo" style="-fx-font-size: 11px;" text="Tipo:" GridPane.rowIndex="0" />
-                                <ComboBox fx:id="comboTipo" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                                <Label style="-fx-font-size: 11px;" text="Hora inicio:" GridPane.rowIndex="1" />
-                                <TextField fx:id="campoInicio" promptText="09:00" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                <Label style="-fx-font-size: 11px;" text="Hora fin:" GridPane.rowIndex="2" />
-                                <TextField fx:id="campoFin" promptText="09:45" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                <Label fx:id="etiquetaPaciente" style="-fx-font-size: 11px;" text="Paciente:" GridPane.rowIndex="3" />
-                                <ComboBox fx:id="comboPaciente" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                <Label style="-fx-font-size: 11px;" text="Odontólogo:" GridPane.rowIndex="4" />
-                                <ComboBox fx:id="comboOdontologo" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                <Label style="-fx-font-size: 11px;" text="Consultorio:" GridPane.rowIndex="5" />
-                                <ComboBox fx:id="comboConsultorio" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                                <Label fx:id="etiquetaTratamiento" style="-fx-font-size: 11px;" text="Tratamiento (opcional):" GridPane.rowIndex="6" />
-                                <ComboBox fx:id="comboTratamiento" styleClass="combo-box, combo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                                <Label fx:id="etiquetaMotivo" style="-fx-font-size: 11px;" text="Motivo:" GridPane.rowIndex="7" />
-                                <TextField fx:id="campoMotivo" promptText="Motivo de la cita o del bloque" styleClass="text-field, campo-formulario" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                            </children>
-                        </GridPane>
-                        <Label fx:id="etiquetaError" styleClass="etiqueta-error" text="" wrapText="true" />
-                        <HBox alignment="CENTER_RIGHT" spacing="10.0">
-                            <children>
-                                <Button text="Cancelar" onAction="#onCancelarClick" />
-                                <Button defaultButton="true" styleClass="button, boton-primario" text="💾 Guardar" onAction="#onGuardarClick" />
-                            </children>
-                        </HBox>
-                    </children>
-                </VBox>
+                        </VBox>
+                    </content>
+                </ScrollPane>
                 <VBox spacing="10.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                     <children>
                         <HBox alignment="CENTER_LEFT" spacing="8.0">
                             <children>
-                                <Label styleClass="tarjeta-titulo" text="JORNADA DEL DÍA" />
+                                <Label styleClass="tarjeta-titulo" text="CITAS DEL DIA" />
                                 <Label HBox.hgrow="ALWAYS" text=" " />
-                                <Label styleClass="tarjeta-etiqueta" text="Consultorios 1 y 2" />
+                                <Button fx:id="btnReprogramar" text="Reprogramar" onAction="#onReprogramarClick" />
+                                <Button fx:id="btnHistorial" text="Historial" onAction="#onHistorialClick" />
                             </children>
                         </HBox>
+                        <Label fx:id="etiquetaAviso" managed="false" styleClass="etiqueta-error" text="" visible="false" wrapText="true" />
                         <TableView fx:id="tablaAgenda" styleClass="table-view, tabla-datos" VBox.vgrow="ALWAYS">
                             <columns>
-                                <TableColumn fx:id="colHora" prefWidth="110.0" text="HORA" />
-                                <TableColumn fx:id="colConsultorio" prefWidth="110.0" text="CONSULT." />
-                                <TableColumn fx:id="colPaciente" prefWidth="180.0" text="PACIENTE" />
-                                <TableColumn fx:id="colTratamiento" prefWidth="200.0" text="TRATAMIENTO / MOTIVO" />
-                                <TableColumn fx:id="colOdontologo" prefWidth="140.0" text="DOCTOR" />
-                                <TableColumn fx:id="colEstado" prefWidth="120.0" text="ESTADO" />
-                                <TableColumn fx:id="colAccion" prefWidth="170.0" text="ACCIÓN" />
+                                <TableColumn fx:id="colHora" minWidth="88.0" prefWidth="90.0" text="HORA" />
+                                <TableColumn fx:id="colPaciente" minWidth="100.0" prefWidth="110.0" text="PACIENTE" />
+                                <TableColumn fx:id="colTratamiento" minWidth="92.0" prefWidth="100.0" text="TRATAMIENTO" />
+                                <TableColumn fx:id="colOdontologo" minWidth="60.0" prefWidth="62.0" text="ODONTOLOGO" />
+                                <TableColumn fx:id="colConsultorio" minWidth="52.0" prefWidth="56.0" text="CONSULT." />
+                                <TableColumn fx:id="colEstado" minWidth="88.0" prefWidth="92.0" text="ESTADO" />
+                                <TableColumn fx:id="colAccion" minWidth="126.0" prefWidth="130.0" text="ACCION" />
                             </columns>
+                            <placeholder>
+                                <Label styleClass="etiqueta-estado" text="Sin citas para la fecha seleccionada." />
+                            </placeholder>
                         </TableView>
+                        <Label styleClass="dato-secundario" text="Clic en una fila para ver el detalle; las acciones dependen del estado y del rol. R24: la inasistencia se habilita 15 min despues." wrapText="true" />
                     </children>
                 </VBox>
             </children>
         </HBox>
     </center>
+    <bottom>
+        <TabPane prefHeight="235.0" tabClosingPolicy="UNAVAILABLE" style="-fx-padding: 12 0 0 0;">
+            <tabs>
+                <Tab text="Lista de espera">
+                    <content>
+                        <VBox spacing="8.0">
+                            <children>
+                                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                    <children>
+                                        <Label styleClass="tarjeta-etiqueta" text="Ordenada por prioridad y tiempo de espera" />
+                                        <Label HBox.hgrow="ALWAYS" text=" " />
+                                        <Button fx:id="btnAgregarEspera" text="Agregar a espera" onAction="#onAgregarEsperaClick" />
+                                        <Button fx:id="btnRetirarEspera" text="Retirar" onAction="#onRetirarEsperaClick" />
+                                        <Button fx:id="btnAsignarCita" styleClass="button, boton-primario" text="Asignar cita" onAction="#onAsignarCitaClick" />
+                                    </children>
+                                </HBox>
+                                <TableView fx:id="tablaEspera" prefHeight="145.0" styleClass="table-view, tabla-datos">
+                                    <columns>
+                                        <TableColumn fx:id="colEsperaPaciente" prefWidth="230.0" text="PACIENTE" />
+                                        <TableColumn fx:id="colEsperaTratamiento" prefWidth="210.0" text="TRATAMIENTO" />
+                                        <TableColumn fx:id="colEsperaPrioridad" prefWidth="90.0" text="PRIORIDAD" />
+                                        <TableColumn fx:id="colEsperaDesde" prefWidth="170.0" text="DESDE" />
+                                    </columns>
+                                </TableView>
+                                <Label fx:id="etiquetaEspera" styleClass="etiqueta-error" text="" wrapText="true" />
+                            </children>
+                        </VBox>
+                    </content>
+                </Tab>
+                <Tab text="Recordatorios">
+                    <content>
+                        <VBox spacing="8.0">
+                            <children>
+                                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                    <children>
+                                        <Label fx:id="etiquetaRecCita" styleClass="tarjeta-etiqueta" text="Sin cita" />
+                                        <Label HBox.hgrow="ALWAYS" text=" " />
+                                        <Button fx:id="btnProgramarRecordatorio" text="Programar recordatorio" onAction="#onProgramarRecordatorioClick" />
+                                        <Button fx:id="btnMarcarEnviado" text="Marcar enviado" onAction="#onMarcarEnviadoClick" />
+                                    </children>
+                                </HBox>
+                                <TableView fx:id="tablaRecordatorios" prefHeight="145.0" styleClass="table-view, tabla-datos">
+                                    <columns>
+                                        <TableColumn fx:id="colRecCanal" prefWidth="120.0" text="CANAL" />
+                                        <TableColumn fx:id="colRecProgramado" prefWidth="190.0" text="PROGRAMADO" />
+                                        <TableColumn fx:id="colRecEstado" prefWidth="130.0" text="ESTADO" />
+                                    </columns>
+                                </TableView>
+                                <Label fx:id="etiquetaRecordatorio" styleClass="etiqueta-error" text="" wrapText="true" />
+                            </children>
+                        </VBox>
+                    </content>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </bottom>
 </BorderPane>

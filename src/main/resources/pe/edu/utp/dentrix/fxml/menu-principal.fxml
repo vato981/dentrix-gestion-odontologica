@@ -43,6 +43,8 @@
                 <Button fx:id="btnPacientes" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="👥  Pacientes" />
                 <Button fx:id="btnAgenda" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="📅  Agenda" />
                 <Button fx:id="btnFicha" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="📋  Ficha clínica" />
+                <Button fx:id="btnPresupuestos" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="📋  Presupuestos" />
+                <Button fx:id="btnEjecucion" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="🦷  Ejecución" />
                 <Button fx:id="btnCaja" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="💳  Caja / Cobros" />
                 <Button fx:id="btnReportes" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="📊  Reportes" />
                 <Button fx:id="btnUsuarios" maxWidth="Infinity" onAction="#onModuloClick" styleClass="button, nav-boton" text="🔐  Usuarios" />

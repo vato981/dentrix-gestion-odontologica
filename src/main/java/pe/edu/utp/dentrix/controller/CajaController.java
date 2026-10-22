@@ -7,14 +7,18 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 import javafx.util.StringConverter;
 import pe.edu.utp.dentrix.config.AppContext;
 import pe.edu.utp.dentrix.dto.LineaBoleta;
@@ -23,6 +27,7 @@ import pe.edu.utp.dentrix.model.CierreCaja;
 import pe.edu.utp.dentrix.model.Paciente;
 import pe.edu.utp.dentrix.model.Pago;
 import pe.edu.utp.dentrix.model.Tratamiento;
+import pe.edu.utp.dentrix.ui.CobroPlanDialog;
 import pe.edu.utp.dentrix.ui.TareasFX;
 
 import java.io.IOException;
@@ -31,7 +36,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class CajaController {
 
@@ -48,6 +56,9 @@ public class CajaController {
 
     @FXML
     private ComboBox<Paciente> comboPaciente;
+
+    @FXML
+    private Label etiquetaPaciente;
 
     @FXML
     private Label lblTotal;
@@ -95,6 +106,9 @@ public class CajaController {
     private TableColumn<Pago, String> colBNumero;
 
     @FXML
+    private TableColumn<Pago, String> colBPaciente;
+
+    @FXML
     private TableColumn<Pago, String> colBFecha;
 
     @FXML
@@ -110,7 +124,16 @@ public class CajaController {
     private TableColumn<Pago, String> colBSaldo;
 
     @FXML
+    private Button btnAnularBoleta;
+
+    @FXML
+    private Button btnVerBoleta;
+
+    @FXML
     private Label etiquetaFechaHoy;
+
+    @FXML
+    private Button btnCobrarPlan;
 
     @FXML
     private TextField campoNumeroBoleta;
@@ -167,14 +190,51 @@ public class CajaController {
     private Label etiquetaCierreResultado;
 
     @FXML
+    private Label lblEstadoTurno;
+
+    @FXML
+    private Label lblCierreFecha;
+
+    @FXML
+    private Label lblFondoInicial;
+
+    @FXML
+    private Label lblEfectivoSistema;
+
+    @FXML
+    private Label lblBilleterasSistema;
+
+    @FXML
+    private Label lblTotalSistema;
+
+    @FXML
+    private Label lblEfectivoContado;
+
+    @FXML
+    private Label lblBilleterasContado;
+
+    @FXML
+    private Label lblDiferencia;
+
+    @FXML
+    private Label lblDiferenciaDetalle;
+
+    @FXML
+    private Label lblCierreNumero;
+
+    @FXML
+    private Label lblActaEstado;
+
+    @FXML
     private HBox panelCaja;
 
     @FXML
-    private VBox panelCierre;
+    private ScrollPane panelCierre;
 
     private final ObservableList<LineaGrilla> lineas = FXCollections.observableArrayList();
     private final List<Paciente> pacientesActivos = new ArrayList<>();
     private final List<Tratamiento> tratamientosActivos = new ArrayList<>();
+    private final Map<Integer, String> nombresPacientes = new HashMap<>();
     private Pago documentoAbonado;
     private CierreCaja cierreActual;
     private Integer usuarioCajaId;
@@ -191,6 +251,10 @@ public class CajaController {
         tablaLineas.setItems(lineas);
 
         colBNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
+        colBPaciente.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().getPacienteId() == null ? ""
+                        : nombresPacientes.getOrDefault(d.getValue().getPacienteId(),
+                                "Paciente " + d.getValue().getPacienteId())));
         colBFecha.setCellValueFactory(d -> new SimpleStringProperty(
                 d.getValue().getFecha() == null ? "" : FECHA_CORTA.format(d.getValue().getFecha())));
         colBMonto.setCellValueFactory(d -> new SimpleStringProperty(
@@ -200,6 +264,13 @@ public class CajaController {
         pe.edu.utp.dentrix.ui.Badges.aplicarEn(colBEstado);
         colBSaldo.setCellValueFactory(d -> new SimpleStringProperty(
                 d.getValue().getSaldoDeudor() == null ? "" : d.getValue().getSaldoDeudor().toPlainString()));
+
+        btnAnularBoleta.setDisable(true);
+        btnVerBoleta.setDisable(true);
+        tablaBoletas.getSelectionModel().selectedItemProperty().addListener((obs, antes, ahora) -> {
+            btnAnularBoleta.setDisable(ahora == null || !"EMITIDO".equals(ahora.getEstado()));
+            btnVerBoleta.setDisable(ahora == null);
+        });
 
         colAFecha.setCellValueFactory(d -> new SimpleStringProperty(
                 d.getValue().getFecha() == null ? "" : FECHA_CORTA.format(d.getValue().getFecha())));
@@ -221,6 +292,14 @@ public class CajaController {
             @Override
             public Paciente fromString(String s) {
                 return null;
+            }
+        });
+        comboPaciente.valueProperty().addListener((obs, antes, ahora) -> {
+            if (ahora == null) {
+                etiquetaPaciente.setText("Selecciona el paciente del cobro");
+            } else {
+                etiquetaPaciente.setText(ahora.getApellidos() + ", " + ahora.getNombres()
+                        + " - DNI " + ahora.getDni() + " - HC " + ahora.getCodigoHc());
             }
         });
         comboTratamiento.setConverter(new StringConverter<Tratamiento>() {
@@ -250,22 +329,24 @@ public class CajaController {
         TareasFX.ejecutar(this::cargarCombos,
                 this::aplicarCombos,
                 error -> mostrarError(TareasFX.mensaje(error)));
-        recargarBoletas();
         recargarCierre();
     }
 
-    private record DatosCombos(List<Paciente> pacientesActivos, List<Tratamiento> tratamientosActivos) {
+    private record DatosCombos(List<Paciente> pacientesActivos, List<Tratamiento> tratamientosActivos,
+                               Map<Integer, String> nombresPaciente) {
     }
 
     private DatosCombos cargarCombos() throws DentrixException {
         AppContext contexto = AppContext.get();
         List<Paciente> activos = new ArrayList<>();
+        Map<Integer, String> nombres = new HashMap<>();
         for (Paciente p : contexto.pacientes().listar()) {
+            nombres.put(p.getId(), p.getCodigoHc() + " - " + p.getApellidos() + ", " + p.getNombres());
             if ("ACTIVO".equals(p.getEstado())) {
                 activos.add(p);
             }
         }
-        return new DatosCombos(activos, contexto.catalogo().listarTratamientosActivos());
+        return new DatosCombos(activos, contexto.catalogo().listarTratamientosActivos(), nombres);
     }
 
     private void aplicarCombos(DatosCombos datos) {
@@ -273,8 +354,11 @@ public class CajaController {
         pacientesActivos.addAll(datos.pacientesActivos());
         tratamientosActivos.clear();
         tratamientosActivos.addAll(datos.tratamientosActivos());
+        nombresPacientes.clear();
+        nombresPacientes.putAll(datos.nombresPaciente());
         comboPaciente.setItems(FXCollections.observableArrayList(pacientesActivos));
         comboTratamiento.setItems(FXCollections.observableArrayList(tratamientosActivos));
+        recargarBoletas();
     }
 
     private void actualizarTotal() {
@@ -345,18 +429,14 @@ public class CajaController {
             }
             List<LineaBoleta> detalle = new ArrayList<>();
             for (LineaGrilla g : lineas) {
-                detalle.add(new LineaBoleta(g.tratamientoId(), g.pieza(), g.cantidad()));
+                detalle.add(LineaBoleta.directa(g.tratamientoId(), g.pieza(), g.cantidad()));
             }
             Integer pacienteId = paciente.getId();
             TareasFX.ejecutar(() -> AppContext.get().caja().emitirBoleta(pacienteId, modalidad, operacion,
                             null, null, usuarioCajaId, null, detalle),
                     boleta -> {
-                        indicar(etiquetaResultado, "Boleta " + boleta.getNumero() + " emitida: S/ "
-                                + boleta.getMonto().toPlainString()
-                                + " (saldo S/ " + boleta.getSaldoDeudor().toPlainString() + ")", false);
                         lineas.clear();
-                        campoOperacion.clear();
-                        recargarBoletas();
+                        aplicarBoletaEmitida(boleta);
                     },
                     error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
@@ -365,8 +445,74 @@ public class CajaController {
     }
 
     @FXML
+    private void onCobrarPlanClick() {
+        try {
+            Paciente paciente = comboPaciente.getValue();
+            if (paciente == null) {
+                throw new DentrixException("Selecciona el paciente de la boleta");
+            }
+            CobroPlanDialog.mostrar(ventana(), paciente, this::aplicarBoletaEmitida);
+        } catch (DentrixException e) {
+            mostrarError(e.getMessage());
+        }
+    }
+
+    private void aplicarBoletaEmitida(Pago boleta) {
+        indicar(etiquetaResultado, "Boleta " + boleta.getNumero() + " emitida: S/ "
+                + boleta.getMonto().toPlainString()
+                + " (saldo S/ " + boleta.getSaldoDeudor().toPlainString() + ")", false);
+        campoOperacion.clear();
+        recargarBoletas();
+    }
+
+    private Window ventana() {
+        return comboPaciente.getScene() == null ? null : comboPaciente.getScene().getWindow();
+    }
+
+    @FXML
     private void onRefrescarBoletasClick() {
         recargarBoletas();
+    }
+
+    @FXML
+    private void onVerBoletaClick() {
+        Pago seleccionada = tablaBoletas.getSelectionModel().getSelectedItem();
+        if (seleccionada == null) {
+            mostrarInfo("Selecciona un comprobante para ver sus abonos.");
+            return;
+        }
+        campoNumeroBoleta.setText(seleccionada.getNumero());
+        onCargarBoletaClick();
+    }
+
+    @FXML
+    private void onAnularBoletaClick() {
+        Pago seleccionada = tablaBoletas.getSelectionModel().getSelectedItem();
+        if (seleccionada == null) {
+            mostrarInfo("Selecciona una boleta para anular.");
+            return;
+        }
+        if (!"EMITIDO".equals(seleccionada.getEstado())) {
+            mostrarInfo("Solo se pueden anular boletas en estado EMITIDO.");
+            return;
+        }
+        TextInputDialog dialogo = new TextInputDialog();
+        dialogo.setTitle("Anular boleta");
+        dialogo.setHeaderText("Anular la boleta " + seleccionada.getNumero());
+        dialogo.setContentText("Motivo:");
+        Optional<String> motivo = dialogo.showAndWait();
+        if (motivo.isEmpty() || motivo.get().isBlank()) {
+            return;
+        }
+        Long id = seleccionada.getId();
+        String numero = seleccionada.getNumero();
+        TareasFX.ejecutar(() -> {
+            AppContext.get().caja().anular(id, motivo.get().trim(), usuarioCajaId);
+            return null;
+        }, ignorado -> {
+            indicar(etiquetaResultado, "Boleta " + numero + " anulada", false);
+            recargarBoletas();
+        }, error -> mostrarError(TareasFX.mensaje(error)));
     }
 
     private void recargarBoletas() {
@@ -580,9 +726,35 @@ public class CajaController {
         if (cierreActual == null) {
             etiquetaSinCierre.setText("Todavía no se abrió el cierre del día. Abre el turno con su fondo inicial.");
             etiquetaCierreInfo.setText("");
+            aplicarBadge(lblEstadoTurno, "SIN CIERRE", "badge-gris");
+            lblCierreFecha.setText("");
+            lblFondoInicial.setText("S/ 0.00");
+            lblEfectivoSistema.setText("S/ 0.00");
+            lblBilleterasSistema.setText("S/ 0.00");
+            lblTotalSistema.setText("S/ 0.00");
+            lblEfectivoContado.setText("—");
+            lblBilleterasContado.setText("—");
+            ponerDiferencia(lblDiferencia, null);
+            ponerDiferencia(lblDiferenciaDetalle, null);
+            lblCierreNumero.setText("Sin cierre");
+            aplicarBadge(lblActaEstado, "PENDIENTE", "badge-gris");
             return;
         }
         etiquetaSinCierre.setText("");
+        aplicarBadge(lblEstadoTurno, cierreActual.getEstado(),
+                "CONSOLIDADO".equals(cierreActual.getEstado()) ? "badge-verde" : "badge-azul");
+        lblCierreFecha.setText("Fecha: " + cierreActual.getFecha() + " - Turno: " + cierreActual.getTurno());
+        lblFondoInicial.setText(moneda(cierreActual.getFondoInicial()));
+        lblEfectivoSistema.setText(moneda(cierreActual.getEfectivoSistema()));
+        lblBilleterasSistema.setText(moneda(cierreActual.getBilleterasSistema()));
+        lblTotalSistema.setText(moneda(cierreActual.getTotalSistema()));
+        lblEfectivoContado.setText(moneda(cierreActual.getEfectivoContado()));
+        lblBilleterasContado.setText(moneda(cierreActual.getBilleterasSistema()));
+        ponerDiferencia(lblDiferencia, cierreActual.getDiferencia());
+        ponerDiferencia(lblDiferenciaDetalle, cierreActual.getDiferencia());
+        lblCierreNumero.setText(cierreActual.getId() == null ? "Sin cierre" : "N° " + cierreActual.getId());
+        aplicarBadge(lblActaEstado, cierreActual.isActaGenerada() ? "GENERADA" : "PENDIENTE",
+                cierreActual.isActaGenerada() ? "badge-verde" : "badge-gris");
         StringBuilder info = new StringBuilder();
         info.append("Fecha: ").append(cierreActual.getFecha())
                 .append("   Turno: ").append(cierreActual.getTurno())
@@ -604,6 +776,30 @@ public class CajaController {
         info.append('\n');
         info.append("Acta generada: ").append(cierreActual.isActaGenerada() ? "Sí" : "No");
         etiquetaCierreInfo.setText(info.toString());
+    }
+
+    private String moneda(BigDecimal valor) {
+        return valor == null ? "—" : "S/ " + valor.toPlainString();
+    }
+
+    private void ponerDiferencia(Label etiqueta, BigDecimal diferencia) {
+        if (diferencia == null) {
+            etiqueta.setText("—");
+            etiqueta.setStyle("");
+        } else if (diferencia.signum() == 0) {
+            etiqueta.setText(moneda(diferencia) + " (conforme)");
+            etiqueta.setStyle("-fx-text-fill: #059669;");
+        } else {
+            etiqueta.setText(moneda(diferencia));
+            etiqueta.setStyle("-fx-text-fill: #DC2626; -fx-font-weight: bold;");
+        }
+    }
+
+    private void aplicarBadge(Label etiqueta, String texto, String clase) {
+        etiqueta.setText(texto);
+        etiqueta.getStyleClass().removeAll("badge-verde", "badge-azul", "badge-rojo",
+                "badge-amarillo", "badge-gris", "badge-naranja");
+        etiqueta.getStyleClass().add(clase);
     }
 
     private String texto(TextField campo) {
