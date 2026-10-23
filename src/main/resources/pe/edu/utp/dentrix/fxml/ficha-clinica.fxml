@@ -75,7 +75,9 @@
     <center>
         <HBox spacing="14.0" BorderPane.alignment="CENTER">
             <children>
-                <VBox prefWidth="540.0" minWidth="540.0" spacing="8.0" styleClass="tarjeta" HBox.hgrow="NEVER">
+                <<VBox prefWidth="600.0" minWidth="0.0" maxWidth="Infinity"
+      spacing="8.0" styleClass="tarjeta"
+      HBox.hgrow="ALWAYS">>
                     <children>
                         <HBox alignment="CENTER_LEFT" spacing="8.0">
                             <children>
@@ -96,7 +98,10 @@
                         </HBox>
                         <StackPane alignment="CENTER" style="-fx-background-color: #F8FAFC; -fx-background-radius: 12; -fx-border-color: #E2E8F0; -fx-border-radius: 12;">
                             <children>
-                                <Pane fx:id="panelOdontograma" prefHeight="222.0" prefWidth="480.0" />
+                                <<Pane fx:id="panelOdontograma"
+      minWidth="0.0"
+      prefWidth="480.0"
+      prefHeight="222.0" />/>
                             </children>
                         </StackPane>
                         <Label fx:id="etiquetaOdontograma" styleClass="etiqueta-estado" text="" wrapText="true" />

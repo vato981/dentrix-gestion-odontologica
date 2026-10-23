@@ -3,9 +3,12 @@ package pe.edu.utp.dentrix.controller;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
+
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -17,8 +20,12 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
+
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.transform.Scale;
 import javafx.util.StringConverter;
+
 import pe.edu.utp.dentrix.config.AppContext;
 import pe.edu.utp.dentrix.dto.CambioPrincipal;
 import pe.edu.utp.dentrix.excepcion.DentrixException;
@@ -318,10 +325,53 @@ public class FichaClinicaController {
         herrCaries.setToggleGroup(herramientas);
         herrObturado.setToggleGroup(herramientas);
         herrAusente.setToggleGroup(herramientas);
-        odontograma = new OdontogramaView();
-        panelOdontograma.getChildren().add(odontograma);
-        odontograma.setOnPiezaSeleccionada(this::aplicarHerramientaPieza);
-        odontograma.reiniciar();
+        
+odontograma = new OdontogramaView();
+
+// Medidas internas de referencia del dibujo
+final double anchoBase = 480.0;
+final double altoBase = 222.0;
+
+// Mantener las proporciones de los dientes
+Scale escalaOdontograma = new Scale(1, 1, 0, 0);
+odontograma.getTransforms().add(escalaOdontograma);
+
+// Contenedor del dibujo
+Group grupoOdontograma = new Group(odontograma);
+StackPane contenedorOdontograma = new StackPane(grupoOdontograma);
+
+contenedorOdontograma.setMinWidth(0);
+contenedorOdontograma.prefWidthProperty()
+        .bind(panelOdontograma.widthProperty());
+
+// Actualizar tamaño cuando cambie el ancho
+panelOdontograma.widthProperty().addListener(
+    (obs, anterior, nuevo) -> {
+
+        double anchoDisponible = nuevo.doubleValue();
+
+        if (anchoDisponible <= 0) {
+            return;
+        }
+
+        double factor = Math.min(
+            1.0,
+            anchoDisponible / anchoBase
+        );
+
+        escalaOdontograma.setX(factor);
+        escalaOdontograma.setY(factor);
+
+        contenedorOdontograma.setPrefHeight(altoBase * factor);
+    }
+);
+
+panelOdontograma.getChildren().add(contenedorOdontograma);
+
+// Conservar la selección y los estados dentales
+odontograma.setOnPiezaSeleccionada(this::aplicarHerramientaPieza);
+odontograma.reiniciar();
+
 
         colDiagCodigo.setCellValueFactory(new PropertyValueFactory<>("cie10Codigo"));
         colDiagDescripcion.setCellValueFactory(d -> new SimpleStringProperty(
