@@ -75,9 +75,8 @@
     <center>
         <HBox spacing="14.0" BorderPane.alignment="CENTER">
             <children>
-                <<VBox prefWidth="600.0" minWidth="0.0" maxWidth="Infinity"
-      spacing="8.0" styleClass="tarjeta"
-      HBox.hgrow="ALWAYS">>
+                <VBox prefWidth="600.0" minWidth="360.0" maxWidth="Infinity"
+                      spacing="8.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                     <children>
                         <HBox alignment="CENTER_LEFT" spacing="8.0">
                             <children>
@@ -96,12 +95,11 @@
                                 <ToggleButton fx:id="herrAusente" styleClass="boton-mini" style="-fx-background-color: #E5E7EB; -fx-text-fill: #374151;" text="✕ Ausente" />
                             </children>
                         </HBox>
-                        <StackPane alignment="CENTER" style="-fx-background-color: #F8FAFC; -fx-background-radius: 12; -fx-border-color: #E2E8F0; -fx-border-radius: 12;">
+                        <StackPane alignment="CENTER" minWidth="0.0" maxWidth="Infinity" prefHeight="250.0"
+                                   style="-fx-background-color: #F8FAFC; -fx-background-radius: 12; -fx-border-color: #E2E8F0; -fx-border-radius: 12;">
                             <children>
-                                <<Pane fx:id="panelOdontograma"
-      minWidth="0.0"
-      prefWidth="480.0"
-      prefHeight="222.0" />/>
+                                <Pane fx:id="panelOdontograma" minWidth="0.0" maxWidth="Infinity"
+                                      prefWidth="600.0" prefHeight="250.0" />
                             </children>
                         </StackPane>
                         <Label fx:id="etiquetaOdontograma" styleClass="etiqueta-estado" text="" wrapText="true" />

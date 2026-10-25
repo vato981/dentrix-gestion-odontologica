@@ -53,9 +53,12 @@ public class LoginController {
             campoClave.clear();
             try {
                 campoUsuario.getScene().setRoot(FXMLLoader.load(getClass().getResource(FXML_MENU)));
-            } catch (Exception e) {
-                mostrarError("No se pudo iniciar la aplicación: " + e.getMessage());
-            }
+           } catch (Exception e) {
+    System.err.println("========== ERROR AL ABRIR MENU PRINCIPAL ==========");
+    e.printStackTrace();
+    System.err.println("==================================================");
+    mostrarError("No se pudo iniciar la aplicación: " + e.getMessage());
+}
         }, error -> {
             ingresando = false;
             mostrarError(TareasFX.mensaje(error));

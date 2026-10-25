@@ -2,69 +2,94 @@ package pe.edu.utp.dentrix.ui;
 
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.SVGPath;
+import javafx.scene.shape.Line;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.IntConsumer;
 
+/** Odontograma adulto FDI adaptable. La geometría visual no conoce la persistencia. */
 public class OdontogramaView extends Pane {
-
-    private static final int[] SUPERIORES = {
-            18, 17, 16, 15, 14, 13, 12, 11,
-            21, 22, 23, 24, 25, 26, 27, 28
-    };
-
-    private static final int[] INFERIORES = {
-            48, 47, 46, 45, 44, 43, 42, 41,
-            31, 32, 33, 34, 35, 36, 37, 38
-    };
-
-    private static final double ANCHO = 480;
-    private static final double ALTO = 222;
-    private static final double CELDA = 29;
-    private static final double FIGURA_ANCHO = 28;
-    private static final double FIGURA_ALTO = 46;
-    private static final double CURVA = 16;
-    private static final double Y_SUPERIOR = 44;
-    private static final double Y_INFERIOR = 138;
-    private static final double ESCALA_MAXIMA = 1.2;
+    private static final int[] SUPERIORES = {18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28};
+    private static final int[] INFERIORES = {48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38};
+    private static final double ANCHO = 940, ALTO = 330, CELDA = 56, INICIO_X = 22;
+    private static final double Y_SUPERIOR = 10, Y_INFERIOR = 182, MARGEN = 10;
 
     private final Map<Integer, Tooth> dientes = new LinkedHashMap<>();
+    private final Group contenido = new Group();
     private Integer seleccionada;
     private IntConsumer alSeleccionar;
 
     public OdontogramaView() {
         setPrefSize(ANCHO, ALTO);
-        setMinSize(ANCHO, ALTO);
-        setMaxSize(ANCHO, ALTO);
+        setMinSize(240, 110);
+        setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        setPickOnBounds(false);
         getStyleClass().add("odontograma");
+        getChildren().add(contenido);
+
+        Line lineaMedia = new Line(ANCHO / 2, 18, ANCHO / 2, ALTO - 18);
+        lineaMedia.setStroke(Color.web("#CBD5E1"));
+        lineaMedia.getStrokeDashArray().setAll(4.0, 5.0);
+        lineaMedia.setMouseTransparent(true);
+        contenido.getChildren().addAll(lineaMedia,
+                etiquetaArcada("ARCADA SUPERIOR", 2), etiquetaArcada("ARCADA INFERIOR", ALTO - 17));
         crearArcada(SUPERIORES, true);
         crearArcada(INFERIORES, false);
     }
 
-    public void setOnPiezaSeleccionada(IntConsumer listener) {
-        this.alSeleccionar = listener;
+    private Label etiquetaArcada(String texto, double y) {
+        Label etiqueta = new Label(texto);
+        etiqueta.setLayoutX(ANCHO / 2 - 68);
+        etiqueta.setLayoutY(y);
+        etiqueta.setPrefWidth(136);
+        etiqueta.setAlignment(Pos.CENTER);
+        etiqueta.setMouseTransparent(true);
+        etiqueta.setStyle("-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #64748B;");
+        return etiqueta;
     }
 
-    public void setEstado(int pieza, String estado) {
+    @Override
+    protected void layoutChildren() {
+        double disponibleX = Math.max(0, getWidth() - MARGEN * 2);
+        double disponibleY = Math.max(0, getHeight() - MARGEN * 2);
+        double escala = Math.min(disponibleX / ANCHO, disponibleY / ALTO);
+        if (!Double.isFinite(escala) || escala <= 0) return;
+        contenido.setScaleX(escala);
+        contenido.setScaleY(escala);
+        contenido.setLayoutX((getWidth() - ANCHO) / 2);
+        contenido.setLayoutY((getHeight() - ALTO) / 2);
+    }
+
+    @Override
+    protected double computePrefHeight(double width) {
+        return width > 0 ? Math.max(110, (width - MARGEN * 2) * ALTO / ANCHO + MARGEN * 2) : ALTO;
+    }
+
+    public int getCantidadPiezas() { return dientes.size(); }
+
+    public void setOnPiezaSeleccionada(IntConsumer listener) { alSeleccionar = listener; }
+
+    public void setEstado(int pieza, String estado) { setEstado(pieza, estado, null); }
+
+    public void setEstado(int pieza, String estado, String cara) {
         Tooth diente = dientes.get(pieza);
-        if (diente != null) {
-            diente.estado = estado == null || estado.isBlank() ? "SANO" : estado.toUpperCase();
-            aplicarEstilo(diente);
-        }
+        if (diente == null) return;
+        diente.estado = estado == null || estado.isBlank() ? "SANO" : estado.toUpperCase();
+        diente.cara = cara;
+        aplicarEstilo(diente);
     }
 
     public void limpiarEstados() {
         for (Tooth diente : dientes.values()) {
             diente.estado = "SANO";
+            diente.cara = null;
             aplicarEstilo(diente);
         }
     }
@@ -84,161 +109,60 @@ public class OdontogramaView extends Pane {
     }
 
     private void crearArcada(int[] piezas, boolean superior) {
-        double inicio = (ANCHO - CELDA * piezas.length) / 2;
         for (int i = 0; i < piezas.length; i++) {
             int numero = piezas[i];
-            double distancia = (i - 7.5) / 7.5;
-            double curva = CURVA * distancia * distancia;
-            double x = inicio + i * CELDA;
-            double y = superior ? Y_SUPERIOR - curva : Y_INFERIOR + curva;
-
-            SVGPath figura = new SVGPath();
-            figura.setContent(forma(numero));
-            figura.setFill(Color.WHITE);
-            figura.setStroke(Color.web("#64748B"));
-            figura.setStrokeWidth(1.3);
-
-            double anchoBase = figura.getLayoutBounds().getWidth();
-            double altoBase = figura.getLayoutBounds().getHeight();
-            double factor = Math.min((FIGURA_ANCHO - 4) / anchoBase, (FIGURA_ALTO - 4) / altoBase)
-                    / ESCALA_MAXIMA * escala(numero);
-            figura.setScaleX(factor);
-            figura.setScaleY(factor);
-            figura.setRotate(superior ? 180 : 0);
-
-            StackPane caja = new StackPane(figura);
-            caja.setPrefSize(FIGURA_ANCHO, FIGURA_ALTO);
-            caja.setMinSize(FIGURA_ANCHO, FIGURA_ALTO);
-            caja.setMaxSize(FIGURA_ANCHO, FIGURA_ALTO);
-
+            PiezaDentalView figura = new PiezaDentalView(numero);
             Label etiqueta = new Label(String.valueOf(numero));
-            VBox contenedor = superior
-                    ? new VBox(2, etiqueta, caja)
-                    : new VBox(2, caja, etiqueta);
-            contenedor.setAlignment(Pos.CENTER);
-            contenedor.setPrefWidth(CELDA);
-            contenedor.setMinWidth(CELDA);
-            contenedor.setMaxWidth(CELDA);
-            contenedor.setLayoutX(x);
-            contenedor.setLayoutY(y);
-            contenedor.setCursor(Cursor.HAND);
+            etiqueta.setPrefWidth(CELDA);
+            etiqueta.setAlignment(Pos.CENTER);
+            etiqueta.setLayoutY(superior ? PiezaDentalView.ALTO - 1 : -17);
 
+            Group contenedor = new Group(figura, etiqueta);
+            contenedor.setLayoutX(INICIO_X + i * CELDA);
+            contenedor.setLayoutY(superior ? Y_SUPERIOR : Y_INFERIOR);
+            contenedor.setCursor(Cursor.HAND);
             Tooltip tooltip = new Tooltip();
             Tooltip.install(contenedor, tooltip);
-
-            Tooth diente = new Tooth(numero, figura, etiqueta, contenedor, tooltip);
-            contenedor.setOnMouseClicked(e -> {
-                seleccionada = numero;
-                for (Tooth t : dientes.values()) {
-                    aplicarEstilo(t);
-                }
-                if (alSeleccionar != null) {
-                    alSeleccionar.accept(numero);
-                }
-            });
-            contenedor.setOnMouseEntered(e -> {
-                figura.setStroke(Color.web("#0D9488"));
-                figura.setStrokeWidth(2.2);
-            });
-            contenedor.setOnMouseExited(e -> aplicarEstilo(diente));
-
-            getChildren().add(contenedor);
+            Tooth diente = new Tooth(numero, figura, etiqueta, tooltip);
+            contenedor.setOnMouseClicked(e -> seleccionar(numero));
+            contenedor.setOnMouseEntered(e -> figura.setResaltada(true));
+            contenedor.setOnMouseExited(e -> figura.setResaltada(false));
+            contenido.getChildren().add(contenedor);
             dientes.put(numero, diente);
             aplicarEstilo(diente);
         }
     }
 
+    private void seleccionar(int numero) {
+        seleccionada = numero;
+        dientes.values().forEach(this::aplicarEstilo);
+        if (alSeleccionar != null) alSeleccionar.accept(numero);
+    }
+
     private void aplicarEstilo(Tooth diente) {
-        Color[] colores = colores(diente.estado);
-        boolean activo = Objects.equals(seleccionada, diente.pieza);
-
-        diente.figura.setFill(colores[0]);
-        diente.figura.setOpacity("AUSENTE".equals(diente.estado) ? 0.45 : 1);
-        if (activo) {
-            diente.figura.setStroke(Color.web("#0F766E"));
-            diente.figura.setStrokeWidth(2.4);
-        } else {
-            diente.figura.setStroke(colores[1]);
-            diente.figura.setStrokeWidth(1.3);
-        }
-
-        diente.etiqueta.setStyle("-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: "
-                + (activo ? "#0F766E" : "#475569") + ";");
-        diente.contenedor.setStyle(activo
-                ? "-fx-background-color: rgba(13, 148, 136, 0.10); -fx-background-radius: 8;"
-                : "");
+        boolean activa = Objects.equals(seleccionada, diente.pieza);
+        diente.figura.setSeleccionada(activa);
+        diente.figura.actualizar(diente.estado, diente.cara);
+        diente.etiqueta.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: "
+                + (activa ? "#0F766E" : "#475569") + ";");
+        String superficie = diente.cara == null || diente.cara.isBlank()
+                ? "pieza completa" : "cara " + diente.cara;
         diente.tooltip.setText("Pieza " + diente.pieza + " · " + tipoPieza(diente.pieza)
-                + " · " + diente.estado);
-    }
-
-    private Color[] colores(String estado) {
-        return switch (estado) {
-            case "CARIES" -> new Color[]{Color.web("#FEE2E2"), Color.web("#991B1B")};
-            case "OBTURADO" -> new Color[]{Color.web("#DBEAFE"), Color.web("#1E40AF")};
-            case "AUSENTE" -> new Color[]{Color.web("#E5E7EB"), Color.web("#6B7280")};
-            case "CORONA" -> new Color[]{Color.web("#FEF3C7"), Color.web("#92400E")};
-            case "IMPLANTE" -> new Color[]{Color.web("#D1FAE5"), Color.web("#065F46")};
-            case "ENDODONCIA" -> new Color[]{Color.web("#FFEDD5"), Color.web("#9A3412")};
-            case "PROTESIS" -> new Color[]{Color.web("#EDE9FE"), Color.web("#5B21B6")};
-            default -> new Color[]{Color.WHITE, Color.web("#64748B")};
-        };
-    }
-
-    private double escala(int numero) {
-        return switch (numero % 10) {
-            case 1, 2 -> 0.85;
-            case 3 -> 0.95;
-            case 4, 5 -> 1.05;
-            default -> ESCALA_MAXIMA;
-        };
-    }
-
-    private String forma(int numero) {
-        int posicion = numero % 10;
-        if (posicion == 1 || posicion == 2) {
-            return "M 7 3 Q 15 -1 23 3 "
-                    + "L 24 15 Q 23 21 20 26 "
-                    + "L 18 43 Q 15 50 12 43 "
-                    + "L 10 26 Q 7 21 6 15 Z";
-        }
-        if (posicion == 3) {
-            return "M 15 0 L 27 13 "
-                    + "Q 29 21 23 29 "
-                    + "L 19 46 Q 15 52 11 46 "
-                    + "L 7 29 Q 1 21 3 13 Z";
-        }
-        if (posicion == 4 || posicion == 5) {
-            return "M 4 8 Q 6 0 13 4 "
-                    + "L 16 7 L 20 4 "
-                    + "Q 27 0 29 8 "
-                    + "L 26 27 Q 23 34 20 40 "
-                    + "Q 16 47 13 40 "
-                    + "Q 9 34 6 27 Z";
-        }
-        return "M 3 7 Q 4 0 10 3 "
-                + "L 14 6 L 18 3 "
-                + "Q 24 0 29 7 "
-                + "L 28 25 "
-                + "Q 25 32 24 43 "
-                + "Q 22 49 18 42 "
-                + "L 16 33 L 14 42 "
-                + "Q 10 49 8 43 "
-                + "Q 7 32 4 25 Z";
+                + " · " + diente.estado + " · " + superficie);
     }
 
     private static final class Tooth {
         private final int pieza;
-        private final SVGPath figura;
+        private final PiezaDentalView figura;
         private final Label etiqueta;
-        private final VBox contenedor;
         private final Tooltip tooltip;
         private String estado = "SANO";
+        private String cara;
 
-        private Tooth(int pieza, SVGPath figura, Label etiqueta, VBox contenedor, Tooltip tooltip) {
+        private Tooth(int pieza, PiezaDentalView figura, Label etiqueta, Tooltip tooltip) {
             this.pieza = pieza;
             this.figura = figura;
             this.etiqueta = etiqueta;
-            this.contenedor = contenedor;
             this.tooltip = tooltip;
         }
     }
