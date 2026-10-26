@@ -27,8 +27,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 public class CajaService {
@@ -58,6 +60,37 @@ public class CajaService {
         this.presupuestoDAO = presupuestoDAO;
         this.comprobanteDAO = comprobanteDAO;
         this.tarifario = tarifario;
+    }
+
+    // =========================================================================
+    // MÉTODO PARA LA CAJA: Calcula el saldo real de cada item
+    // =========================================================================
+    public Map<Long, BigDecimal> obtenerSaldosCobrables(Long presupuestoId) throws DentrixException {
+        if (presupuestoId == null) {
+            throw new DentrixException("El presupuesto es obligatorio para listar items");
+        }
+        Map<Long, BigDecimal> saldos = new HashMap<>();
+        List<PresupuestoItem> items = presupuestoDAO.listarItems(presupuestoId);
+        
+        for (PresupuestoItem item : items) {
+            if (!ESTADOS_COBRABLES.contains(item.getEstado())) {
+                continue;
+            }
+            if (presupuestoDAO.estaFacturado(item.getId())) {
+                continue;
+            }
+            BigDecimal monto = item.getMontoNeto() == null ? item.getSubtotal() : item.getMontoNeto();
+            if (monto == null) monto = BigDecimal.ZERO;
+            
+            BigDecimal pagado = presupuestoDAO.imputadoDeItem(item.getId());
+            if (pagado == null) pagado = BigDecimal.ZERO;
+            
+            BigDecimal saldo = monto.subtract(pagado);
+            if (saldo.signum() < 0) saldo = BigDecimal.ZERO; 
+            
+            saldos.put(item.getId(), saldo);
+        }
+        return saldos;
     }
 
     public Pago crearBorrador(Integer pacienteId, Long fichaId, Integer usuarioCajaId, Long cierreId)

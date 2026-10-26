@@ -32,6 +32,7 @@ import java.math.RoundingMode;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public final class CobroPlanDialog {
@@ -58,6 +59,7 @@ public final class CobroPlanDialog {
     private final Consumer<Pago> alEmitir;
     private Long borradorId;
     private final List<Long> itemsEnBorrador = new ArrayList<>();
+    private Map<Long, BigDecimal> saldosActuales;
 
     private CobroPlanDialog(Paciente paciente, Consumer<Pago> alEmitir) {
         this.paciente = paciente;
@@ -133,7 +135,7 @@ public final class CobroPlanDialog {
 
         Label relleno = new Label(" ");
         HBox.setHgrow(relleno, Priority.ALWAYS);
-        HBox lineaTotal = new HBox(10, new Label("Total seleccionado:"), lblTotal, relleno,
+        HBox lineaTotal = new HBox(10, new Label("Total a cobrar:"), lblTotal, relleno,
                 btnBorrador, btnConfirmar, btnCerrar);
         lineaTotal.setAlignment(Pos.CENTER_LEFT);
 
@@ -165,9 +167,13 @@ public final class CobroPlanDialog {
         colPrestacion.setCellValueFactory(d -> new ReadOnlyStringWrapper(
                 d.getValue().getTratamientoNombre() == null ? "" : d.getValue().getTratamientoNombre()));
 
-        TableColumn<PresupuestoItem, String> colMonto = new TableColumn<>("MONTO NETO");
+        TableColumn<PresupuestoItem, String> colMonto = new TableColumn<>("SALDO PENDIENTE");
         colMonto.setPrefWidth(130);
-        colMonto.setCellValueFactory(d -> new ReadOnlyStringWrapper(formatear(monto(d.getValue()))));
+        colMonto.setCellValueFactory(d -> {
+            BigDecimal saldo = saldosActuales != null && saldosActuales.containsKey(d.getValue().getId())
+                    ? saldosActuales.get(d.getValue().getId()) : monto(d.getValue());
+            return new ReadOnlyStringWrapper(formatear(saldo));
+        });
 
         TableColumn<PresupuestoItem, String> colEstado = new TableColumn<>("ESTADO");
         colEstado.setPrefWidth(130);
@@ -207,19 +213,34 @@ public final class CobroPlanDialog {
             return;
         }
         Long presupuestoId = presupuesto.getId();
-        TareasFX.ejecutar(() -> AppContext.get().presupuestos().itemsCobrables(presupuestoId),
-                items -> {
-                    filas.setAll(items);
-                    tabla.refresh();
-                    lblVacio.setVisible(items.isEmpty());
-                },
-                error -> lblError.setText(TareasFX.mensaje(error)));
+        
+        TareasFX.ejecutar(() -> {
+            List<PresupuestoItem> items = AppContext.get().presupuestos().itemsCobrables(presupuestoId);
+            Map<Long, BigDecimal> saldos = AppContext.get().caja().obtenerSaldosCobrables(presupuestoId);
+            return new Object[]{items, saldos};
+        }, resultado -> {
+            @SuppressWarnings("unchecked")
+            List<PresupuestoItem> items = (List<PresupuestoItem>) resultado[0];
+            @SuppressWarnings("unchecked")
+            Map<Long, BigDecimal> saldos = (Map<Long, BigDecimal>) resultado[1];
+            
+            saldosActuales = saldos;
+            filas.setAll(items);
+            tabla.refresh();
+            lblVacio.setVisible(items.isEmpty());
+            
+            if (!items.isEmpty()) {
+                tabla.getSelectionModel().selectAll();
+            }
+        }, error -> lblError.setText(TareasFX.mensaje(error)));
     }
 
     private void actualizarTotal() {
         BigDecimal total = BigDecimal.ZERO;
         for (PresupuestoItem item : tabla.getSelectionModel().getSelectedItems()) {
-            total = total.add(monto(item));
+            BigDecimal montoItem = saldosActuales != null && saldosActuales.containsKey(item.getId())
+                    ? saldosActuales.get(item.getId()) : monto(item);
+            total = total.add(montoItem);
         }
         lblTotal.setText("S/ " + total.setScale(2, RoundingMode.HALF_UP).toPlainString());
     }

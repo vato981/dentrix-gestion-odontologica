@@ -38,6 +38,8 @@ import pe.edu.utp.dentrix.ui.TareasFX;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -379,6 +381,15 @@ public class PresupuestoController {
         String motivo = presupuesto.getDescuentoMotivo();
         lblDescuentoMotivo.setText(motivo == null ? "" : "Motivo del descuento: " + motivo);
         aplicarEstadoBotones(presupuesto.getEstado());
+
+        // --- CORRECCIÓN: AUTOCOMPLETAR CAMPOS DE FIRMA ---
+        Paciente paciente = comboPaciente.getValue();
+        if (paciente != null) {
+            campoFirmante.setText(paciente.getApellidos() + ", " + paciente.getNombres());
+            campoDocumento.setText(paciente.getDni());
+            comboRolFirmante.setValue("PACIENTE");
+        }
+        // -------------------------------------------------
     }
 
     private String describir(Presupuesto presupuesto) {
@@ -428,21 +439,30 @@ public class PresupuestoController {
         columna.setVisible(!oculto);
     }
 
-    private void aplicarEstadoBotones(String estado) {
+     private void aplicarEstadoBotones(String estado) {
         boolean borrador = "BORRADOR".equals(estado);
         boolean presentado = "PRESENTADO".equals(estado);
         boolean aceptado = "ACEPTADO".equals(estado);
+        
+        // El formulario de ítems solo se edita en borrador
         panelFormularioItems.setDisable(!borrador);
+        
+        // El botón de presentar sigue estando por si quieres hacerlo manual
         btnPresentar.setDisable(!borrador);
         btnDescartar.setDisable(!(borrador || presentado));
-        btnAceptarTodo.setDisable(!presentado);
-        btnAceptarSeleccionados.setDisable(!presentado);
+        
+        // --- MEJORA UX: Habilitamos los botones de aceptar en borrador y presentado ---
+        btnAceptarTodo.setDisable(!(borrador || presentado));
+        btnAceptarSeleccionados.setDisable(!(borrador || presentado));
+        btnRegistrarAceptacion.setDisable(!(borrador || presentado)); 
+        // -----------------------------------------------------------------------------
+
         btnRechazar.setDisable(!presentado);
-        btnRegistrarAceptacion.setDisable(!presentado);
+        
+        // El consentimiento solo se firma si ya está aceptado
         btnFirmarConsentimiento.setDisable(!aceptado);
         btnEnmendar.setDisable(!(aceptado && puedeEnmendar()));
     }
-
     private boolean puedeEnmendar() {
         String rol = AppContext.get().sesion().getCodigoRol();
         return "ADMINISTRADOR".equals(rol) || "ODONTOLOGO".equals(rol);
@@ -607,9 +627,21 @@ public class PresupuestoController {
         aceptarItems(seleccionados.isEmpty() ? itemsPropuestos() : seleccionados);
     }
 
-    private void aceptarItems(List<PresupuestoItem> items) {
+        private void aceptarItems(List<PresupuestoItem> items) {
         try {
-            Presupuesto presupuesto = exigirPresupuesto("PRESENTADO");
+            Presupuesto presupuesto = exigirPresupuesto(null); // Ya no exigimos que esté PRESENTADO aquí
+            
+            // --- MEJORA UX: Si está en borrador, lo presentamos automáticamente ---
+            if ("BORRADOR".equals(presupuesto.getEstado())) {
+                AppContext.get().presupuestos().presentar(presupuesto.getId());
+                presupuesto.setEstado("PRESENTADO");
+            }
+            // ---------------------------------------------------------------------
+
+            if (!"PRESENTADO".equals(presupuesto.getEstado())) {
+                 throw new DentrixException("El presupuesto debe estar PRESENTADO o en BORRADOR para aceptarse. Estado actual: " + presupuesto.getEstado());
+            }
+
             if (items.isEmpty()) {
                 throw new DentrixException("La aceptacion debe incluir al menos un item PROPUESTO");
             }
@@ -633,12 +665,14 @@ public class PresupuestoController {
             String riesgos = texto(areaRiesgos);
             Long presupuestoId = presupuesto.getId();
             Integer registradoPor = usuarioId();
+            
+            // Aquí se hace la aceptación real
             TareasFX.ejecutar(() -> {
                 AppContext.get().presupuestos().aceptar(presupuestoId, ids, firmante, documento, rol,
                         alternativas, riesgos, registradoPor);
                 return null;
             }, ok -> {
-                indicar("Aceptacion registrada; los precios quedaron congelados (R21)");
+                indicar("Aceptacion registrada exitosamente.");
                 recargarPresupuestos(presupuestoId);
             }, error -> mostrarError(TareasFX.mensaje(error)));
         } catch (DentrixException e) {
@@ -710,12 +744,19 @@ public class PresupuestoController {
         }
     }
 
-    @FXML
+        @FXML
     private void onFirmarConsentimientoClick() {
         try {
             Presupuesto presupuesto = exigirPresupuesto("ACEPTADO");
             List<PresupuestoItem> seleccionados = new ArrayList<>();
-            for (PresupuestoItem item : tablaItems.getSelectionModel().getSelectedItems()) {
+            
+            // --- CORRECCIÓN: Si no hay nada seleccionado, toma automáticamente todos los pendientes ---
+            List<PresupuestoItem> itemsAProcesar = new ArrayList<>(tablaItems.getSelectionModel().getSelectedItems());
+            if (itemsAProcesar.isEmpty()) {
+                itemsAProcesar = tablaItems.getItems(); // Toma todos los ítems de la tabla
+            }
+
+            for (PresupuestoItem item : itemsAProcesar) {
                 if (item.isRequiereConsentimiento()
                         && !consentimientosFirmados.contains(item.getId())
                         && !"ANULADO".equals(item.getEstado())
@@ -723,9 +764,11 @@ public class PresupuestoController {
                     seleccionados.add(item);
                 }
             }
+            // --------------------------------------------------------------------------------------
+
             if (seleccionados.isEmpty()) {
                 throw new DentrixException(
-                        "Selecciona items que requieran consentimiento y no esten firmados");
+                        "No hay items pendientes de consentimiento. Asegúrate de que el item tenga marcado 'Requiere consentimiento'.");
             }
             List<Long> ids = new ArrayList<>();
             StringBuilder procedimiento = new StringBuilder();
@@ -737,8 +780,14 @@ public class PresupuestoController {
                 procedimiento.append(item.getTratamientoNombre() == null
                         ? "Item " + item.getId() : item.getTratamientoNombre());
             }
+            // Calcular edad del paciente y pasarla al diálogo
+            Paciente paciente = comboPaciente.getValue();
+            int edad = 0;
+            if (paciente != null && paciente.getFechaNac() != null) {
+                edad = Period.between(paciente.getFechaNac(), LocalDate.now()).getYears();
+            }
             Optional<ConsentimientoDialog.Datos> datos =
-                    ConsentimientoDialog.mostrar(ventana(), procedimiento.toString());
+                    ConsentimientoDialog.mostrar(ventana(), procedimiento.toString(), edad);
             if (datos.isEmpty()) {
                 return;
             }

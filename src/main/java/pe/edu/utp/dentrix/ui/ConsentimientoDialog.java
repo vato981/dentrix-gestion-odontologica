@@ -22,7 +22,8 @@ public final class ConsentimientoDialog {
     private ConsentimientoDialog() {
     }
 
-    public static Optional<Datos> mostrar(Window duenio, String procedimientoSugerido) {
+    // CORRECCIÓN: Se agrega el parámetro edadPaciente
+    public static Optional<Datos> mostrar(Window duenio, String procedimientoSugerido, int edadPaciente) {
         Dialog<Datos> dialogo = new Dialog<>();
         dialogo.setTitle("Consentimiento informado");
         dialogo.setHeaderText("R7: firma del paciente, tutor o pagador");
@@ -54,6 +55,15 @@ public final class ConsentimientoDialog {
         TextField vinculo = new TextField();
         vinculo.setPromptText("Vinculo del representante (tutor o pagador)");
         vinculo.getStyleClass().add("campo-formulario");
+
+        // --- CORRECCIÓN: VALIDACIÓN POR EDAD ---
+        if (edadPaciente >= 18) {
+            vinculo.setDisable(true);
+            vinculo.setPromptText("No requiere tutor (mayor de edad)");
+            rol.setDisable(true);
+            rol.setValue("PACIENTE");
+        }
+        // ----------------------------------------
 
         GridPane grilla = new GridPane();
         grilla.setHgap(8.0);

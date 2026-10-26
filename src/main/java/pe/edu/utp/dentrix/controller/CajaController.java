@@ -4,8 +4,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -17,7 +15,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
 import pe.edu.utp.dentrix.config.AppContext;
@@ -26,14 +23,15 @@ import pe.edu.utp.dentrix.excepcion.DentrixException;
 import pe.edu.utp.dentrix.model.CierreCaja;
 import pe.edu.utp.dentrix.model.Paciente;
 import pe.edu.utp.dentrix.model.Pago;
+import pe.edu.utp.dentrix.model.Presupuesto;
+import pe.edu.utp.dentrix.model.PresupuestoItem;
 import pe.edu.utp.dentrix.model.Tratamiento;
+import pe.edu.utp.dentrix.ui.Badges;
 import pe.edu.utp.dentrix.ui.CobroPlanDialog;
 import pe.edu.utp.dentrix.ui.TareasFX;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,192 +48,131 @@ public class CajaController {
     private static final List<String> TURNOS = List.of("DIURNO", "NOCTURNO");
 
     public record LineaGrilla(Integer tratamientoId, String codigo, String nombre, Integer pieza,
-                              Integer cantidad, BigDecimal precio, BigDecimal subtotal) {
+            Integer cantidad, BigDecimal precio, BigDecimal subtotal) {
     }
 
     @FXML
     private Label etiquetaCajero;
-
     @FXML
     private ComboBox<Paciente> comboPaciente;
-
     @FXML
     private Label etiquetaPaciente;
-
     @FXML
     private Label lblTotal;
-
     @FXML
     private ComboBox<Tratamiento> comboTratamiento;
-
     @FXML
     private TextField campoPieza;
-
     @FXML
     private TextField campoCantidad;
-
     @FXML
     private TableView<LineaGrilla> tablaLineas;
-
     @FXML
     private TableColumn<LineaGrilla, String> colTratamiento;
-
     @FXML
     private TableColumn<LineaGrilla, String> colPieza;
-
     @FXML
     private TableColumn<LineaGrilla, String> colCantidad;
-
     @FXML
     private TableColumn<LineaGrilla, String> colPrecio;
-
     @FXML
     private TableColumn<LineaGrilla, String> colSubtotal;
-
     @FXML
     private ComboBox<String> comboModalidad;
-
     @FXML
     private TextField campoOperacion;
-
     @FXML
     private Label etiquetaResultado;
-
     @FXML
     private TableView<Pago> tablaBoletas;
-
     @FXML
     private TableColumn<Pago, String> colBNumero;
-
     @FXML
     private TableColumn<Pago, String> colBPaciente;
-
     @FXML
     private TableColumn<Pago, String> colBFecha;
-
     @FXML
     private TableColumn<Pago, String> colBMonto;
-
     @FXML
     private TableColumn<Pago, String> colBModalidad;
-
     @FXML
     private TableColumn<Pago, String> colBEstado;
-
     @FXML
     private TableColumn<Pago, String> colBSaldo;
-
     @FXML
     private Button btnAnularBoleta;
-
     @FXML
     private Button btnVerBoleta;
-
     @FXML
     private Label etiquetaFechaHoy;
-
     @FXML
     private Button btnCobrarPlan;
-
     @FXML
     private TextField campoNumeroBoleta;
-
     @FXML
     private Label etiquetaDocumento;
-
     @FXML
     private TableView<Pago> tablaAbonos;
-
     @FXML
     private TableColumn<Pago, String> colAFecha;
-
     @FXML
     private TableColumn<Pago, String> colAMonto;
-
     @FXML
     private TableColumn<Pago, String> colAModalidad;
-
     @FXML
     private TableColumn<Pago, String> colAOp;
-
     @FXML
     private TextField campoMontoAbono;
-
     @FXML
     private ComboBox<String> comboModalidadAbono;
-
     @FXML
     private TextField campoOpAbono;
-
     @FXML
     private Label etiquetaAbonoResultado;
-
     @FXML
     private ComboBox<String> comboTurno;
-
     @FXML
     private TextField campoFondo;
-
     @FXML
     private Label etiquetaSinCierre;
-
     @FXML
     private Label etiquetaCierreInfo;
-
     @FXML
     private TextField campoNuevoFondo;
-
     @FXML
     private TextField campoContado;
-
     @FXML
     private Label etiquetaCierreResultado;
-
     @FXML
     private Label lblEstadoTurno;
-
     @FXML
     private Label lblCierreFecha;
-
     @FXML
     private Label lblFondoInicial;
-
     @FXML
     private Label lblEfectivoSistema;
-
     @FXML
     private Label lblBilleterasSistema;
-
     @FXML
     private Label lblTotalSistema;
-
     @FXML
     private Label lblEfectivoContado;
-
     @FXML
     private Label lblBilleterasContado;
-
     @FXML
     private Label lblDiferencia;
-
     @FXML
     private Label lblDiferenciaDetalle;
-
     @FXML
     private Label lblTolerancia;
-
     @FXML
     private ComboBox<String> comboMotivoDiferencia;
-
     @FXML
     private Label lblCierreNumero;
-
     @FXML
     private Label lblActaEstado;
-
     @FXML
     private HBox panelCaja;
-
     @FXML
     private ScrollPane panelCierre;
 
@@ -246,6 +183,7 @@ public class CajaController {
     private Pago documentoAbonado;
     private CierreCaja cierreActual;
     private Integer usuarioCajaId;
+    private List<PresupuestoItem> itemsDeudaActual;
 
     @FXML
     private void initialize() {
@@ -269,7 +207,7 @@ public class CajaController {
                 d.getValue().getMonto() == null ? "" : d.getValue().getMonto().toPlainString()));
         colBModalidad.setCellValueFactory(new PropertyValueFactory<>("modalidad"));
         colBEstado.setCellValueFactory(new PropertyValueFactory<>("estadoPago"));
-        pe.edu.utp.dentrix.ui.Badges.aplicarEn(colBEstado);
+        Badges.aplicarEn(colBEstado);
         colBSaldo.setCellValueFactory(d -> new SimpleStringProperty(
                 d.getValue().getSaldoDeudor() == null ? "" : d.getValue().getSaldoDeudor().toPlainString()));
 
@@ -303,14 +241,19 @@ public class CajaController {
                 return null;
             }
         });
+
         comboPaciente.valueProperty().addListener((obs, antes, ahora) -> {
+            lineas.clear();
             if (ahora == null) {
                 etiquetaPaciente.setText("Selecciona el paciente del cobro");
+                itemsDeudaActual = null;
             } else {
                 etiquetaPaciente.setText(ahora.getApellidos() + ", " + ahora.getNombres()
                         + " - DNI " + ahora.getDni() + " - HC " + ahora.getCodigoHc());
+                cargarDeudaPaciente(ahora);
             }
         });
+
         comboTratamiento.setConverter(new StringConverter<Tratamiento>() {
             @Override
             public String toString(Tratamiento t) {
@@ -341,8 +284,46 @@ public class CajaController {
         recargarCierre();
     }
 
+        private void cargarDeudaPaciente(Paciente paciente) {
+        TareasFX.ejecutar(() -> {
+            var presupuestos = AppContext.get().presupuestos().listarPorPaciente(paciente.getId());
+            List<PresupuestoItem> deuda = new ArrayList<>();
+            
+            // Buscar el primer presupuesto ACEPTADO
+            Presupuesto presupuestoElegido = null;
+            for (Presupuesto p : presupuestos) {
+                if ("ACEPTADO".equals(p.getEstado())) {
+                    presupuestoElegido = p;
+                    break; // Solo tomamos el primero para evitar mezclar
+                }
+            }
+            
+            if (presupuestoElegido != null) {
+                deuda.addAll(AppContext.get().presupuestos().itemsCobrables(presupuestoElegido.getId()));
+            }
+            return deuda;
+        }, items -> {
+            itemsDeudaActual = items;
+            lineas.clear();
+            for (PresupuestoItem item : items) {
+                lineas.add(new LineaGrilla(item.getTratamientoId(), "TRAT", item.getTratamientoNombre(),
+                        item.getPiezaFdi(), item.getCantidad(),
+                        item.getMontoNeto(), item.getMontoNeto()));
+            }
+            if (!items.isEmpty()) {
+                etiquetaResultado.setText("Se cargaron automáticamente los tratamientos del primer presupuesto ACEPTADO.");
+                etiquetaResultado.getStyleClass().removeAll("etiqueta-error", "etiqueta-ok");
+                etiquetaResultado.getStyleClass().add("etiqueta-ok");
+            } else {
+                etiquetaResultado.setText("El paciente no tiene presupuestos ACEPTADOS pendientes.");
+            }
+        }, error -> {
+            etiquetaResultado.setText("Error al cargar deuda: " + TareasFX.mensaje(error));
+        });
+    }
+
     private record DatosCombos(List<Paciente> pacientesActivos, List<Tratamiento> tratamientosActivos,
-                               Map<Integer, String> nombresPaciente) {
+            Map<Integer, String> nombresPaciente) {
     }
 
     private DatosCombos cargarCombos() throws DentrixException {
@@ -437,14 +418,24 @@ public class CajaController {
                 throw new DentrixException("RF-08: Yape/Plin/Tarjeta requieren N° de operación");
             }
             List<LineaBoleta> detalle = new ArrayList<>();
-            for (LineaGrilla g : lineas) {
-                detalle.add(LineaBoleta.directa(g.tratamientoId(), g.pieza(), g.cantidad()));
+
+            // Si la deuda vino de un presupuesto, usamos esos IDs.
+            if (itemsDeudaActual != null && !itemsDeudaActual.isEmpty()) {
+                for (PresupuestoItem item : itemsDeudaActual) {
+                    detalle.add(LineaBoleta.deItem(item.getId())); // CORREGIDO: ahora usa deItem
+                }
+            } else {
+                for (LineaGrilla g : lineas) {
+                    detalle.add(LineaBoleta.directa(g.tratamientoId(), g.pieza(), g.cantidad()));
+                }
             }
+
             Integer pacienteId = paciente.getId();
             TareasFX.ejecutar(() -> AppContext.get().caja().emitirBoleta(pacienteId, modalidad, operacion,
-                            null, null, usuarioCajaId, null, detalle),
+                    null, null, usuarioCajaId, null, detalle),
                     boleta -> {
                         lineas.clear();
+                        itemsDeudaActual = null;
                         aplicarBoletaEmitida(boleta);
                     },
                     error -> mostrarError(TareasFX.mensaje(error)));
@@ -658,7 +649,8 @@ public class CajaController {
                     cierre -> {
                         cierreActual = cierre;
                         campoNuevoFondo.clear();
-                        indicar(etiquetaCierreResultado, "Fondo inicial actualizado a S/ " + fondo.toPlainString(), false);
+                        indicar(etiquetaCierreResultado, "Fondo inicial actualizado a S/ " + fondo.toPlainString(),
+                                false);
                         recargarCierre();
                     },
                     error -> mostrarError(TareasFX.mensaje(error)));
@@ -766,7 +758,8 @@ public class CajaController {
         ponerDiferencia(lblDiferencia, cierreActual.getDiferencia());
         ponerDiferencia(lblDiferenciaDetalle, cierreActual.getDiferencia());
         BigDecimal tolerancia = cierreActual.getTolerancia() == null
-                ? BigDecimal.ONE : cierreActual.getTolerancia();
+                ? BigDecimal.ONE
+                : cierreActual.getTolerancia();
         lblTolerancia.setText(moneda(tolerancia));
         boolean excede = cierreActual.getDiferencia() != null
                 && cierreActual.getDiferencia().abs().compareTo(tolerancia) > 0;
@@ -786,7 +779,8 @@ public class CajaController {
         info.append("Fondo inicial: S/ ").append(cierreActual.getFondoInicial().toPlainString()).append('\n');
         info.append("Historial de fondos: ").append(cierreActual.getHistorialFondos()).append('\n');
         info.append("Efectivo en sistema: S/ ").append(cierreActual.getEfectivoSistema().toPlainString()).append('\n');
-        info.append("Billeteras digitales: S/ ").append(cierreActual.getBilleterasSistema().toPlainString()).append('\n');
+        info.append("Billeteras digitales: S/ ").append(cierreActual.getBilleterasSistema().toPlainString())
+                .append('\n');
         info.append("Total sistema: S/ ").append(cierreActual.getTotalSistema().toPlainString());
         if (cierreActual.getEfectivoContado() != null) {
             info.append('\n');
